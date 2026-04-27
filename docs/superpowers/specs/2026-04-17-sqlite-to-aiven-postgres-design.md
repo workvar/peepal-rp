@@ -8,7 +8,7 @@
 
 ## Problem
 
-The CollERP backend uses a local SQLite file (`backend/collegeerp.db`) via GORM. This needs to be replaced with an Aiven-managed PostgreSQL instance for cloud persistence.
+The StepElly backend uses a local SQLite file (`backend/collegeerp.db`) via GORM. This needs to be replaced with an Aiven-managed PostgreSQL instance for cloud persistence.
 
 ---
 

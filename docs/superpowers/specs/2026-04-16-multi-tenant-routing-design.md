@@ -7,7 +7,7 @@
 
 ## Overview
 
-CollERP is a multi-tenant ERP platform. Currently all org users share a single `/login` page and flat routes like `/dashboard`, `/students`. This spec introduces per-org URL namespacing so each organisation lives under its own path prefix (`/[tenant]/...`), giving clear data and route isolation at the browser level. Backend data isolation via `X-Tenant-ID` header is already implemented and unchanged.
+StepElly is a multi-tenant ERP platform. Currently all org users share a single `/login` page and flat routes like `/dashboard`, `/students`. This spec introduces per-org URL namespacing so each organisation lives under its own path prefix (`/[tenant]/...`), giving clear data and route isolation at the browser level. Backend data isolation via `X-Tenant-ID` header is already implemented and unchanged.
 
 ---
 

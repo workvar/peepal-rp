@@ -684,7 +684,7 @@ export default function SuperLoginPage() {
             Super Admin
           </h1>
           <p style={{ margin: 0, fontSize: "15px", color: C.placeholder }}>
-            CollERP Platform Console
+            StepElly Platform Console
           </p>
         </div>
 
@@ -953,7 +953,7 @@ export default function LoginPage() {
             <Logo size={48} variant="gradient" />
           </div>
           <h1 style={{ margin: "0 0 4px", fontSize: "26px", fontWeight: 700, letterSpacing: "-0.6px", color: C.label, lineHeight: 1.2 }}>
-            Sign in to CollERP
+            Sign in to StepElly
           </h1>
           <p style={{ margin: 0, fontSize: "15px", color: C.placeholder }}>
             Enter your organisation and credentials

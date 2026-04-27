@@ -6,7 +6,7 @@
 
 ## Overview
 
-A learning matrix module for CollERP that allows admins to define learning goals (named courses/trainings), build them using a structured **Section → Unit + Assignment** hierarchy, assign them to departments (cascading to all employees), and track mandatory completion. Employees experience a LinkedIn Learning–style sequential sidebar with sections, units, and assignments.
+A learning matrix module for StepElly that allows admins to define learning goals (named courses/trainings), build them using a structured **Section → Unit + Assignment** hierarchy, assign them to departments (cascading to all employees), and track mandatory completion. Employees experience a LinkedIn Learning–style sequential sidebar with sections, units, and assignments.
 
 ---
 

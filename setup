@@ -1,0 +1,223 @@
+#!/usr/bin/env bash
+# ----------------------------------------------------------------------------
+# CollERP — first-time setup script
+#
+# Run this once on a fresh clone (or when schema/dependencies change).
+# It is idempotent: safe to re-run.
+#
+# What it does:
+#   1. Verifies required tools (go, node, and a node package manager).
+#   2. Creates backend/.env and frontend/.env.local if they don't exist.
+#   3. Installs Go module dependencies (go mod tidy).
+#   4. Regenerates GraphQL code from schema.graphqls via gqlgen.
+#   5. Builds the backend once to run GORM migrations against the DB
+#      configured in backend/.env (AutoMigrate runs on startup).
+#   6. Installs frontend npm/pnpm dependencies.
+#
+# Usage:
+#   ./setup            # full setup
+#   ./setup --backend  # only backend steps
+#   ./setup --frontend # only frontend steps
+#   ./setup --help     # show help
+# ----------------------------------------------------------------------------
+
+set -euo pipefail
+
+# ── Colours ─────────────────────────────────────────────────────────────────
+if [[ -t 1 ]]; then
+  C_RESET='\033[0m'
+  C_BOLD='\033[1m'
+  C_RED='\033[31m'
+  C_GREEN='\033[32m'
+  C_YELLOW='\033[33m'
+  C_CYAN='\033[36m'
+else
+  C_RESET='' C_BOLD='' C_RED='' C_GREEN='' C_YELLOW='' C_CYAN=''
+fi
+
+log()    { printf "${C_CYAN}▸${C_RESET} %s\n" "$*"; }
+ok()     { printf "${C_GREEN}✓${C_RESET} %s\n" "$*"; }
+warn()   { printf "${C_YELLOW}!${C_RESET} %s\n" "$*"; }
+err()    { printf "${C_RED}✗${C_RESET} %s\n" "$*" >&2; }
+step()   { printf "\n${C_BOLD}==> %s${C_RESET}\n" "$*"; }
+
+# ── Resolve repo root ───────────────────────────────────────────────────────
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$SCRIPT_DIR"
+
+BACKEND_DIR="$SCRIPT_DIR/backend"
+FRONTEND_DIR="$SCRIPT_DIR/frontend"
+
+# ── Parse args ──────────────────────────────────────────────────────────────
+DO_BACKEND=1
+DO_FRONTEND=1
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --backend)    DO_FRONTEND=0 ;;
+    --frontend)   DO_BACKEND=0 ;;
+    --help|-h)
+      sed -n '2,20p' "$0" | sed 's/^# \{0,1\}//'
+      exit 0
+      ;;
+    *)
+      err "Unknown argument: $1"
+      exit 1
+      ;;
+  esac
+  shift
+done
+
+# ── Check prerequisites ─────────────────────────────────────────────────────
+need_cmd() {
+  if ! command -v "$1" >/dev/null 2>&1; then
+    err "Required tool not found: $1"
+    printf "   %s\n" "$2"
+    exit 1
+  fi
+}
+
+step "Checking prerequisites"
+
+if (( DO_BACKEND )); then
+  need_cmd go "Install Go 1.21+ from https://go.dev/dl/"
+  GO_VERSION="$(go version | awk '{print $3}')"
+  ok "Go detected: $GO_VERSION"
+fi
+
+if (( DO_FRONTEND )); then
+  need_cmd node "Install Node.js 18+ from https://nodejs.org/"
+  NODE_VERSION="$(node --version)"
+  ok "Node detected: $NODE_VERSION"
+
+  # Prefer pnpm (a pnpm-lock.yaml is checked in) but fall back to npm.
+  if command -v pnpm >/dev/null 2>&1; then
+    PKG_MGR="pnpm"
+  elif command -v npm >/dev/null 2>&1; then
+    PKG_MGR="npm"
+    warn "pnpm not found, falling back to npm (the repo ships a pnpm-lock.yaml)."
+  else
+    err "No Node package manager found (install pnpm or npm)."
+    exit 1
+  fi
+  ok "Using package manager: $PKG_MGR"
+fi
+
+# ── Backend setup ───────────────────────────────────────────────────────────
+if (( DO_BACKEND )); then
+  step "Backend: environment file"
+  if [[ ! -f "$BACKEND_DIR/.env" ]]; then
+    if [[ -f "$BACKEND_DIR/.env.example" ]]; then
+      cp "$BACKEND_DIR/.env.example" "$BACKEND_DIR/.env"
+      ok "Created backend/.env from .env.example"
+      warn "Edit backend/.env to set DB_PATH, JWT_SECRET, ADMIN_EMAIL, ADMIN_PASSWORD."
+    else
+      warn "backend/.env.example not found — skipping env copy."
+    fi
+  else
+    ok "backend/.env already exists — leaving it alone"
+  fi
+
+  step "Backend: go mod tidy"
+  (
+    cd "$BACKEND_DIR"
+    go mod tidy
+  )
+  ok "Go dependencies synced"
+
+  step "Backend: generate GraphQL code (gqlgen)"
+  # gqlgen reads gqlgen.yml and writes graph/generated.go + graph/model/models_gen.go.
+  # This is the step that was missing after schema.graphqls changed.
+  (
+    cd "$BACKEND_DIR"
+    go run github.com/99designs/gqlgen generate
+  )
+  ok "gqlgen generated graph/generated.go and graph/model/models_gen.go"
+
+  step "Backend: compile check"
+  (
+    cd "$BACKEND_DIR"
+    go build ./...
+  )
+  ok "Backend builds cleanly"
+
+  step "Backend: run migrations"
+  # main.go only runs database.Migrate() when invoked with --migrate. It
+  # AutoMigrates every model (including the Learning Matrix tables), seeds
+  # the default admin, and exits. Running a plain `go run main.go` skips
+  # migration entirely and would leave new tables missing.
+  (
+    cd "$BACKEND_DIR"
+    mkdir -p uploads/learning-videos
+
+    MIGRATION_LOG="$(mktemp -t collerp-migrate.XXXXXX.log)"
+    trap 'rm -f "$MIGRATION_LOG"' EXIT
+
+    log "Running: go run main.go --migrate"
+    set +e
+    go run main.go --migrate >"$MIGRATION_LOG" 2>&1
+    MIG_EXIT=$?
+    set -e
+
+    if [[ $MIG_EXIT -ne 0 ]]; then
+      err "Migration failed (exit $MIG_EXIT). Tail of log:"
+      tail -n 30 "$MIGRATION_LOG" | sed 's/^/    /'
+      err "Common causes: backend/.env DB_PATH wrong, DB not running, or a model has an invalid GORM tag."
+      exit 1
+    fi
+
+    if grep -qiE "panic|AutoMigrate failed" "$MIGRATION_LOG"; then
+      warn "Migration reported problems — showing tail:"
+      tail -n 30 "$MIGRATION_LOG" | sed 's/^/    /'
+    else
+      ok "Migrations completed (default admin seeded if missing)"
+    fi
+  )
+fi
+
+# ── Frontend setup ──────────────────────────────────────────────────────────
+if (( DO_FRONTEND )); then
+  step "Frontend: environment file"
+  if [[ ! -f "$FRONTEND_DIR/.env.local" ]]; then
+    cat > "$FRONTEND_DIR/.env.local" <<'EOF'
+# Frontend environment. Update NEXT_PUBLIC_API_URL to match the backend's
+# listen port (see backend/.env → PORT). Default backend PORT is 8080.
+NEXT_PUBLIC_API_URL=http://localhost:8080
+EOF
+    ok "Created frontend/.env.local"
+    warn "If backend/.env PORT is not 8080, edit frontend/.env.local accordingly."
+  else
+    ok "frontend/.env.local already exists — leaving it alone"
+  fi
+
+  step "Frontend: install dependencies ($PKG_MGR)"
+  (
+    cd "$FRONTEND_DIR"
+    if [[ "$PKG_MGR" == "pnpm" ]]; then
+      pnpm install
+    else
+      npm install
+    fi
+  )
+  ok "Frontend dependencies installed"
+fi
+
+# ── Done ────────────────────────────────────────────────────────────────────
+step "Setup complete"
+cat <<EOF
+
+Next steps:
+
+  ${C_BOLD}Start the backend${C_RESET}
+    cd backend && go run main.go
+
+  ${C_BOLD}Start the frontend${C_RESET} (in a separate terminal)
+    cd frontend && ${PKG_MGR:-pnpm} dev
+
+  ${C_BOLD}Default admin login${C_RESET}
+    email:    \$ADMIN_EMAIL (from backend/.env — defaults to admin@college.edu)
+    password: \$ADMIN_PASSWORD (defaults to Admin@123)
+
+Re-run this script any time you pull changes to schema.graphqls or add new
+Go dependencies.
+EOF

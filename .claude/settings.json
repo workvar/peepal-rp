@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git -C /Users/yasharyan/Documents/Claude/Projects/CollERP/backend show d6b3653:graph/payroll.resolvers.go)",
+      "Bash(git -C /Users/yasharyan/Documents/Claude/Projects/CollERP/backend show d6b3653:graph/model/models_gen.go)",
+      "Bash(git -C /Users/yasharyan/Documents/Claude/Projects/CollERP/backend show d6b3653 -- graph/model/models_gen.go)",
+      "Bash(awk '/type UpdateEmployeeInput struct/,/^}/' /Users/yasharyan/Documents/Claude/Projects/CollERP/backend/graph/model/models_gen.go)",
+      "Bash(awk '{print $1}')",
+      "Bash(sed -n '343,442p' /Users/yasharyan/Documents/Claude/Projects/CollERP/backend/graph/employees.resolvers.go)",
+      "Bash(go test *)",
+      "Bash(go vet *)"
+    ]
+  }
+}

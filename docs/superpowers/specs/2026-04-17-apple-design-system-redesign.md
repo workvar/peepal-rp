@@ -1,4 +1,4 @@
-# Apple Design System Redesign — CollERP
+# Apple Design System Redesign — StepElly
 
 **Date:** 2026-04-17  
 **Scope:** Entire frontend app  
@@ -8,7 +8,7 @@
 
 ## Overview
 
-Redesign the CollERP frontend to follow Apple's Human Interface Guidelines. The guiding principle: content leads, UI chrome recedes. Visual hierarchy is driven by typography, spacing, and contrast — not decoration. No gradients anywhere. Spatial depth is communicated through subtle shadows, blur, and layering rather than color fills.
+Redesign the StepElly frontend to follow Apple's Human Interface Guidelines. The guiding principle: content leads, UI chrome recedes. Visual hierarchy is driven by typography, spacing, and contrast — not decoration. No gradients anywhere. Spatial depth is communicated through subtle shadows, blur, and layering rather than color fills.
 
 ---
 

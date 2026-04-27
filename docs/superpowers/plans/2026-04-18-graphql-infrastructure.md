@@ -17,7 +17,7 @@
 
 ---
 
-**Working directory note:** All `go` commands in this plan must be run from `CollERP/backend/`. All `npm` commands must be run from `CollERP/frontend/`. `git` commands can be run from the repo root.
+**Working directory note:** All `go` commands in this plan must be run from `StepElly/backend/`. All `npm` commands must be run from `StepElly/frontend/`. `git` commands can be run from the repo root.
 
 ---
 
@@ -522,7 +522,7 @@ func NewHandler() fiber.Handler {
 // NewPlayground returns a Fiber handler for GET /api/v1/graphql (GraphiQL UI).
 // Should only be registered when AppEnv != "production".
 func NewPlayground() fiber.Handler {
-	h := playground.Handler("CollERP GraphQL", "/api/v1/graphql")
+	h := playground.Handler("StepElly GraphQL", "/api/v1/graphql")
 	return adaptor.HTTPHandler(h)
 }
 ```
