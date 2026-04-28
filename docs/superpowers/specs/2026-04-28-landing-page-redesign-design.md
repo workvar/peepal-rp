@@ -188,7 +188,7 @@ components/marketing/scroll/ScrollReveal.tsx
 ```
 components/marketing/scroll/SmoothScroll.tsx
 components/marketing/layout/MarketingShell.tsx
-lib/marketing/modules.ts                            # retune later, not in hot path
+lib/marketing/modules.ts                            # structure unchanged; only color + gradient values retone (see hex sweep below)
 components/marketing/modules/*                      # light visual sweep only
 ```
 
@@ -338,7 +338,7 @@ Idempotent insertions sufficient to make screenshots look populated:
 - Marks for 2 internal exams across 3 subjects
 - A handful of leave requests (pending + approved)
 
-The script either runs against the backend's HTTP API using a service token, or wraps `gorm` directly via a small Go entrypoint — implementation detail for the plan, not the spec. Output is logged so it is clear what was inserted.
+The script is a Node/TypeScript file in the frontend repo that authenticates against the backend HTTP API as the seeded admin and POSTs the fixture rows through the public endpoints. It is idempotent — re-running does not produce duplicates. Output is logged so it is clear what was inserted.
 
 ### What `scripts/capture-marketing-screenshots.ts` does
 
@@ -387,7 +387,7 @@ The plan builder will turn this into discrete tasks. Suggested sequencing:
 | Screenshots go stale as dashboards evolve. | `pnpm screenshots:marketing` is one command and idempotent. Add to README; revisit later for CI automation. |
 | Demo seed conflicts with real data on a developer's local DB. | Seed script is idempotent and namespaces fixture rows (e.g., `email LIKE '%@demo.stepelly.app'`); `--reset` flag deletes only fixture-namespaced rows. |
 | Visitor's OS dark-mode bleeds into marketing pages. | `MarketingShell` strips any `dark` class from `<html>` while mounted; CSS for marketing-specific surfaces uses literal hex, not dark-mode-conditional tokens. |
-| Page weight balloons from screenshots. | All screenshots use `next/image`; hero gets `priority`, others lazy-load. Target homepage transfer < 250 KB excluding screenshots, screenshots themselves < 200 KB each after WebP conversion (a `convert.sh` step in the capture script). |
+| Page weight balloons from screenshots. | All screenshots use `next/image`, which serves modern formats (AVIF/WebP) automatically — sources stay as PNG. Hero gets `priority`, others lazy-load. Soft target: each screenshot below 250 KB after `next/image` optimization. |
 | `gsap`/`lenis` stay as deps even though only Lenis is used. | Acceptable — `gsap` is used elsewhere in the codebase. No bundle-size change for `/`. |
 
 ---
