@@ -29,3 +29,33 @@ func TestParseIgnoresJunk(t *testing.T) {
 		t.Fatalf("unexpected parse: %+v", v)
 	}
 }
+
+func TestLatestPicksTheHighestRelease(t *testing.T) {
+	tags := []string{"v1.0.0", "v1.2.0", "v1.10.0", "v1.3.0", "nightly", "stable"}
+	if got := Latest(tags, false); got != "v1.10.0" {
+		t.Errorf("Latest = %q, want v1.10.0 (10 > 3 numerically, not alphabetically)", got)
+	}
+}
+
+func TestLatestSkipsPrereleasesUnlessAsked(t *testing.T) {
+	tags := []string{"v1.0.0", "v2.0.0-rc1"}
+	if got := Latest(tags, false); got != "v1.0.0" {
+		t.Errorf("Latest = %q, a customer machine must not jump onto a prerelease", got)
+	}
+	if got := Latest(tags, true); got != "v2.0.0-rc1" {
+		t.Errorf("Latest(allowPre) = %q", got)
+	}
+}
+
+func TestLooksRejectsNonVersionTags(t *testing.T) {
+	for _, tag := range []string{"nightly", "latest", "release", ""} {
+		if Looks(tag) {
+			t.Errorf("Looks(%q) should be false", tag)
+		}
+	}
+	for _, tag := range []string{"v1.0.0", "2.1", "0.0.1-beta"} {
+		if !Looks(tag) {
+			t.Errorf("Looks(%q) should be true", tag)
+		}
+	}
+}

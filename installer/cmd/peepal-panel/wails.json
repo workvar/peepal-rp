@@ -1,0 +1,16 @@
+{
+  "$schema": "https://wails.io/schemas/config.v2.json",
+  "name": "peepal-panel",
+  "outputfilename": "peepal-panel",
+  "frontend:dir": "frontend",
+  "frontend:build": "",
+  "frontend:install": "",
+  "wailsjsdir": "./frontend",
+  "author": {
+    "name": "Peepal"
+  },
+  "info": {
+    "productName": "Peepal Control Panel",
+    "comments": "Installs, supervises and monitors the application described by app.yml"
+  }
+}

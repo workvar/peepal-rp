@@ -68,3 +68,29 @@ func sign(n int) int {
 	}
 	return 1
 }
+
+// Latest returns the highest tag in a list, ignoring anything that does not
+// look like a version. Prereleases are skipped unless allowPre is true, so a
+// customer machine never jumps onto v2.0.0-rc1 by accident.
+func Latest(tags []string, allowPre bool) string {
+	best := ""
+	for _, t := range tags {
+		if !Looks(t) {
+			continue
+		}
+		if !allowPre && Parse(t).IsPre() {
+			continue
+		}
+		if best == "" || Newer(t, best) {
+			best = t
+		}
+	}
+	return best
+}
+
+// Looks reports whether a tag is version-shaped: an optional "v" and then a
+// digit. Tags like "nightly" or "stable" are deliberately not releases.
+func Looks(tag string) bool {
+	s := strings.TrimPrefix(strings.TrimSpace(tag), "v")
+	return s != "" && s[0] >= '0' && s[0] <= '9'
+}

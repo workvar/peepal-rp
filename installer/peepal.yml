@@ -1,0 +1,184 @@
+# Peepal / CollERP — control panel definition.
+#
+# This one file is everything the panel knows about the product. Point it at
+# different repositories, build commands and services and the same panel
+# installs and monitors a different application.
+#
+# The repository is private, so the panel authenticates with a token: see
+# auth: below and PANEL.md. Nothing else needs filling in except the hub
+# address, if the developer is running one (cmd/peepal-hub).
+
+app:
+  name: peepal
+  display_name: Peepal ERP
+  description: Educational institute ERP — employees, students, attendance, marks and approvals.
+  vendor: Peepal
+  # Unix service account; created by the installer, used for every child
+  # process. PostgreSQL refuses to run as root.
+  service_user: peepal
+
+# Prerequisites. Missing ones are installed with the platform's package
+# manager (winget/choco on Windows, apt/dnf/pacman on Linux, brew on macOS),
+# falling back to the vendors' own archives under <root>/runtime.
+toolchain:
+  - name: git
+    min_version: "2.30"
+  - name: go
+    min_version: "1.22"
+  - name: node
+    command: node
+    min_version: "20.0"
+  - name: npm
+    command: npm
+    optional: true
+
+repos:
+  - name: app
+    url: https://github.com/workvar/peepal-rp.git
+    branch: main
+    dir: peepal-rp
+    primary: true
+
+# The repository is private. The panel sends an Authorization header on each
+# git invocation rather than writing the token into the remote URL, so the
+# credential never lands in .git/config, in `git remote -v` or in a log line.
+#
+# The token can arrive three ways, highest precedence first:
+#   1. typed into the Repository step of the wizard;
+#   2. the environment variable named below, for a scripted install;
+#   3. compiled into the panel at build time, so the customer double-clicks
+#      an installer that already has read access:
+#      go build -ldflags "-X github.com/peepal/installer/internal/setup.BuiltInToken=github_pat_..."
+#
+# Use a fine-grained PAT scoped to this repository with Contents: read and
+# nothing else. Treat a build that embeds one as a secret and rotate it when
+# a customer relationship ends. For an SSH deploy key instead, change the URL
+# to git@github.com:workvar/peepal-rp.git and set method: ssh.
+auth:
+  method: token
+  token: ""
+  token_env: PEEPAL_REPO_TOKEN
+  prompt: true
+  user: x-access-token
+
+database:
+  engine: postgres
+  name: peepal
+  user: peepal
+  port: 5433
+  url_var: DB_PATH
+  allow_cloud: true
+
+routing:
+  mode: local
+  http_port: 80
+  public_url_var: NEXT_PUBLIC_APP_URL
+  # Deliberately unset in local mode: a cookie domain of "localhost" breaks
+  # the login cookie on the machine itself.
+  cookie_domain_var: COOKIE_DOMAIN
+
+# Every entry here is written into the generated .env files, so an operator
+# sees the whole configuration in one place. Secrets without a value are
+# generated once and reused across updates.
+env:
+  - key: JWT_SECRET
+    secret: true
+    secret_bytes: 32
+    target: backend
+    comment: Signs login tokens. Changing it logs everyone out.
+  - key: PORT
+    value: "3001"
+    target: backend
+  - key: ENVIRONMENT
+    value: production
+    target: backend
+  - key: UPLOAD_DIR
+    value: "{{.Uploads}}"
+    target: backend
+    comment: Kept outside the source tree so a rebuild never deletes uploads.
+  - key: ADMIN_EMAIL
+    prompt: Administrator email
+    value: admin@college.edu
+    target: backend
+  - key: ADMIN_PASSWORD
+    prompt: Administrator password
+    secret: true
+    target: backend
+    comment: Used once, to seed the first login.
+  - key: NODE_ENV
+    value: production
+    target: frontend
+  - key: NEXT_PUBLIC_API_URL
+    value: http://127.0.0.1:3001
+    target: frontend
+    comment: Server-side only; the browser bundle calls /api/v1 through the front door.
+
+build:
+  - name: Backend dependencies
+    repo: app
+    dir: backend
+    run: go mod download
+    timeout_minutes: 15
+  - name: Compile the backend
+    repo: app
+    dir: backend
+    run: go build -o peepal-backend{{.Exe}} .
+    timeout_minutes: 20
+    env:
+      CGO_ENABLED: "0"
+  - name: Frontend dependencies
+    repo: app
+    dir: frontend
+    run: npm ci --no-audit --no-fund
+    timeout_minutes: 25
+  - name: Build the frontend
+    repo: app
+    dir: frontend
+    run: npm run build
+    timeout_minutes: 30
+
+services:
+  - name: backend
+    repo: app
+    dir: backend
+    run: "{{.Src}}/peepal-rp/backend/peepal-backend{{.Exe}}"
+    port: 3001
+    port_var: PORT
+    health: /health
+    routes: ["/api/"]
+    migrate: "{{.Src}}/peepal-rp/backend/peepal-backend{{.Exe}} --migrate"
+  - name: frontend
+    repo: app
+    dir: frontend
+    run: npm run start
+    port: 3000
+    port_var: PORT
+    routes: ["/"]
+
+updates:
+  enabled: true
+  strategy: git
+  check_every_minutes: 60
+  # release: only a newer semver tag ships. A commit pushed to main reaches
+  # customers when it is tagged, not before. Use "branch" for a staging box
+  # that should follow every commit, or "prerelease" to include v2.0.0-rc1.
+  track: release
+  # Equal hours mean "any time"; 2 and 5 would restrict installs to 02:00-05:00.
+  window_start_hour: 0
+  window_end_hour: 0
+  auto_apply: true
+
+monitoring:
+  enabled: false
+  hub_url: ""
+  token: ""
+  heartbeat_seconds: 60
+  ship_logs: false
+  remote_control: true
+  # exec is off by default. The allow-list is the entire security boundary:
+  # anything listed here can be run by whoever controls the hub.
+  allow_exec: false
+  exec_allow:
+    - "git status"
+    - "df -h"
+    - "systemctl status peepal"
