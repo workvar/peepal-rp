@@ -1,14 +1,14 @@
-# StepElly Postman Collection — Design Spec
+# Peepal Postman Collection — Design Spec
 
 **Date:** 2026-04-19  
 **Status:** Approved  
-**Scope:** Complete Postman collection for all REST and GraphQL APIs in the StepElly backend.
+**Scope:** Complete Postman collection for all REST and GraphQL APIs in the Peepal backend.
 
 ---
 
 ## 1. Overview
 
-A single Postman Collection v2.1 JSON file covering ~180 requests across all StepElly API surfaces, accompanied by three environment files for different user roles. The collection is a static, importable artifact committed to the repo under `postman/`.
+A single Postman Collection v2.1 JSON file covering ~180 requests across all Peepal API surfaces, accompanied by three environment files for different user roles. The collection is a static, importable artifact committed to the repo under `postman/`.
 
 ---
 
@@ -17,9 +17,9 @@ A single Postman Collection v2.1 JSON file covering ~180 requests across all Ste
 ```
 postman/
   CollERP.postman_collection.json        ← single importable collection (~180 requests)
-  StepElly.super_admin.postman_env.json   ← super_admin credentials + baseUrl
-  StepElly.admin.postman_env.json         ← tenant admin credentials + baseUrl
-  StepElly.student.postman_env.json       ← student credentials + baseUrl
+  Peepal.super_admin.postman_env.json   ← super_admin credentials + baseUrl
+  Peepal.admin.postman_env.json         ← tenant admin credentials + baseUrl
+  Peepal.student.postman_env.json       ← student credentials + baseUrl
 ```
 
 ---
@@ -83,7 +83,7 @@ Runs before every request. Logic:
 ## 5. Collection Structure
 
 ```
-StepElly API
+Peepal API
 ├── REST
 │   ├── Auth
 │   │   ├── POST   Login
@@ -499,5 +499,5 @@ The `REST > Auth > Login` request does **not** use the collection-level pre-requ
 
 - Newman CI integration script (separate task)
 - Mock server setup
-- OAuth2 flows (StepElly uses JWT bearer only)
+- OAuth2 flows (Peepal uses JWT bearer only)
 - WebSocket or SSE endpoints

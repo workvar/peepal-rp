@@ -563,7 +563,7 @@ export default function BrowserFrame({
   width = 1280,
   height = 800,
 }: BrowserFrameProps) {
-  const displayUrl = url ?? "stepelly.app";
+  const displayUrl = url ?? "peepal.app";
 
   return (
     <motion.div
@@ -738,24 +738,24 @@ git commit -m "build: add playwright + tsx for screenshot pipeline"
 
 - [ ] **Step 1: Create the seeder**
 
-This script logs in as the seeded admin, then idempotently POSTs fixture students/employees/attendance/leaves/payroll using the public API. It namespaces fixture rows with `email LIKE '%@demo.stepelly.app'` so it can be re-run safely.
+This script logs in as the seeded admin, then idempotently POSTs fixture students/employees/attendance/leaves/payroll using the public API. It namespaces fixture rows with `email LIKE '%@demo.peepal.app'` so it can be re-run safely.
 
 ```ts
 /**
  * Demo-data seeder for marketing screenshots.
  * Idempotent — safe to re-run. Inserts fixture rows that all live under
- * the @demo.stepelly.app email namespace so they can be cleaned out via
+ * the @demo.peepal.app email namespace so they can be cleaned out via
  *   pnpm seed:demo -- --reset
  */
 import axios from "axios";
 
-const API_BASE = process.env.STEPELLY_API_BASE ?? "http://localhost:8080/api";
-const ADMIN_EMAIL = process.env.STEPELLY_ADMIN_EMAIL ?? "admin@college.edu";
-const ADMIN_PASSWORD = process.env.STEPELLY_ADMIN_PASSWORD ?? "Admin@123";
+const API_BASE = process.env.PEEPAL_API_BASE ?? "http://localhost:8080/api";
+const ADMIN_EMAIL = process.env.PEEPAL_ADMIN_EMAIL ?? "admin@college.edu";
+const ADMIN_PASSWORD = process.env.PEEPAL_ADMIN_PASSWORD ?? "Admin@123";
 
 const RESET = process.argv.includes("--reset");
 
-const DEMO_DOMAIN = "demo.stepelly.app";
+const DEMO_DOMAIN = "demo.peepal.app";
 
 const STUDENTS = Array.from({ length: 30 }, (_, i) => ({
   email: `student${i + 1}@${DEMO_DOMAIN}`,
@@ -904,9 +904,9 @@ import { chromium } from "playwright";
 import * as path from "path";
 import * as fs from "fs";
 
-const BASE = process.env.STEPELLY_DEV_URL ?? "http://localhost:3000";
-const ADMIN_EMAIL = process.env.STEPELLY_ADMIN_EMAIL ?? "admin@college.edu";
-const ADMIN_PASSWORD = process.env.STEPELLY_ADMIN_PASSWORD ?? "Admin@123";
+const BASE = process.env.PEEPAL_DEV_URL ?? "http://localhost:3000";
+const ADMIN_EMAIL = process.env.PEEPAL_ADMIN_EMAIL ?? "admin@college.edu";
+const ADMIN_PASSWORD = process.env.PEEPAL_ADMIN_PASSWORD ?? "Admin@123";
 const OUT_DIR = path.resolve(__dirname, "../public/marketing/screenshots");
 
 interface Target {
@@ -1024,7 +1024,7 @@ pnpm screenshots:marketing
 
 Outputs land in `public/marketing/screenshots/`. Commit the PNGs after re-running.
 
-The seeder uses the `@demo.stepelly.app` email namespace so fixture rows are easy to identify; pass `--reset` to log which rows would be removed.
+The seeder uses the `@demo.peepal.app` email namespace so fixture rows are easy to identify; pass `--reset` to log which rows would be removed.
 ```
 
 - [ ] **Step 2: Commit**
@@ -1057,7 +1057,7 @@ export default function Manifesto() {
         <Reveal>
           <p className="font-sans text-3xl font-semibold leading-[1.25] tracking-[-0.005em] text-[#0a0a09] md:text-[44px] md:leading-[1.18]">
             Most institutes run on six tools and a thousand spreadsheets.{" "}
-            <span className="text-[#1f5d36]">StepElly replaces all of them</span>{" "}
+            <span className="text-[#1f5d36]">Peepal replaces all of them</span>{" "}
             with a single workspace where attendance, payroll, marks, leaves and
             reports finally talk to each other — and to you.
           </p>
@@ -1278,7 +1278,7 @@ export default function Hero() {
         {/* Copy */}
         <div>
           <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-[#1f5d36]">
-            StepElly · ERP for institutes
+            Peepal · ERP for institutes
           </p>
           <h1 className="mt-5 text-5xl font-extrabold leading-[1.04] tracking-[-0.025em] text-[#0a0a09] md:text-display-2">
             Run every team.{" "}
@@ -1286,7 +1286,7 @@ export default function Hero() {
             workflow.
           </h1>
           <p className="mt-7 max-w-xl text-[17px] leading-[1.6] text-[#3a3a37] md:text-[19px]">
-            StepElly is one workspace for everything an institute runs — students,
+            Peepal is one workspace for everything an institute runs — students,
             staff, attendance, marks, leaves, payroll and fees, with reports built in.
           </p>
 
@@ -1308,8 +1308,8 @@ export default function Hero() {
         <div className="relative">
           <BrowserFrame
             src="/marketing/screenshots/dashboard.png"
-            alt="StepElly dashboard — KPI summary, recent activity and charts"
-            url="stepelly.app/dashboard"
+            alt="Peepal dashboard — KPI summary, recent activity and charts"
+            url="peepal.app/dashboard"
             tilt={-1}
             shadow="lg"
             priority
@@ -1378,7 +1378,7 @@ export default function ITPanel() {
         </Reveal>
         <Reveal delay={0.1}>
           <p className="mt-6 max-w-2xl text-[17px] leading-[1.6] text-[#a1a1aa]">
-            StepElly is multi-tenant, role-based and audit-friendly — so the team
+            Peepal is multi-tenant, role-based and audit-friendly — so the team
             running the institute can sleep at night.
           </p>
         </Reveal>
@@ -1538,8 +1538,8 @@ export default function LandingPage() {
           "Bridges to payroll for staff attendance",
         ]}
         screenshotSrc="/marketing/screenshots/attendance.png"
-        screenshotAlt="StepElly attendance — bulk-mark UI for a class"
-        screenshotUrl="stepelly.app/attendance"
+        screenshotAlt="Peepal attendance — bulk-mark UI for a class"
+        screenshotUrl="peepal.app/attendance"
       />
       <ModuleDeepDive
         side="left"
@@ -1552,8 +1552,8 @@ export default function LandingPage() {
           "Attendance, leaves and overtime, factored automatically",
         ]}
         screenshotSrc="/marketing/screenshots/payroll.png"
-        screenshotAlt="StepElly payroll — payrun list with detail drawer"
-        screenshotUrl="stepelly.app/payroll"
+        screenshotAlt="Peepal payroll — payrun list with detail drawer"
+        screenshotUrl="peepal.app/payroll"
       />
       <ModuleDeepDive
         side="right"
@@ -1566,8 +1566,8 @@ export default function LandingPage() {
           "CSV / PDF on every table, one click",
         ]}
         screenshotSrc="/marketing/screenshots/reports.png"
-        screenshotAlt="StepElly dashboard — KPI tiles and trend charts"
-        screenshotUrl="stepelly.app/reports"
+        screenshotAlt="Peepal dashboard — KPI tiles and trend charts"
+        screenshotUrl="peepal.app/reports"
       />
       <ITPanel />
       <ClosingCTA />
@@ -1807,7 +1807,7 @@ export default function MarketingFooter() {
 
         <div className="mt-12 flex flex-col items-start justify-between gap-3 border-t border-[#e7e7e3] pt-6 md:flex-row md:items-center">
           <p className="text-xs text-[#737370]">
-            © {new Date().getFullYear()} StepElly — Run your institute on one operating system.
+            © {new Date().getFullYear()} Peepal — Run your institute on one operating system.
           </p>
           <p className="text-xs text-[#737370]">
             Crafted for education, operations and finance teams.

@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Peepal ERP — Required System Configuration</title>
+<style>
+@page { size: A4; margin: 12mm 12mm 10mm 12mm; }
+html { font-family: "DejaVu Sans", sans-serif; font-size: 7.6pt; color: #1d2430; line-height: 1.4; }
+body { margin: 0; }
+
+.hdr { background: #0f2f4f; color: #fff; padding: 7mm 8mm 6mm; margin: -12mm -12mm 5mm -12mm; }
+.hdr .kick { font-size: 7pt; letter-spacing: 3px; text-transform: uppercase; color: #7fc4f5; margin: 0 0 4px; }
+.hdr h1 { font-size: 17pt; margin: 0 0 4px; color: #fff; }
+.hdr p { margin: 0; font-size: 8pt; color: #b9d5ea; }
+
+.cols { display: flex; gap: 5mm; }
+.col { flex: 1; }
+
+h2 { font-size: 8.6pt; color: #0f2f4f; margin: 0 0 3px; padding-bottom: 2px; border-bottom: 2px solid #0f2f4f; }
+h2 .n { color: #4a90c4; }
+.blk { margin-bottom: 5mm; }
+
+table { width: 100%; border-collapse: collapse; font-size: 7.4pt; margin-top: 3px; }
+th { background: #e8eef5; color: #0f2f4f; text-align: left; padding: 3px 5px; font-weight: bold; font-size: 7pt; }
+td { padding: 3px 5px; border-bottom: 1px solid #e2e8ef; vertical-align: top; }
+td.k { width: 38%; font-weight: bold; color: #2a4a68; }
+tbody tr:nth-child(even) { background: #f6f9fc; }
+
+code { font-family: "DejaVu Sans Mono", monospace; font-size: 6.8pt; background: #eef2f7; padding: 0 2px; border-radius: 2px; }
+
+.note { border-left: 3px solid #d9822b; background: #fdf4ea; padding: 4px 7px; font-size: 7pt; margin-top: 4px; }
+.note b { color: #0f2f4f; }
+ul { margin: 3px 0 0; padding-left: 13px; }
+li { margin-bottom: 1.5px; }
+
+.foot { margin-top: 4mm; padding-top: 3px; border-top: 1px solid #dfe5ec; font-size: 6.6pt; color: #7c889b; display: flex; justify-content: space-between; }
+</style>
+</head>
+<body>
+
+<div class="hdr">
+  <p class="kick">Peepal ERP · rosERP</p>
+  <h1>Required System Configuration</h1>
+  <p>Minimum viable specification for every environment. All values below are mandatory, not advisory.</p>
+</div>
+
+<div class="cols">
+<div class="col">
+
+  <div class="blk">
+    <h2><span class="n">1.</span> Developer workstation</h2>
+    <table>
+      <tr><td class="k">Operating system</td><td>macOS 12+, Windows 10/11 with WSL2, or Ubuntu 22.04+</td></tr>
+      <tr><td class="k">CPU</td><td>2 cores</td></tr>
+      <tr><td class="k">RAM</td><td>8 GB</td></tr>
+      <tr><td class="k">Free disk</td><td>10 GB</td></tr>
+      <tr><td class="k">Node.js</td><td>18.x LTS</td></tr>
+      <tr><td class="k">Package manager</td><td>pnpm 8+</td></tr>
+      <tr><td class="k">Go</td><td>1.21+</td></tr>
+      <tr><td class="k">Git</td><td>2.40+</td></tr>
+      <tr><td class="k">Browser</td><td>Chromium, Chrome or Edge, current</td></tr>
+      <tr><td class="k">Network</td><td>Outbound HTTPS to source control and the PostgreSQL host</td></tr>
+      <tr><td class="k">Credentials</td><td>Non-production DSN and non-production admin account</td></tr>
+    </table>
+  </div>
+
+  <div class="blk">
+    <h2><span class="n">2.</span> Application host (staging or production)</h2>
+    <table>
+      <tr><td class="k">Operating system</td><td>Ubuntu 22.04 LTS</td></tr>
+      <tr><td class="k">CPU</td><td>2 vCPU</td></tr>
+      <tr><td class="k">RAM</td><td>4 GB</td></tr>
+      <tr><td class="k">Disk</td><td>40 GB SSD</td></tr>
+      <tr><td class="k">Persistent volume</td><td>Durable mount for <code>backend/uploads/</code></td></tr>
+      <tr><td class="k">Node.js</td><td>18.x LTS</td></tr>
+      <tr><td class="k">Go toolchain</td><td>1.21+ (build only)</td></tr>
+      <tr><td class="k">Process manager</td><td>PM2, with <code>pm2 startup</code> and <code>pm2 save</code></td></tr>
+      <tr><td class="k">Reverse proxy</td><td>Nginx or Caddy terminating TLS</td></tr>
+      <tr><td class="k">Frontend port</td><td>3000 (<code>peepal-frontend</code>)</td></tr>
+      <tr><td class="k">API port</td><td>8080 (<code>PORT</code>; <code>.env.example</code> uses 3001 locally)</td></tr>
+      <tr><td class="k">Public ports</td><td>443 only; 80 redirecting to 443</td></tr>
+      <tr><td class="k">DNS</td><td>Wildcard record for tenant subdomains, plus an API hostname</td></tr>
+      <tr><td class="k">Outbound</td><td>HTTPS to the database and the SMTP relay</td></tr>
+    </table>
+  </div>
+
+</div>
+<div class="col">
+
+  <div class="blk">
+    <h2><span class="n">3.</span> Database</h2>
+    <table>
+      <tr><td class="k">Engine</td><td>PostgreSQL 14+</td></tr>
+      <tr><td class="k">Driver</td><td>GORM with pgx</td></tr>
+      <tr><td class="k">Storage</td><td>10 GB</td></tr>
+      <tr><td class="k">Transport</td><td>TLS enforced</td></tr>
+      <tr><td class="k">Access control</td><td>IP allowlist or private networking</td></tr>
+      <tr><td class="k">Backups</td><td>Daily automated snapshots</td></tr>
+      <tr><td class="k">Schema changes</td><td>Only via <code>main.go --migrate</code>, run deliberately</td></tr>
+    </table>
+  </div>
+
+  <div class="blk">
+    <h2><span class="n">4.</span> Required environment variables</h2>
+    <table>
+      <thead><tr><th style="width:38%">Variable</th><th>Requirement</th></tr></thead>
+      <tbody>
+        <tr><td><code>DB_PATH</code></td><td>PostgreSQL DSN</td></tr>
+        <tr><td><code>PORT</code></td><td>API listen port; falls back to 8080</td></tr>
+        <tr><td><code>COOKIE_DOMAIN</code></td><td>Cookie scope. Must be empty on localhost</td></tr>
+        <tr><td>JWT / admin seed secrets</td><td>Unique per environment</td></tr>
+        <tr><td>SMTP settings</td><td>Required for invitations and notifications</td></tr>
+        <tr><td><code>NEXT_PUBLIC_API_URL</code></td><td>Origin of the Go API</td></tr>
+        <tr><td><code>NODE_ENV</code> / <code>PORT</code></td><td><code>production</code> / <code>3000</code> on the host</td></tr>
+      </tbody>
+    </table>
+    <div class="note"><b>Never commit</b> a real <code>.env</code> or <code>.env.local</code>. Inject secrets at the host or through a secret manager.</div>
+  </div>
+
+  <div class="blk">
+    <h2><span class="n">5.</span> End-user device</h2>
+    <table>
+      <tr><td class="k">Browser</td><td>Chrome, Edge, Firefox or Safari, within the last two major versions</td></tr>
+      <tr><td class="k">Screen</td><td>1280 × 720</td></tr>
+      <tr><td class="k">Cookies</td><td>First-party cookies allowed for the Peepal domain</td></tr>
+      <tr><td class="k">JavaScript</td><td>Enabled</td></tr>
+      <tr><td class="k">Network</td><td>Stable broadband, no captive portal</td></tr>
+    </table>
+    <div class="note"><b>Desktop required</b> for dense admin tables and bulk CSV tools. Mobile browsers are supported for everyday modules only.</div>
+  </div>
+
+  <div class="blk">
+    <h2><span class="n">6.</span> Non-negotiable operating rules</h2>
+    <ul>
+      <li>Sessions use the httpOnly cookie <code>peepal_token</code>, valid 24 hours. Cookies must not be stripped by the proxy.</li>
+      <li>The proxy must forward the tenant header and cookies unchanged.</li>
+      <li><code>backend/uploads/</code> must be included in the backup policy alongside the database.</li>
+      <li>Change the seeded administrator credentials before the instance is reachable by anyone else.</li>
+      <li>Login is blocked without an active subscription on the tenant.</li>
+    </ul>
+  </div>
+
+</div>
+</div>
+
+<div class="foot">
+  <span>Peepal ERP · Required System Configuration · v1.0</span>
+  <span>August 2026</span>
+</div>
+
+</body>
+</html>

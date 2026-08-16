@@ -7,7 +7,7 @@
 
 ## Overview
 
-Replace all ~60 REST endpoints in StepElly's Go/Fiber backend with a single `/graphql` endpoint using gqlgen (schema-first, code-generated). Replace the axios-based `api.ts` frontend layer with Apollo Client. Migration is phased in 9 domain batches — REST routes are deleted only after the corresponding frontend batch is verified working.
+Replace all ~60 REST endpoints in Peepal's Go/Fiber backend with a single `/graphql` endpoint using gqlgen (schema-first, code-generated). Replace the axios-based `api.ts` frontend layer with Apollo Client. Migration is phased in 9 domain batches — REST routes are deleted only after the corresponding frontend batch is verified working.
 
 **Primary driver:** Developer ergonomics — every new screen currently requires a new REST route, handler, and TypeScript API wrapper. GraphQL eliminates this. Secondary benefits: fewer sequential fetches on dashboard/list pages (a), and overfetching reduction (b).
 

@@ -1,8 +1,8 @@
 {
   "info": {
     "_postman_id": "6362687c-a291-4b4d-b782-9ca2f2dc7d81",
-    "name": "CollERP API",
-    "description": "Complete Postman collection for the CollERP Educational Institute ERP backend.\n\nCovers every REST and GraphQL endpoint (~183 requests). See postman/CollERP.*.postman_env.json for role-specific environments (super_admin, admin, student). The collection-level pre-request script auto-refreshes `authToken` by hitting `POST /auth/login` whenever the token is missing or expired, so you only need to fill in `loginEmail` / `loginPassword` on the environment.",
+    "name": "Peepal API",
+    "description": "Complete Postman collection for the Peepal Educational Institute ERP backend.\n\nCovers every REST and GraphQL endpoint (~183 requests). See postman/CollERP.*.postman_env.json for role-specific environments (super_admin, admin, student). The collection-level pre-request script auto-refreshes `authToken` by hitting `POST /auth/login` whenever the token is missing or expired, so you only need to fill in `loginEmail` / `loginPassword` on the environment.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "item": [
@@ -741,7 +741,7 @@
                     "description": "Create a new super admin.",
                     "body": {
                       "mode": "raw",
-                      "raw": "{\n  \"name\": \"Backup Admin\",\n  \"email\": \"backup@collerp.io\",\n  \"password\": \"Backup@1234\"\n}",
+                      "raw": "{\n  \"name\": \"Backup Admin\",\n  \"email\": \"backup@peepal.io\",\n  \"password\": \"Backup@1234\"\n}",
                       "options": {
                         "raw": {
                           "language": "json"
@@ -13612,7 +13612,7 @@
       "script": {
         "type": "text/javascript",
         "exec": [
-          "// CollERP auto-auth pre-request script",
+          "// Peepal auto-auth pre-request script",
           "(() => {",
           "  if (pm.info.requestName === 'Login') return;",
           "",
@@ -13638,7 +13638,7 @@
           "  const password = pm.environment.get('loginPassword');",
           "  const baseUrl = pm.environment.get('baseUrl');",
           "  if (!email || !password || !baseUrl) {",
-          "    console.warn('CollERP auto-auth: missing loginEmail/loginPassword/baseUrl');",
+          "    console.warn('Peepal auto-auth: missing loginEmail/loginPassword/baseUrl');",
           "    return;",
           "  }",
           "",

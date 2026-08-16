@@ -1228,7 +1228,7 @@ Read the existing events page (it is a complex calendar view). Replace Redux `ev
 
 - [ ] **Step 1: Read events page**
 
-The existing events page at `frontend/app/[tenant]/(dashboard)/events/page.tsx` is a full calendar component. It was saved to `/Users/yasharyan/.claude/projects/-Users-yasharyan-Documents-Claude-Projects-StepElly/2c3af479-0d57-4689-8ba8-d01aa929f5f7/tool-results/bnt68ielj.txt`. Read that file for the full content.
+The existing events page at `frontend/app/[tenant]/(dashboard)/events/page.tsx` is a full calendar component. It was saved to `/Users/yasharyan/.claude/projects/-Users-yasharyan-Documents-Claude-Projects-Peepal/2c3af479-0d57-4689-8ba8-d01aa929f5f7/tool-results/bnt68ielj.txt`. Read that file for the full content.
 
 - [ ] **Step 2: Replace Redux with Apollo**
 

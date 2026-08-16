@@ -1,0 +1,707 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>CollERP, Architecture Map</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  body { font-family: 'Inter', system-ui, -apple-system, Segoe UI, sans-serif; background: #0b1020; color: #e6e8f0; }
+  .gradient-bg {
+    background:
+      radial-gradient(1200px 600px at 10% -10%, rgba(99,102,241,0.25), transparent 60%),
+      radial-gradient(900px 500px at 90% 0%, rgba(236,72,153,0.18), transparent 60%),
+      radial-gradient(900px 500px at 50% 110%, rgba(20,184,166,0.18), transparent 60%),
+      #0b1020;
+  }
+  .card { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); backdrop-filter: blur(6px); transition: all .25s ease; }
+  .card:hover { transform: translateY(-2px); border-color: rgba(255,255,255,0.18); box-shadow: 0 10px 30px rgba(0,0,0,0.35); }
+  .pill { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 9999px; font-size: 11px; font-weight: 600; }
+  .chip { display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 6px; font-size: 11px; font-weight: 500; border: 1px solid rgba(255,255,255,0.10); background: rgba(255,255,255,0.04); }
+  .glow-indigo { box-shadow: 0 0 0 1px rgba(99,102,241,0.45), 0 10px 30px rgba(99,102,241,0.18); }
+  .glow-pink   { box-shadow: 0 0 0 1px rgba(236,72,153,0.45), 0 10px 30px rgba(236,72,153,0.18); }
+  .glow-teal   { box-shadow: 0 0 0 1px rgba(20,184,166,0.45), 0 10px 30px rgba(20,184,166,0.18); }
+  .glow-amber  { box-shadow: 0 0 0 1px rgba(245,158,11,0.45), 0 10px 30px rgba(245,158,11,0.18); }
+  .glow-violet { box-shadow: 0 0 0 1px rgba(139,92,246,0.45), 0 10px 30px rgba(139,92,246,0.18); }
+  .row-arrow { position: relative; }
+  .row-arrow::after {
+    content: ""; position: absolute; left: 50%; bottom: -22px;
+    width: 2px; height: 22px; background: linear-gradient(180deg, rgba(255,255,255,0.4), rgba(255,255,255,0));
+  }
+  .node { cursor: pointer; }
+  .node[aria-expanded="true"] .chev { transform: rotate(180deg); }
+  .chev { transition: transform .2s ease; }
+  .detail { max-height: 0; overflow: hidden; transition: max-height .35s ease, opacity .25s ease; opacity: 0; }
+  .detail.open { max-height: 800px; opacity: 1; }
+  .legend-dot { width: 10px; height: 10px; border-radius: 9999px; display: inline-block; }
+  .pan-wrap { overflow: auto; }
+  .zoomable { transform-origin: 0 0; transition: transform .2s ease; }
+  .topo-line { stroke: rgba(255,255,255,0.18); stroke-dasharray: 4 4; }
+  details > summary { list-style: none; cursor: pointer; }
+  details > summary::-webkit-details-marker { display: none; }
+  .module-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
+  .endpoint { font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 11.5px; }
+  .verb-GET    { color: #34d399; }
+  .verb-POST   { color: #60a5fa; }
+  .verb-PUT    { color: #fbbf24; }
+  .verb-PATCH  { color: #f472b6; }
+  .verb-DELETE { color: #f87171; }
+  .verb-GQL    { color: #c084fc; }
+  kbd { background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12); border-radius: 6px; padding: 1px 6px; font-size: 11px; }
+</style>
+</head>
+<body class="gradient-bg min-h-screen">
+<div class="max-w-7xl mx-auto px-6 py-8">
+
+  <!-- HERO -->
+  <header class="flex items-start justify-between gap-6 mb-8">
+    <div>
+      <div class="flex items-center gap-3 mb-2">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-pink-500 flex items-center justify-center font-black">C</div>
+        <h1 class="text-3xl font-extrabold tracking-tight">CollERP, Architecture Map</h1>
+      </div>
+      <p class="text-slate-300 max-w-3xl">A multi-tenant ERP serving education, corporate, healthcare, and nonprofit verticals. Go Fiber + GORM + PostgreSQL on the back, Next.js 14 + Apollo + Redux Toolkit on the front, with a tenant-aware terminology layer and a generic approval engine.</p>
+    </div>
+    <div class="flex items-center gap-2 shrink-0">
+      <button id="zoom-out" class="px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10">,</button>
+      <span id="zoom-label" class="text-xs text-slate-400 w-12 text-center">100%</span>
+      <button id="zoom-in" class="px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10">+</button>
+      <button id="expand-all" class="ml-2 px-3 py-1.5 rounded-lg bg-indigo-500/20 hover:bg-indigo-500/30 border border-indigo-400/30 text-indigo-200 text-xs font-semibold">Expand all</button>
+      <button id="collapse-all" class="px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-xs">Collapse</button>
+    </div>
+  </header>
+
+  <!-- LEGEND -->
+  <div class="card rounded-xl p-3 mb-6 flex flex-wrap gap-4 text-xs text-slate-300">
+    <span class="flex items-center gap-2"><span class="legend-dot" style="background:#818cf8"></span>Frontend (Next.js)</span>
+    <span class="flex items-center gap-2"><span class="legend-dot" style="background:#f472b6"></span>API layer (REST + GraphQL)</span>
+    <span class="flex items-center gap-2"><span class="legend-dot" style="background:#2dd4bf"></span>Backend (Go Fiber)</span>
+    <span class="flex items-center gap-2"><span class="legend-dot" style="background:#fbbf24"></span>Database / Storage</span>
+    <span class="flex items-center gap-2"><span class="legend-dot" style="background:#a78bfa"></span>Cross-cutting (auth, tenant, terminology)</span>
+    <span class="ml-auto text-slate-400">Click any card to expand. Use <kbd>+</kbd> / <kbd>,</kbd> to zoom.</span>
+  </div>
+
+  <div id="canvas" class="pan-wrap">
+  <div class="zoomable" id="zoomable">
+
+  <!-- ROW 1, CLIENT -->
+  <section class="mb-10 row-arrow">
+    <h2 class="text-sm uppercase tracking-widest text-slate-400 mb-3">Clients</h2>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div class="card glow-indigo rounded-2xl p-5 node" data-target="d-browser">
+        <div class="flex items-start justify-between">
+          <div>
+            <div class="text-xs text-indigo-300 font-semibold mb-1">Browser SPA</div>
+            <h3 class="text-lg font-bold">Tenant users</h3>
+            <p class="text-slate-300 text-sm mt-1">admin / teacher / student / staff log in at <span class="endpoint">/[tenant]/login</span>. JWT + tenantId persisted in localStorage.</p>
+          </div>
+          <span class="chev text-slate-400">v</span>
+        </div>
+        <div class="detail" id="d-browser">
+          <div class="mt-3 pt-3 border-t border-white/5 text-xs text-slate-300 space-y-1">
+            <div>Route group: <span class="endpoint text-slate-200">app/[tenant]/(dashboard)/*</span></div>
+            <div>Auth pages: <span class="endpoint text-slate-200">app/login</span>, <span class="endpoint text-slate-200">app/[tenant]/login</span></div>
+            <div>Storage: <span class="endpoint text-slate-200">token</span>, <span class="endpoint text-slate-200">tenantId</span> (localStorage)</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card glow-pink rounded-2xl p-5 node" data-target="d-super">
+        <div class="flex items-start justify-between">
+          <div>
+            <div class="text-xs text-pink-300 font-semibold mb-1">Super Admin Console</div>
+            <h3 class="text-lg font-bold">Platform operator</h3>
+            <p class="text-slate-300 text-sm mt-1">Manages tenants, plans, subscriptions, can impersonate.</p>
+          </div>
+          <span class="chev text-slate-400">v</span>
+        </div>
+        <div class="detail" id="d-super">
+          <div class="mt-3 pt-3 border-t border-white/5 text-xs text-slate-300 space-y-1">
+            <div>Route group: <span class="endpoint text-slate-200">app/(super-admin)/super/*</span></div>
+            <div>Login: <span class="endpoint text-slate-200">app/super/login</span></div>
+            <div>Belongs to platform tenant <span class="endpoint text-slate-200">00000000-0000-0000-0000-000000000001</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card glow-violet rounded-2xl p-5 node" data-target="d-public">
+        <div class="flex items-start justify-between">
+          <div>
+            <div class="text-xs text-violet-300 font-semibold mb-1">Public / Marketing</div>
+            <h3 class="text-lg font-bold">Unauthenticated visitors</h3>
+            <p class="text-slate-300 text-sm mt-1">Landing, modules pages, about, privacy, terms. 401s do not redirect here.</p>
+          </div>
+          <span class="chev text-slate-400">v</span>
+        </div>
+        <div class="detail" id="d-public">
+          <div class="mt-3 pt-3 border-t border-white/5 text-xs text-slate-300 space-y-1">
+            <div>Pages: <span class="endpoint text-slate-200">app/page.tsx</span>, <span class="endpoint text-slate-200">app/modules/*</span>, <span class="endpoint text-slate-200">app/about</span>, <span class="endpoint text-slate-200">app/privacy</span>, <span class="endpoint text-slate-200">app/terms</span></div>
+            <div>Public path guard in <span class="endpoint text-slate-200">api/client.ts</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ROW 2, FRONTEND -->
+  <section class="mb-10 row-arrow">
+    <h2 class="text-sm uppercase tracking-widest text-slate-400 mb-3">Frontend, Next.js 14 (App Router)</h2>
+    <div class="grid grid-cols-1 md:grid-cols-12 gap-4">
+
+      <div class="card rounded-2xl p-5 md:col-span-4 node" data-target="d-fe-pages">
+        <div class="flex items-start justify-between">
+          <div>
+            <div class="text-xs text-indigo-300 font-semibold mb-1">App Router pages</div>
+            <h3 class="text-lg font-bold">Routes & layouts</h3>
+            <p class="text-slate-300 text-sm mt-1">Three route groups, super admin, tenant dashboard, and public marketing.</p>
+          </div>
+          <span class="chev text-slate-400">v</span>
+        </div>
+        <div class="detail" id="d-fe-pages">
+          <div class="mt-3 pt-3 border-t border-white/5 text-xs text-slate-300 grid grid-cols-2 gap-1">
+            <span class="chip">dashboard</span><span class="chip">employees</span><span class="chip">students</span><span class="chip">attendance</span>
+            <span class="chip">marks</span><span class="chip">leaves</span><span class="chip">leave-types</span><span class="chip">payroll</span>
+            <span class="chip">salary-templates</span><span class="chip">salary-assignments</span><span class="chip">fees</span><span class="chip">timetable</span>
+            <span class="chip">events</span><span class="chip">calendar</span><span class="chip">hostel</span><span class="chip">transport</span>
+            <span class="chip">library</span><span class="chip">announcements</span><span class="chip">notifications</span><span class="chip">reports</span>
+            <span class="chip">results</span><span class="chip">learning</span><span class="chip">approval-flows</span><span class="chip">my-approvals</span>
+            <span class="chip">organization-structure</span><span class="chip">org/*</span><span class="chip">docs</span><span class="chip">portal</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="card rounded-2xl p-5 md:col-span-4 node" data-target="d-fe-state">
+        <div class="flex items-start justify-between">
+          <div>
+            <div class="text-xs text-violet-300 font-semibold mb-1">State, Redux Toolkit</div>
+            <h3 class="text-lg font-bold">Slices</h3>
+            <p class="text-slate-300 text-sm mt-1">Slim global store. Most CRUD migrated to Apollo cache; slices keep cross-page state.</p>
+          </div>
+          <span class="chev text-slate-400">v</span>
+        </div>
+        <div class="detail" id="d-fe-state">
+          <div class="mt-3 pt-3 border-t border-white/5 text-xs text-slate-300 grid grid-cols-2 gap-1">
+            <span class="chip">auth</span><span class="chip">tenant</span><span class="chip">org</span><span class="chip">holiday</span>
+            <span class="chip">calendar</span><span class="chip">notification</span><span class="chip">report</span><span class="chip">subscription</span>
+            <span class="chip">timetable</span><span class="chip">hostel</span><span class="chip">transport</span><span class="chip">library</span>
+            <span class="chip">terminology</span>
+          </div>
+          <p class="mt-2 text-slate-400">Hooks: <span class="endpoint">useAppDispatch</span>, <span class="endpoint">useAppSelector</span>, <span class="endpoint">useTerminology</span>.</p>
+        </div>
+      </div>
+
+      <div class="card rounded-2xl p-5 md:col-span-4 node" data-target="d-fe-data">
+        <div class="flex items-start justify-between">
+          <div>
+            <div class="text-xs text-pink-300 font-semibold mb-1">Data fetching</div>
+            <h3 class="text-lg font-bold">Apollo + Axios</h3>
+            <p class="text-slate-300 text-sm mt-1">Apollo for most CRUD via <span class="endpoint">/graphql</span>. Axios for REST (auth, uploads, exports, bulk, calendar settings).</p>
+          </div>
+          <span class="chev text-slate-400">v</span>
+        </div>
+        <div class="detail" id="d-fe-data">
+          <div class="mt-3 pt-3 border-t border-white/5 text-xs text-slate-300 space-y-1">
+            <div><b>Apollo client:</b> <span class="endpoint">lib/apollo.ts</span>, sets <span class="endpoint">Authorization</span> + <span class="endpoint">X-Tenant-ID</span> on every request.</div>
+            <div><b>Axios client:</b> <span class="endpoint">api/client.ts</span>, interceptors handle token + tenant headers, public-page 401 guard.</div>
+            <div><b>Service modules:</b> <span class="endpoint">api/services/{auth, bulk, campus, communications, finance, operations, org, people, reports, superAdmin, terminology, organization, approvals, uploads}.ts</span></div>
+            <div><b>GraphQL ops:</b> <span class="endpoint">graphql/queries/*</span>, <span class="endpoint">graphql/mutations/*</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card rounded-2xl p-5 md:col-span-6 node" data-target="d-fe-components">
+        <div class="flex items-start justify-between">
+          <div>
+            <div class="text-xs text-teal-300 font-semibold mb-1">UI</div>
+            <h3 class="text-lg font-bold">Components</h3>
+            <p class="text-slate-300 text-sm mt-1">Per-page components colocated in <span class="endpoint">components/pages/[route]/Page.tsx</span> with sub-pieces in the same folder. Shared UI in <span class="endpoint">components/ui/*</span>, chrome in <span class="endpoint">components/layout/*</span>.</p>
+          </div>
+          <span class="chev text-slate-400">v</span>
+        </div>
+        <div class="detail" id="d-fe-components">
+          <div class="mt-3 pt-3 border-t border-white/5 text-xs text-slate-300 grid grid-cols-3 gap-1">
+            <span class="chip">ui/button</span><span class="chip">ui/card</span><span class="chip">ui/Modal</span>
+            <span class="chip">ui/PhotoUpload</span><span class="chip">ui/BulkUpload/*</span><span class="chip">ui/skeletons/*</span>
+            <span class="chip">layout/Header</span><span class="chip">layout/TopBar</span><span class="chip">layout/UserMenu</span>
+            <span class="chip">layout/NotificationBell</span><span class="chip">layout/ModuleSwitcher</span><span class="chip">layout/GridMenu</span>
+            <span class="chip">onboarding/OnboardingTour</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="card rounded-2xl p-5 md:col-span-6 node" data-target="d-fe-lib">
+        <div class="flex items-start justify-between">
+          <div>
+            <div class="text-xs text-amber-300 font-semibold mb-1">lib/</div>
+            <h3 class="text-lg font-bold">Cross-cutting helpers</h3>
+            <p class="text-slate-300 text-sm mt-1">Module config, analytics (gtag + registry), marketing copy, shared utils.</p>
+          </div>
+          <span class="chev text-slate-400">v</span>
+        </div>
+        <div class="detail" id="d-fe-lib">
+          <div class="mt-3 pt-3 border-t border-white/5 text-xs text-slate-300 space-y-1">
+            <div><span class="endpoint">lib/moduleConfig.ts</span>, sidebar / nav module registry</div>
+            <div><span class="endpoint">lib/analytics/*</span>, GA event registry + hooks</div>
+            <div><span class="endpoint">lib/marketing/modules.ts</span>, public site module copy</div>
+            <div><span class="endpoint">lib/utils.ts</span>, formatting + classnames</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ROW 3, API SURFACE -->
+  <section class="mb-10 row-arrow">
+    <h2 class="text-sm uppercase tracking-widest text-slate-400 mb-3">API surface</h2>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div class="card glow-pink rounded-2xl p-5 node" data-target="d-rest">
+        <div class="flex items-start justify-between">
+          <div>
+            <div class="text-xs text-pink-300 font-semibold mb-1">REST, Fiber</div>
+            <h3 class="text-lg font-bold">/api/v1/*</h3>
+            <p class="text-slate-300 text-sm mt-1">Registered in <span class="endpoint">backend/routes/routes.go</span>. CORS open, BodyLimit 16 MiB, JWT-protected groups.</p>
+          </div>
+          <span class="chev text-slate-400">v</span>
+        </div>
+        <div class="detail" id="d-rest">
+          <div class="mt-3 pt-3 border-t border-white/5 endpoint text-[11.5px] leading-5 grid grid-cols-1 gap-0.5">
+            <div><span class="verb-POST">POST  </span> /auth/login, /auth/me (GET), /auth/profile (PUT), /auth/password (PUT)</div>
+            <div><span class="verb-GET">GET   </span> /tenants/lookup/:subdomain, /terminology</div>
+            <div><span class="verb-GET">GET   </span> /super/stats, /super/tenants, /super/plans, /super/subscriptions, /super/admins</div>
+            <div><span class="verb-POST">POST  </span> /super/tenants, /super/tenants/:id/impersonate</div>
+            <div><span class="verb-GET">GET   </span> /org/profile, /org/setup-status, /org/subscription</div>
+            <div><span class="verb-GET">GET   </span> /org/departments, /org/academic-years, /org/semesters, /org/roles</div>
+            <div><span class="verb-PUT">PUT   </span> /org/users/:id/manager, /org/users/:id/custom-role</div>
+            <div><span class="verb-GET">GET   </span> /organization/users, /organization/structure</div>
+            <div><span class="verb-GET">GET   </span> /org/approval-flows, /org/approval-process-types</div>
+            <div><span class="verb-POST">POST  </span> /approval-requests, /:id/approve, /:id/reject</div>
+            <div><span class="verb-GET">GET   </span> /students/me, /attendance/{summary,shortage,settings}</div>
+            <div><span class="verb-POST">POST  </span> /attendance/export-csv, /students/bulk-import</div>
+            <div><span class="verb-GET">GET   </span> /holidays, /calendar/{settings,month}</div>
+            <div><span class="verb-POST">POST  </span> /calendar/generate, /calendar/day (PUT)</div>
+            <div><span class="verb-GET">GET   </span> /salary-templates, /salary-assignments, /payroll, /payroll/me, /payroll/summary</div>
+            <div><span class="verb-POST">POST  </span> /payroll/generate, /payroll/:id/pdf (GET)</div>
+            <div><span class="verb-GET">GET   </span> /fee-categories, /fee-structures, /fee-payments{,/me,/dues,/summary}</div>
+            <div><span class="verb-GET">GET   </span> /announcements{,/all}, /notifications{,/unread-count}</div>
+            <div><span class="verb-GET">GET   </span> /reports/{dashboard,attendance,marks,leaves,fees,payroll,charts}</div>
+            <div><span class="verb-GET">GET   </span> /timetable, /events, /hostels/{blocks,rooms,allocations}</div>
+            <div><span class="verb-GET">GET   </span> /transport/{routes,vehicles,allocations}, /library/{books,issues}</div>
+            <div><span class="verb-POST">POST  </span> /learning/video-upload, /uploads/photo</div>
+            <div><span class="verb-GET">GET   </span> /bulk/resources, /:resource/{schema,template,docs}</div>
+            <div><span class="verb-POST">POST  </span> /bulk/:resource/{validate,submit}</div>
+            <div><span class="verb-GET">GET   </span> /uploads/photos/*, /uploads/learning-videos/* (static)</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card glow-violet rounded-2xl p-5 node" data-target="d-gql">
+        <div class="flex items-start justify-between">
+          <div>
+            <div class="text-xs text-violet-300 font-semibold mb-1">GraphQL, gqlgen</div>
+            <h3 class="text-lg font-bold">POST /api/v1/graphql</h3>
+            <p class="text-slate-300 text-sm mt-1">Single endpoint, optional auth (introspection allowed). Playground at GET /graphql in non-prod.</p>
+          </div>
+          <span class="chev text-slate-400">v</span>
+        </div>
+        <div class="detail" id="d-gql">
+          <div class="mt-3 pt-3 border-t border-white/5 endpoint text-[11.5px] leading-5">
+            <div class="verb-GQL font-semibold">Queries</div>
+            <div>employees, employee, departments, users, students, student, courses, subjects, subject</div>
+            <div>academicYears, examSchedules, marks, results, attendance, attendanceSummary, attendanceShortage</div>
+            <div>leaves, leaveTypes, myLeaveBalance, leaveBalances, salaryStructures</div>
+            <div>payrolls, myPayrolls, payrollSummary, publishedResults, resultSummary</div>
+            <div>events, timetable, announcements, notifications</div>
+            <div>learningGoals, learningAssignments, myGoalProgress, quizSubmissions</div>
+            <div class="verb-GQL font-semibold mt-2">Mutations</div>
+            <div>createUser, updateUser, deactivateUser, createEmployee, updateEmployee, deleteEmployee</div>
+            <div>createStudent, updateStudent, deleteStudent, createDepartment</div>
+            <div>createSubject, updateSubject, deleteSubject, createExamSchedule, publishExamSchedule</div>
+            <div>createMark, publishResults, markAttendance, bulkMarkAttendance</div>
+            <div>applyLeave, reviewLeave, createLeaveType, updateLeaveType, deleteLeaveType</div>
+            <div>createLearningGoal, assignGoal, submitQuiz, gradeAssignment</div>
+            <div class="mt-2 text-slate-400">Resolvers split per domain: <span class="endpoint">employees.resolvers.go</span>, <span class="endpoint">students.resolvers.go</span>, <span class="endpoint">academic.resolvers.go</span>, <span class="endpoint">marks.resolvers.go</span>, <span class="endpoint">attendance.resolvers.go</span>, <span class="endpoint">fees.resolvers.go</span>, <span class="endpoint">payroll.resolvers.go</span>, <span class="endpoint">timetable.resolvers.go</span>, <span class="endpoint">comms.resolvers.go</span>, <span class="endpoint">reports.resolvers.go</span>, <span class="endpoint">learning.resolvers.go</span>.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ROW 4, BACKEND CORE -->
+  <section class="mb-10 row-arrow">
+    <h2 class="text-sm uppercase tracking-widest text-slate-400 mb-3">Backend, Go Fiber</h2>
+    <div class="grid grid-cols-1 md:grid-cols-12 gap-4">
+
+      <div class="card glow-teal rounded-2xl p-5 md:col-span-4 node" data-target="d-be-entry">
+        <div class="flex items-start justify-between">
+          <div>
+            <div class="text-xs text-teal-300 font-semibold mb-1">Entry</div>
+            <h3 class="text-lg font-bold">main.go</h3>
+            <p class="text-slate-300 text-sm mt-1">Load config -&gt; connect DB -&gt; AutoMigrate -&gt; seed platform tenant + super admin -&gt; mount middleware -&gt; register routes -&gt; listen on :PORT.</p>
+          </div>
+          <span class="chev text-slate-400">v</span>
+        </div>
+        <div class="detail" id="d-be-entry">
+          <div class="mt-3 pt-3 border-t border-white/5 text-xs text-slate-300 space-y-1">
+            <div>Default port <span class="endpoint">8080</span></div>
+            <div>Global middleware: <span class="endpoint">recover</span>, <span class="endpoint">logger</span>, <span class="endpoint">cors</span> (* origins)</div>
+            <div>Health: <span class="endpoint">GET /health</span></div>
+            <div>One-shot mode: <span class="endpoint">--migrate</span> flag</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card rounded-2xl p-5 md:col-span-4 node" data-target="d-be-mw">
+        <div class="flex items-start justify-between">
+          <div>
+            <div class="text-xs text-violet-300 font-semibold mb-1">middleware/</div>
+            <h3 class="text-lg font-bold">Auth + tenant scope</h3>
+            <p class="text-slate-300 text-sm mt-1">JWT bearer -&gt; locals (userID, tenantID, role, isSuperAdmin). Role gates per route.</p>
+          </div>
+          <span class="chev text-slate-400">v</span>
+        </div>
+        <div class="detail" id="d-be-mw">
+          <div class="mt-3 pt-3 border-t border-white/5 text-xs text-slate-300 space-y-1">
+            <div><span class="endpoint">Authenticate</span>, hard 401 if no/invalid token</div>
+            <div><span class="endpoint">OptionalAuthenticate</span>, used by GraphQL endpoint</div>
+            <div><span class="endpoint">RequireRole(...)</span>, admin / teacher / staff / student gates</div>
+            <div><span class="endpoint">RequireSuperAdmin</span>, platform-tier only</div>
+            <div>Helpers: <span class="endpoint">TenantID</span>, <span class="endpoint">UserID</span>, <span class="endpoint">UserRole</span>, <span class="endpoint">IsSuperAdmin</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card rounded-2xl p-5 md:col-span-4 node" data-target="d-be-utils">
+        <div class="flex items-start justify-between">
+          <div>
+            <div class="text-xs text-amber-300 font-semibold mb-1">utils/</div>
+            <h3 class="text-lg font-bold">Shared primitives</h3>
+            <p class="text-slate-300 text-sm mt-1">JWT, bcrypt, uniform response envelope, payslip PDF, video storage.</p>
+          </div>
+          <span class="chev text-slate-400">v</span>
+        </div>
+        <div class="detail" id="d-be-utils">
+          <div class="mt-3 pt-3 border-t border-white/5 text-xs text-slate-300 space-y-1">
+            <div><span class="endpoint">utils/jwt.go</span>, sign + parse</div>
+            <div><span class="endpoint">utils/password.go</span>, bcrypt hash + verify</div>
+            <div><span class="endpoint">utils/response.go</span>, APIResponse{ success, data, message, error }</div>
+            <div><span class="endpoint">utils/payslip_pdf.go</span>, payroll PDF</div>
+            <div><span class="endpoint">utils/video_storage.go</span>, learning video paths</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card rounded-2xl p-5 md:col-span-6 node" data-target="d-be-handlers">
+        <div class="flex items-start justify-between">
+          <div>
+            <div class="text-xs text-pink-300 font-semibold mb-1">handlers/</div>
+            <h3 class="text-lg font-bold">REST controllers</h3>
+            <p class="text-slate-300 text-sm mt-1">One file per domain. Bulk CSV pipeline lives in <span class="endpoint">handlers/bulk/</span> and is schema-driven.</p>
+          </div>
+          <span class="chev text-slate-400">v</span>
+        </div>
+        <div class="detail" id="d-be-handlers">
+          <div class="mt-3 pt-3 border-t border-white/5 text-xs text-slate-300 grid grid-cols-2 gap-1">
+            <span class="chip">auth</span><span class="chip">users</span><span class="chip">org_admin</span><span class="chip">super_admin</span>
+            <span class="chip">subscriptions</span><span class="chip">academic</span><span class="chip">students</span><span class="chip">employees</span>
+            <span class="chip">attendance</span><span class="chip">attendance_export</span><span class="chip">marks</span><span class="chip">results</span>
+            <span class="chip">leaves</span><span class="chip">leave_types</span><span class="chip">fees</span><span class="chip">salary</span>
+            <span class="chip">approval_engine</span><span class="chip">approval_process_types</span><span class="chip">approval_callbacks</span><span class="chip">org_structure</span>
+            <span class="chip">timetable</span><span class="chip">events</span><span class="chip">holidays</span><span class="chip">calendar</span>
+            <span class="chip">hostel</span><span class="chip">transport</span><span class="chip">library</span><span class="chip">notifications</span>
+            <span class="chip">announcements</span><span class="chip">reports</span><span class="chip">dashboard_charts</span><span class="chip">payslip</span>
+            <span class="chip">terminology</span><span class="chip">user_custom_roles</span><span class="chip">photo_upload</span><span class="chip">learning_video</span>
+            <span class="chip">bulk/handlers</span><span class="chip">bulk/registry</span><span class="chip">bulk/validate</span><span class="chip">bulk/schema_*</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="card rounded-2xl p-5 md:col-span-6 node" data-target="d-be-graph">
+        <div class="flex items-start justify-between">
+          <div>
+            <div class="text-xs text-violet-300 font-semibold mb-1">graph/</div>
+            <h3 class="text-lg font-bold">GraphQL resolvers</h3>
+            <p class="text-slate-300 text-sm mt-1">Schema at <span class="endpoint">graph/schema.graphqls</span>. Resolvers per domain reach into the same GORM models as REST.</p>
+          </div>
+          <span class="chev text-slate-400">v</span>
+        </div>
+        <div class="detail" id="d-be-graph">
+          <div class="mt-3 pt-3 border-t border-white/5 text-xs text-slate-300 grid grid-cols-2 gap-1">
+            <span class="chip">resolver.go</span><span class="chip">schema.resolvers.go</span><span class="chip">employees.resolvers.go</span><span class="chip">students.resolvers.go</span>
+            <span class="chip">academic.resolvers.go</span><span class="chip">marks.resolvers.go</span><span class="chip">attendance.resolvers.go</span><span class="chip">fees.resolvers.go</span>
+            <span class="chip">payroll.resolvers.go</span><span class="chip">timetable.resolvers.go</span><span class="chip">comms.resolvers.go</span><span class="chip">reports.resolvers.go</span>
+            <span class="chip">learning.resolvers.go</span><span class="chip">learning_quiz.resolvers.go</span><span class="chip">auth_context.go</span><span class="chip">helpers.go</span>
+            <span class="chip">errors.go</span><span class="chip">generated.go</span><span class="chip">model/models_gen.go</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="card rounded-2xl p-5 md:col-span-12 node" data-target="d-be-models">
+        <div class="flex items-start justify-between">
+          <div>
+            <div class="text-xs text-amber-300 font-semibold mb-1">models/, GORM</div>
+            <h3 class="text-lg font-bold">Domain entities</h3>
+            <p class="text-slate-300 text-sm mt-1">AutoMigrated on every boot. Every row is tenant-scoped via <span class="endpoint">tenant_id</span>; super admin lives on the fixed platform tenant.</p>
+          </div>
+          <span class="chev text-slate-400">v</span>
+        </div>
+        <div class="detail" id="d-be-models">
+          <div class="mt-3 pt-3 border-t border-white/5 text-xs text-slate-300 grid grid-cols-3 md:grid-cols-5 gap-1">
+            <span class="chip">Tenant</span><span class="chip">TenantSubscription</span><span class="chip">SubscriptionPlan</span><span class="chip">OrgProfile</span><span class="chip">User</span>
+            <span class="chip">CustomRole</span><span class="chip">Department</span><span class="chip">Employee</span><span class="chip">EmployeePaymentDetails</span><span class="chip">Course</span>
+            <span class="chip">Student</span><span class="chip">AcademicYear</span><span class="chip">Semester</span><span class="chip">Subject</span><span class="chip">ExamSchedule</span>
+            <span class="chip">Mark</span><span class="chip">Attendance</span><span class="chip">AttendanceSettings</span><span class="chip">Leave</span><span class="chip">LeaveTypeConfig</span>
+            <span class="chip">LeaveBalance</span><span class="chip">SalaryTemplate</span><span class="chip">SalaryAssignment</span><span class="chip">Payroll</span><span class="chip">PayrollDeduction</span>
+            <span class="chip">FeeCategory</span><span class="chip">FeeStructure</span><span class="chip">FeePayment</span><span class="chip">Holiday</span><span class="chip">CalendarSettings</span>
+            <span class="chip">TimetableSlot</span><span class="chip">Event</span><span class="chip">Announcement</span><span class="chip">Notification</span><span class="chip">HostelBlock</span>
+            <span class="chip">HostelRoom</span><span class="chip">HostelAllocation</span><span class="chip">TransportRoute</span><span class="chip">TransportVehicle</span><span class="chip">TransportAllocation</span>
+            <span class="chip">LibraryBook</span><span class="chip">LibraryIssue</span><span class="chip">LearningGoal</span><span class="chip">LearningSection</span><span class="chip">LearningUnit</span>
+            <span class="chip">LearningAssignment</span><span class="chip">LearningQuestion</span><span class="chip">GoalAssignment</span><span class="chip">EmployeeGoalProgress</span><span class="chip">UnitProgress</span>
+            <span class="chip">AssignmentProgress</span><span class="chip">ApprovalProcessType</span><span class="chip">ApprovalFlow</span><span class="chip">ApprovalStep</span><span class="chip">ApprovalRequest</span>
+            <span class="chip">ApprovalAction</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ROW 5, STORAGE & EXTERNAL -->
+  <section class="mb-10">
+    <h2 class="text-sm uppercase tracking-widest text-slate-400 mb-3">Persistence & external surfaces</h2>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+
+      <div class="card glow-amber rounded-2xl p-5 node" data-target="d-db">
+        <div class="flex items-start justify-between">
+          <div>
+            <div class="text-xs text-amber-300 font-semibold mb-1">Database</div>
+            <h3 class="text-lg font-bold">PostgreSQL</h3>
+            <p class="text-slate-300 text-sm mt-1">GORM ORM, single connection. AutoMigrate is additive; one-shot self-heal drops legacy <span class="endpoint">salary_structures</span> and reborn-empty <span class="endpoint">salary_*</span> tables.</p>
+          </div>
+          <span class="chev text-slate-400">v</span>
+        </div>
+        <div class="detail" id="d-db">
+          <div class="mt-3 pt-3 border-t border-white/5 text-xs text-slate-300 space-y-1">
+            <div>Connection: <span class="endpoint">DB_PATH</span> env (Postgres URL)</div>
+            <div>Migrate: <span class="endpoint">database.Migrate()</span>, runs on every boot</div>
+            <div>Migrations connection disables FK constraints during migrate to avoid circular FK errors (Employee &lt;-&gt; Salary, Payroll)</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card rounded-2xl p-5 node" data-target="d-uploads">
+        <div class="flex items-start justify-between">
+          <div>
+            <div class="text-xs text-amber-300 font-semibold mb-1">Local file storage</div>
+            <h3 class="text-lg font-bold">Static uploads</h3>
+            <p class="text-slate-300 text-sm mt-1">Profile + entity photos and learning videos served from disk via Fiber Static.</p>
+          </div>
+          <span class="chev text-slate-400">v</span>
+        </div>
+        <div class="detail" id="d-uploads">
+          <div class="mt-3 pt-3 border-t border-white/5 text-xs text-slate-300 space-y-1">
+            <div>Photos: <span class="endpoint">/uploads/photos</span> -&gt; <span class="endpoint">./uploads/photos</span></div>
+            <div>Videos: <span class="endpoint">/uploads/learning-videos</span> -&gt; <span class="endpoint">./uploads/learning-videos</span></div>
+            <div>BodyLimit raised to 16 MiB for bulk + uploads</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card glow-pink rounded-2xl p-5 node" data-target="d-ext">
+        <div class="flex items-start justify-between">
+          <div>
+            <div class="text-xs text-pink-300 font-semibold mb-1">External integrations</div>
+            <h3 class="text-lg font-bold">Browser + analytics</h3>
+            <p class="text-slate-300 text-sm mt-1">No third-party SaaS today. Frontend ships an analytics registry (gtag) and a content registry for the marketing site.</p>
+          </div>
+          <span class="chev text-slate-400">v</span>
+        </div>
+        <div class="detail" id="d-ext">
+          <div class="mt-3 pt-3 border-t border-white/5 text-xs text-slate-300 space-y-1">
+            <div>Analytics: <span class="endpoint">lib/analytics/gtag.ts</span>, events declared in <span class="endpoint">events.ts</span>, scoped by <span class="endpoint">config.ts</span></div>
+            <div>Marketing copy: <span class="endpoint">lib/marketing/modules.ts</span></div>
+            <div>Auth flow lives in-app (no OAuth), email + password only</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- DATA FLOWS -->
+  <section class="mb-10">
+    <h2 class="text-sm uppercase tracking-widest text-slate-400 mb-3">Key data flows</h2>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+      <details class="card rounded-2xl p-5">
+        <summary class="flex items-center justify-between">
+          <div>
+            <div class="text-xs text-indigo-300 font-semibold mb-1">1, Login + tenant resolution</div>
+            <h3 class="text-base font-bold">Email/password -&gt; JWT -&gt; tenant scope</h3>
+          </div>
+          <span class="text-slate-400">+</span>
+        </summary>
+        <ol class="mt-3 text-sm text-slate-300 list-decimal list-inside space-y-1">
+          <li>User submits to <span class="endpoint">POST /auth/login</span>.</li>
+          <li>Handler verifies bcrypt password, signs JWT carrying <span class="endpoint">userID, tenantID, role, isSuperAdmin</span>.</li>
+          <li>Frontend stores <span class="endpoint">token</span> and <span class="endpoint">tenantId</span> in localStorage; Axios + Apollo attach them as <span class="endpoint">Authorization</span> + <span class="endpoint">X-Tenant-ID</span>.</li>
+          <li>Subsequent calls hit <span class="endpoint">Authenticate</span> middleware which populates request locals, then domain handlers filter by <span class="endpoint">tenant_id</span>.</li>
+        </ol>
+      </details>
+
+      <details class="card rounded-2xl p-5">
+        <summary class="flex items-center justify-between">
+          <div>
+            <div class="text-xs text-violet-300 font-semibold mb-1">2, Terminology layer</div>
+            <h3 class="text-base font-bold">Vertical-aware labels</h3>
+          </div>
+          <span class="text-slate-400">+</span>
+        </summary>
+        <ol class="mt-3 text-sm text-slate-300 list-decimal list-inside space-y-1">
+          <li>On login, frontend calls <span class="endpoint">GET /terminology</span>.</li>
+          <li>Backend returns labels keyed off the tenant's <span class="endpoint">type</span> (education / corporate / healthcare / nonprofit).</li>
+          <li><span class="endpoint">terminologySlice</span> caches the map; <span class="endpoint">useTerminology()</span> resolves a label key (e.g. "Student") to "Patient" or "Member" per tenant.</li>
+        </ol>
+      </details>
+
+      <details class="card rounded-2xl p-5">
+        <summary class="flex items-center justify-between">
+          <div>
+            <div class="text-xs text-teal-300 font-semibold mb-1">3, Approval engine</div>
+            <h3 class="text-base font-bold">Dynamic multi-step approvals</h3>
+          </div>
+          <span class="text-slate-400">+</span>
+        </summary>
+        <ol class="mt-3 text-sm text-slate-300 list-decimal list-inside space-y-1">
+          <li>Admin builds an <span class="endpoint">ApprovalFlow</span> with ordered <span class="endpoint">ApprovalStep</span>s, scoped to an <span class="endpoint">ApprovalProcessType</span>.</li>
+          <li>A user raises a request via <span class="endpoint">POST /approval-requests</span>; backend resolves the active flow and records the first pending step.</li>
+          <li>Each approver hits <span class="endpoint">/:id/approve</span> or <span class="endpoint">/:id/reject</span>, generating an <span class="endpoint">ApprovalAction</span>; <span class="endpoint">approval_callbacks.go</span> fans out to the domain (leave, etc.) when terminal.</li>
+        </ol>
+      </details>
+
+      <details class="card rounded-2xl p-5">
+        <summary class="flex items-center justify-between">
+          <div>
+            <div class="text-xs text-pink-300 font-semibold mb-1">4, Bulk CSV pipeline</div>
+            <h3 class="text-base font-bold">Schema-driven upload</h3>
+          </div>
+          <span class="text-slate-400">+</span>
+        </summary>
+        <ol class="mt-3 text-sm text-slate-300 list-decimal list-inside space-y-1">
+          <li>Resource declared in <span class="endpoint">backend/handlers/bulk/schema_*.go</span> (columns, validators, FK lookups).</li>
+          <li>Client downloads template (<span class="endpoint">/bulk/:resource/template</span>), edits in <span class="endpoint">ui/BulkUpload/EditableTable</span>, then calls <span class="endpoint">/validate</span>.</li>
+          <li>On success, <span class="endpoint">/submit</span> inserts rows in chunks under the BodyLimit of 16 MiB.</li>
+        </ol>
+      </details>
+
+      <details class="card rounded-2xl p-5">
+        <summary class="flex items-center justify-between">
+          <div>
+            <div class="text-xs text-amber-300 font-semibold mb-1">5, Payroll generation</div>
+            <h3 class="text-base font-bold">Templates -&gt; assignments -&gt; payrolls</h3>
+          </div>
+          <span class="text-slate-400">+</span>
+        </summary>
+        <ol class="mt-3 text-sm text-slate-300 list-decimal list-inside space-y-1">
+          <li>Admin defines <span class="endpoint">SalaryTemplate</span> records (basic + components).</li>
+          <li>Employees are linked via <span class="endpoint">SalaryAssignment</span> (single or bulk).</li>
+          <li><span class="endpoint">POST /payroll/generate</span> snapshots templates + attendance + leave into <span class="endpoint">Payroll</span> rows; status flows draft -&gt; approved -&gt; paid; PDFs served from <span class="endpoint">GET /payroll/:id/pdf</span>.</li>
+        </ol>
+      </details>
+
+      <details class="card rounded-2xl p-5">
+        <summary class="flex items-center justify-between">
+          <div>
+            <div class="text-xs text-indigo-300 font-semibold mb-1">6, Attendance + calendar</div>
+            <h3 class="text-base font-bold">Marking, summary, shortage</h3>
+          </div>
+          <span class="text-slate-400">+</span>
+        </summary>
+        <ol class="mt-3 text-sm text-slate-300 list-decimal list-inside space-y-1">
+          <li>Teacher/admin marks attendance via GraphQL (<span class="endpoint">markAttendance</span>, <span class="endpoint">bulkMarkAttendance</span>); Holiday + CalendarSettings exclude non-working days.</li>
+          <li>Reports compute summary / shortage via REST so the Redux <span class="endpoint">holidaySlice</span> can feed it synchronously.</li>
+          <li>Admin can export full attendance to CSV via <span class="endpoint">POST /attendance/export-csv</span>.</li>
+        </ol>
+      </details>
+
+    </div>
+  </section>
+
+  <!-- TECH STACK -->
+  <section class="mb-10">
+    <h2 class="text-sm uppercase tracking-widest text-slate-400 mb-3">Tech stack snapshot</h2>
+    <div class="card rounded-2xl p-5 module-grid">
+      <div><div class="text-xs text-slate-400">Frontend</div><div class="font-semibold">Next.js 14 (App Router), React 18</div></div>
+      <div><div class="text-xs text-slate-400">Language</div><div class="font-semibold">TypeScript 5</div></div>
+      <div><div class="text-xs text-slate-400">Styling</div><div class="font-semibold">Tailwind CSS 3</div></div>
+      <div><div class="text-xs text-slate-400">State</div><div class="font-semibold">Redux Toolkit 2</div></div>
+      <div><div class="text-xs text-slate-400">GraphQL client</div><div class="font-semibold">Apollo Client 3</div></div>
+      <div><div class="text-xs text-slate-400">REST client</div><div class="font-semibold">Axios 1</div></div>
+      <div><div class="text-xs text-slate-400">Forms</div><div class="font-semibold">react-hook-form</div></div>
+      <div><div class="text-xs text-slate-400">Backend</div><div class="font-semibold">Go 1.21+, Fiber v2</div></div>
+      <div><div class="text-xs text-slate-400">ORM</div><div class="font-semibold">GORM (Postgres driver)</div></div>
+      <div><div class="text-xs text-slate-400">GraphQL server</div><div class="font-semibold">gqlgen</div></div>
+      <div><div class="text-xs text-slate-400">Auth</div><div class="font-semibold">JWT (HS) + bcrypt</div></div>
+      <div><div class="text-xs text-slate-400">Database</div><div class="font-semibold">PostgreSQL</div></div>
+      <div><div class="text-xs text-slate-400">PDF</div><div class="font-semibold">In-house payslip generator</div></div>
+      <div><div class="text-xs text-slate-400">Testing</div><div class="font-semibold">Playwright + Go test</div></div>
+    </div>
+  </section>
+
+  <!-- ARCH DECISIONS -->
+  <section class="mb-16">
+    <h2 class="text-sm uppercase tracking-widest text-slate-400 mb-3">Notable architectural decisions</h2>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div class="card rounded-2xl p-5"><h4 class="font-bold mb-1">Hybrid REST + GraphQL</h4><p class="text-sm text-slate-300">CRUD-heavy domains migrated to GraphQL (Apollo) for typed selection. REST kept for auth, file uploads, exports, calendar settings, and the bulk pipeline, which all need binary bodies, custom envelopes, or sync Redux consumption.</p></div>
+      <div class="card rounded-2xl p-5"><h4 class="font-bold mb-1">Tenant scoping by JWT claim</h4><p class="text-sm text-slate-300">No row-level security; every handler filters by <span class="endpoint">tenant_id</span> from JWT. Super admin sits on the platform tenant and bypasses scope.</p></div>
+      <div class="card rounded-2xl p-5"><h4 class="font-bold mb-1">Vertical-neutral terminology layer</h4><p class="text-sm text-slate-300">Same schema, different labels. <span class="endpoint">TenantType</span> drives the <span class="endpoint">/terminology</span> map; UI never hardcodes "Student".</p></div>
+      <div class="card rounded-2xl p-5"><h4 class="font-bold mb-1">Schema-driven bulk uploads</h4><p class="text-sm text-slate-300">Adding a new bulk-importable resource is a single file in <span class="endpoint">handlers/bulk/schema_*.go</span>, no route plumbing or UI changes.</p></div>
+      <div class="card rounded-2xl p-5"><h4 class="font-bold mb-1">Salary domain redesigned</h4><p class="text-sm text-slate-300">Legacy per-employee <span class="endpoint">salary_structures</span> dropped at boot; current world is reusable <span class="endpoint">SalaryTemplate</span> + <span class="endpoint">SalaryAssignment</span>. A read-only shim still serves the legacy endpoint.</p></div>
+      <div class="card rounded-2xl p-5"><h4 class="font-bold mb-1">Generic approval engine</h4><p class="text-sm text-slate-300">Any module can plug into <span class="endpoint">ApprovalFlow</span>, terminal actions fan out via <span class="endpoint">approval_callbacks.go</span> (currently driving leave approvals).</p></div>
+      <div class="card rounded-2xl p-5"><h4 class="font-bold mb-1">Component-per-page colocation</h4><p class="text-sm text-slate-300"><span class="endpoint">app/[tenant]/(dashboard)/X/page.tsx</span> stays a thin shell; the real component lives in <span class="endpoint">components/pages/[tenant]/(dashboard)/X/Page.tsx</span> with sub-components in the same folder for easy navigation.</p></div>
+      <div class="card rounded-2xl p-5"><h4 class="font-bold mb-1">AutoMigrate on every boot</h4><p class="text-sm text-slate-300">Idempotent and additive; a side migration uses a separate connection with FK constraints disabled to handle the Employee <span class="endpoint">&lt;-&gt;</span> Salary/Payroll cycle.</p></div>
+    </div>
+  </section>
+
+  </div><!-- /zoomable -->
+  </div><!-- /canvas -->
+
+  <footer class="text-center text-xs text-slate-500 pb-6">CollERP - architecture snapshot generated from the codebase</footer>
+</div>
+
+<script>
+  // expand/collapse
+  document.querySelectorAll('.node').forEach(node => {
+    node.addEventListener('click', () => {
+      const targetId = node.getAttribute('data-target');
+      const detail = document.getElementById(targetId);
+      const open = detail.classList.toggle('open');
+      node.setAttribute('aria-expanded', open ? 'true' : 'false');
+    });
+  });
+  document.getElementById('expand-all').addEventListener('click', () => {
+    document.querySelectorAll('.detail').forEach(d => d.classList.add('open'));
+    document.querySelectorAll('.node').forEach(n => n.setAttribute('aria-expanded', 'true'));
+  });
+  document.getElementById('collapse-all').addEventListener('click', () => {
+    document.querySelectorAll('.detail').forEach(d => d.classList.remove('open'));
+    document.querySelectorAll('.node').forEach(n => n.setAttribute('aria-expanded', 'false'));
+  });
+
+  // zoom
+  let zoom = 1;
+  const zoomable = document.getElementById('zoomable');
+  const label = document.getElementById('zoom-label');
+  function applyZoom() {
+    zoomable.style.transform = `scale(${zoom})`;
+    label.textContent = `${Math.round(zoom * 100)}%`;
+  }
+  document.getElementById('zoom-in').addEventListener('click', () => { zoom = Math.min(1.6, zoom + 0.1); applyZoom(); });
+  document.getElementById('zoom-out').addEventListener('click', () => { zoom = Math.max(0.6, zoom - 0.1); applyZoom(); });
+  document.addEventListener('keydown', e => {
+    if (e.key === '+' || e.key === '=') { zoom = Math.min(1.6, zoom + 0.1); applyZoom(); }
+    if (e.key === '-' || e.key === '_') { zoom = Math.max(0.6, zoom - 0.1); applyZoom(); }
+  });
+</script>
+</body>
+</html>

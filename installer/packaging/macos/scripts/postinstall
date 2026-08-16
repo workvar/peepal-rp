@@ -1,0 +1,17 @@
+#!/bin/bash
+# Runs after the pkg has copied the binaries into place. Installer packages
+# have no interactive terminal, so this opens one and hands over to the setup
+# program, which asks for the administrator account and the AI preference.
+set -e
+
+SETUP="/usr/local/peepal/bin/peepal-setup.command"
+LOG="/var/log/peepal-install.log"
+
+echo "$(date) pkg payload installed" >> "$LOG"
+
+if [ -x "$SETUP" ]; then
+  # open runs as the logged-in user, who is prompted for their password by
+  # the sudo inside the .command file.
+  /usr/bin/open -a Terminal "$SETUP" || true
+fi
+exit 0

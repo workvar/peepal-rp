@@ -1,0 +1,566 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "project": {
+    "name": "CollERP",
+    "tagline": "Multi-tenant ERP for educational institutes, generalised to corporate, healthcare, and nonprofit verticals.",
+    "version": "0.1.0",
+    "domain": "ERP",
+    "verticals": ["education", "corporate", "healthcare", "nonprofit"],
+    "legacy_vertical_aliases": { "college": "education", "enterprise": "corporate" },
+    "repo_root": "/Users/yasharyan/Documents/Claude/Projects/CollERP",
+    "package_layout": ["backend/", "frontend/"]
+  },
+
+  "tech_stack": {
+    "frontend": {
+      "framework": "Next.js 14 (App Router)",
+      "language": "TypeScript 5",
+      "ui": "React 18",
+      "styling": "Tailwind CSS 3",
+      "state": "Redux Toolkit 2",
+      "graphql_client": "Apollo Client 3",
+      "rest_client": "Axios 1",
+      "forms": "react-hook-form",
+      "icons": "lucide-react",
+      "markdown": "react-markdown + remark-gfm",
+      "scroll": "lenis",
+      "test": "Playwright"
+    },
+    "backend": {
+      "language": "Go 1.21+",
+      "framework": "Fiber v2",
+      "orm": "GORM",
+      "database": "PostgreSQL",
+      "graphql_server": "gqlgen",
+      "auth": "JWT (HS) + bcrypt",
+      "pdf": "in-house payslip generator (utils/payslip_pdf.go)",
+      "csv": "schema-driven bulk pipeline (handlers/bulk)",
+      "static_files": "Fiber Static for photos and learning videos"
+    },
+    "infra": {
+      "deploy_targets": ["self-hosted Linux"],
+      "external_services": [],
+      "analytics": "client-side gtag registry (lib/analytics)"
+    }
+  },
+
+  "entry_points": {
+    "backend": {
+      "main": "backend/main.go",
+      "routes": "backend/routes/routes.go",
+      "graphql_schema": "backend/graph/schema.graphqls",
+      "config": "backend/config/config.go",
+      "default_port": 8080,
+      "health_check": "GET /health",
+      "graphql_endpoint": "POST /api/v1/graphql",
+      "graphql_playground_dev_only": "GET /api/v1/graphql"
+    },
+    "frontend": {
+      "root_layout": "frontend/app/layout.tsx",
+      "marketing_root": "frontend/app/page.tsx",
+      "tenant_login": "frontend/app/[tenant]/login/page.tsx",
+      "fallback_login": "frontend/app/login/page.tsx",
+      "super_admin_login": "frontend/app/super/login/page.tsx",
+      "dashboard_layout": "frontend/app/[tenant]/(dashboard)/layout.tsx",
+      "super_admin_layout": "frontend/app/(super-admin)/layout.tsx",
+      "redux_store": "frontend/store/index.ts",
+      "apollo_client": "frontend/lib/apollo.ts",
+      "axios_client": "frontend/api/client.ts"
+    }
+  },
+
+  "tenancy": {
+    "model": "single-database, tenant_id column on every row",
+    "tenant_table": "tenants",
+    "platform_tenant_id": "00000000-0000-0000-0000-000000000001",
+    "tenant_resolution": "JWT claim tenant_id; client also sends X-Tenant-ID header",
+    "tenant_types": ["education", "corporate", "healthcare", "nonprofit", "college (legacy)", "enterprise (legacy)"],
+    "terminology": {
+      "endpoint": "GET /api/v1/terminology",
+      "frontend_slice": "store/slices/terminologySlice.ts",
+      "hook": "store/hooks/useTerminology.ts",
+      "behavior": "Returns a per-tenant label map (e.g. Student vs Member vs Patient vs Employee) keyed off TenantType."
+    }
+  },
+
+  "auth": {
+    "method": "Email + password (no OAuth)",
+    "token": "JWT bearer, sent as Authorization: Bearer <token>",
+    "password_hash": "bcrypt (utils/password.go)",
+    "client_storage": {
+      "token": "localStorage.token",
+      "tenant_id": "localStorage.tenantId"
+    },
+    "middleware": {
+      "Authenticate": "backend/middleware/auth.go, hard 401 if missing/invalid",
+      "OptionalAuthenticate": "used by GraphQL endpoint to allow introspection",
+      "RequireRole(roles...)": "role gate, returns 403 on mismatch",
+      "RequireSuperAdmin": "platform-tier only"
+    },
+    "roles": ["super_admin", "admin", "teacher", "student", "staff"],
+    "custom_roles": {
+      "model": "CustomRole (tenant-scoped, fine-grained permission strings)",
+      "link": "User.custom_role_id"
+    }
+  },
+
+  "components": {
+    "backend_packages": [
+      { "path": "backend/config",      "responsibility": "Env loading via godotenv; exposes config.App.{Port,JWTSecret,DBPath,SuperAdminEmail,SuperAdminPassword,AppEnv}" },
+      { "path": "backend/database",    "responsibility": "GORM Postgres connection and AutoMigrate; self-heals legacy salary tables" },
+      { "path": "backend/models",      "responsibility": "All GORM domain entities; constants for roles, tenant types, platform tenant ID" },
+      { "path": "backend/middleware",  "responsibility": "JWT authenticate, role gates, tenant + user helpers" },
+      { "path": "backend/handlers",    "responsibility": "REST controllers, one file per domain" },
+      { "path": "backend/handlers/bulk", "responsibility": "Schema-driven CSV import pipeline (resources declared in schema_*.go)" },
+      { "path": "backend/graph",       "responsibility": "gqlgen resolvers + generated schema/types" },
+      { "path": "backend/routes",      "responsibility": "Route registration; mounts middleware groups" },
+      { "path": "backend/utils",       "responsibility": "JWT signing, bcrypt, APIResponse envelope, payslip PDF, video storage paths" }
+    ],
+    "frontend_packages": [
+      { "path": "frontend/app",          "responsibility": "Next.js App Router; route groups for super admin, tenant dashboard, and public marketing" },
+      { "path": "frontend/components",   "responsibility": "Per-page UI colocated by route, shared ui/, layout/, onboarding/" },
+      { "path": "frontend/store",        "responsibility": "Redux store + slices, useAppDispatch/useAppSelector hooks" },
+      { "path": "frontend/api",          "responsibility": "Axios client + service modules (auth, bulk, finance, operations, org, people, etc.)" },
+      { "path": "frontend/graphql",      "responsibility": "Apollo queries + mutations, organised per domain" },
+      { "path": "frontend/lib",          "responsibility": "Cross-cutting helpers, Apollo client, module config, analytics, marketing copy" },
+      { "path": "frontend/types",        "responsibility": "Shared TS types, per-page type files" }
+    ]
+  },
+
+  "modules": [
+    { "id": "auth",              "label": "Auth + profile",           "transport": "REST", "routes_prefix": "/auth", "frontend_pages": ["app/login", "app/[tenant]/login", "app/super/login"] },
+    { "id": "tenants",           "label": "Tenant lookup + super admin", "transport": "REST", "routes_prefix": "/super", "frontend_pages": ["app/(super-admin)/super/*"] },
+    { "id": "plans_subscriptions","label": "Plans & subscriptions",   "transport": "REST", "routes_prefix": "/super/{plans,subscriptions}", "frontend_pages": ["app/(super-admin)/super/plans", "app/(super-admin)/super/subscriptions"] },
+    { "id": "org_admin",         "label": "Org profile + setup",      "transport": "REST", "routes_prefix": "/org", "frontend_pages": ["app/[tenant]/(dashboard)/org/*"] },
+    { "id": "users",             "label": "User management",          "transport": "GraphQL+REST", "graphql_ops": ["users", "createUser", "updateUser", "deactivateUser"], "rest_helpers": ["/org/users/:id/manager", "/org/users/:id/custom-role"], "frontend_pages": ["app/[tenant]/(dashboard)/users"] },
+    { "id": "custom_roles",      "label": "Custom roles",             "transport": "REST", "routes_prefix": "/org/roles", "frontend_pages": ["app/[tenant]/(dashboard)/org/roles"] },
+    { "id": "departments",       "label": "Departments",              "transport": "GraphQL+REST", "frontend_pages": ["app/[tenant]/(dashboard)/org/departments"] },
+    { "id": "employees",         "label": "Employees",                "transport": "GraphQL", "graphql_ops": ["employees","employee","createEmployee","updateEmployee","deleteEmployee"], "frontend_pages": ["app/[tenant]/(dashboard)/employees"] },
+    { "id": "students",          "label": "Students",                 "transport": "GraphQL+REST", "graphql_ops": ["students","student","createStudent","updateStudent","deleteStudent"], "rest_helpers": ["/students/me", "/students/bulk-import"], "frontend_pages": ["app/[tenant]/(dashboard)/students", "app/[tenant]/(dashboard)/portal"] },
+    { "id": "academic",          "label": "Academic years, semesters, subjects, exams", "transport": "GraphQL+REST", "frontend_pages": ["app/[tenant]/(dashboard)/academic/*", "app/[tenant]/(dashboard)/org/academic-years"] },
+    { "id": "attendance",        "label": "Attendance",               "transport": "GraphQL+REST", "graphql_ops": ["attendance","attendanceSummary","attendanceShortage","markAttendance","bulkMarkAttendance"], "rest_helpers": ["/attendance/summary","/attendance/shortage","/attendance/settings","/attendance/export-csv"], "frontend_pages": ["app/[tenant]/(dashboard)/attendance/*"] },
+    { "id": "marks_results",     "label": "Marks + results",          "transport": "GraphQL", "graphql_ops": ["marks","createMark","publishResults","publishedResults","resultSummary"], "frontend_pages": ["app/[tenant]/(dashboard)/marks", "app/[tenant]/(dashboard)/results"] },
+    { "id": "leaves",            "label": "Leaves + leave types",     "transport": "GraphQL", "graphql_ops": ["leaves","leaveTypes","myLeaveBalance","applyLeave","reviewLeave","createLeaveType"], "frontend_pages": ["app/[tenant]/(dashboard)/leaves", "app/[tenant]/(dashboard)/leave-types"] },
+    { "id": "salary",            "label": "Salary templates + assignments", "transport": "REST", "routes_prefix": "/salary-{templates,assignments}", "frontend_pages": ["app/[tenant]/(dashboard)/salary-templates", "app/[tenant]/(dashboard)/salary-assignments", "app/[tenant]/(dashboard)/salary-structures"] },
+    { "id": "payroll",           "label": "Payroll",                  "transport": "REST", "routes_prefix": "/payroll", "frontend_pages": ["app/[tenant]/(dashboard)/payroll"] },
+    { "id": "fees",              "label": "Fees (categories/structures/payments)", "transport": "REST", "routes_prefix": "/fee-{categories,structures,payments}", "frontend_pages": ["app/[tenant]/(dashboard)/fees", "app/[tenant]/(dashboard)/fees/{categories,structures,payments,dues}"] },
+    { "id": "announcements",     "label": "Announcements",            "transport": "REST", "routes_prefix": "/announcements", "frontend_pages": ["app/[tenant]/(dashboard)/announcements"] },
+    { "id": "notifications",     "label": "Notifications",            "transport": "REST", "routes_prefix": "/notifications", "frontend_pages": ["app/[tenant]/(dashboard)/notifications"] },
+    { "id": "timetable",         "label": "Timetable",                "transport": "REST", "routes_prefix": "/timetable", "frontend_pages": ["app/[tenant]/(dashboard)/timetable"] },
+    { "id": "events",            "label": "Events / college calendar","transport": "REST", "routes_prefix": "/events", "frontend_pages": ["app/[tenant]/(dashboard)/events"] },
+    { "id": "calendar_holidays", "label": "Institutional calendar",   "transport": "REST", "routes_prefix": "/calendar, /holidays", "frontend_pages": ["app/[tenant]/(dashboard)/calendar", "app/[tenant]/(dashboard)/org/holidays"] },
+    { "id": "hostel",            "label": "Hostel management",        "transport": "REST", "routes_prefix": "/hostels", "frontend_pages": ["app/[tenant]/(dashboard)/hostel"] },
+    { "id": "transport",         "label": "Transport management",     "transport": "REST", "routes_prefix": "/transport", "frontend_pages": ["app/[tenant]/(dashboard)/transport"] },
+    { "id": "library",           "label": "Library management",       "transport": "REST", "routes_prefix": "/library", "frontend_pages": ["app/[tenant]/(dashboard)/library"] },
+    { "id": "learning",          "label": "Learning Matrix",          "transport": "GraphQL+REST", "graphql_ops": ["learningGoals","myGoalProgress","submitQuiz","gradeAssignment"], "rest_helpers": ["/learning/video-upload"], "frontend_pages": ["app/[tenant]/(dashboard)/learning/*"] },
+    { "id": "reports",           "label": "Reports + dashboard charts","transport": "REST", "routes_prefix": "/reports", "frontend_pages": ["app/[tenant]/(dashboard)/reports/*", "app/[tenant]/(dashboard)/dashboard"] },
+    { "id": "approvals",         "label": "Approval engine",          "transport": "REST", "routes_prefix": "/approval-requests, /org/approval-flows, /org/approval-process-types", "frontend_pages": ["app/[tenant]/(dashboard)/approval-flows", "app/[tenant]/(dashboard)/my-approvals", "app/[tenant]/(dashboard)/approval-types"] },
+    { "id": "org_structure",     "label": "Org structure + users tree","transport": "REST", "routes_prefix": "/organization", "frontend_pages": ["app/[tenant]/(dashboard)/organization-structure"] },
+    { "id": "bulk_upload",       "label": "Generic CSV import",       "transport": "REST", "routes_prefix": "/bulk", "frontend_components": ["components/ui/BulkUpload/*"] },
+    { "id": "uploads",           "label": "Photo + video uploads",    "transport": "REST", "routes_prefix": "/uploads", "frontend_components": ["components/ui/PhotoUpload.tsx"] }
+  ],
+
+  "api": {
+    "base_path": "/api/v1",
+    "cors": "AllowOrigins=*, AllowMethods=GET,POST,PUT,PATCH,DELETE,OPTIONS, AllowHeaders includes X-Tenant-ID",
+    "body_limit_bytes": 16777216,
+    "response_envelope": "utils.APIResponse{ success: bool, data: any, message: string, error: string }",
+    "rest_groups": [
+      { "prefix": "/auth", "auth": "mixed", "endpoints": [
+        { "method": "POST", "path": "/auth/login", "auth": "public" },
+        { "method": "GET",  "path": "/auth/me", "auth": "user" },
+        { "method": "PUT",  "path": "/auth/profile", "auth": "user" },
+        { "method": "PUT",  "path": "/auth/password", "auth": "user" }
+      ]},
+      { "prefix": "/tenants", "auth": "public", "endpoints": [
+        { "method": "GET",  "path": "/tenants/lookup/:subdomain" }
+      ]},
+      { "prefix": "/super", "auth": "super_admin", "endpoints": [
+        { "method": "GET",    "path": "/super/stats" },
+        { "method": "GET",    "path": "/super/tenants" },
+        { "method": "POST",   "path": "/super/tenants" },
+        { "method": "GET",    "path": "/super/tenants/:id" },
+        { "method": "PUT",    "path": "/super/tenants/:id" },
+        { "method": "PATCH",  "path": "/super/tenants/:id/status" },
+        { "method": "POST",   "path": "/super/tenants/:id/impersonate" },
+        { "method": "DELETE", "path": "/super/tenants/:id" },
+        { "method": "GET",    "path": "/super/admins" },
+        { "method": "POST",   "path": "/super/admins" },
+        { "method": "PUT",    "path": "/super/admins/:id" },
+        { "method": "DELETE", "path": "/super/admins/:id" },
+        { "method": "GET",    "path": "/super/plans" },
+        { "method": "POST",   "path": "/super/plans" },
+        { "method": "PUT",    "path": "/super/plans/:id" },
+        { "method": "DELETE", "path": "/super/plans/:id" },
+        { "method": "GET",    "path": "/super/subscriptions" },
+        { "method": "POST",   "path": "/super/subscriptions" },
+        { "method": "PATCH",  "path": "/super/subscriptions/:id/status" }
+      ]},
+      { "prefix": "/org", "auth": "admin", "endpoints": [
+        { "method": "GET", "path": "/org/profile" },
+        { "method": "PUT", "path": "/org/profile" },
+        { "method": "GET", "path": "/org/setup-status" },
+        { "method": "GET", "path": "/org/subscription" },
+        { "method": "GET", "path": "/org/departments" },
+        { "method": "POST", "path": "/org/departments" },
+        { "method": "PUT", "path": "/org/departments/:id" },
+        { "method": "DELETE", "path": "/org/departments/:id" },
+        { "method": "GET", "path": "/org/academic-years" },
+        { "method": "POST", "path": "/org/academic-years" },
+        { "method": "PUT", "path": "/org/academic-years/:id" },
+        { "method": "PATCH", "path": "/org/academic-years/:id/set-current" },
+        { "method": "GET", "path": "/org/semesters" },
+        { "method": "POST", "path": "/org/semesters" },
+        { "method": "GET", "path": "/org/roles" },
+        { "method": "POST", "path": "/org/roles" },
+        { "method": "PUT", "path": "/org/roles/:id" },
+        { "method": "DELETE", "path": "/org/roles/:id" },
+        { "method": "PUT", "path": "/org/users/:id/manager" },
+        { "method": "PUT", "path": "/org/users/:id/custom-role" },
+        { "method": "GET", "path": "/org/approval-flows" },
+        { "method": "POST", "path": "/org/approval-flows" },
+        { "method": "PUT", "path": "/org/approval-flows/:id" },
+        { "method": "DELETE", "path": "/org/approval-flows/:id" },
+        { "method": "GET", "path": "/org/approval-process-types" },
+        { "method": "POST", "path": "/org/approval-process-types" }
+      ]},
+      { "prefix": "/organization", "auth": "user", "endpoints": [
+        { "method": "GET", "path": "/organization/users" },
+        { "method": "GET", "path": "/organization/structure" }
+      ]},
+      { "prefix": "/approval-requests", "auth": "user", "endpoints": [
+        { "method": "GET", "path": "/approval-requests/pending" },
+        { "method": "GET", "path": "/approval-requests/mine" },
+        { "method": "GET", "path": "/approval-requests/active-flows" },
+        { "method": "GET", "path": "/approval-requests/:id" },
+        { "method": "POST", "path": "/approval-requests" },
+        { "method": "POST", "path": "/approval-requests/:id/approve" },
+        { "method": "POST", "path": "/approval-requests/:id/reject" }
+      ]},
+      { "prefix": "/students", "auth": "user", "endpoints": [
+        { "method": "GET", "path": "/students/me" },
+        { "method": "POST", "path": "/students/bulk-import", "auth": "admin" }
+      ]},
+      { "prefix": "/attendance", "auth": "user", "endpoints": [
+        { "method": "GET", "path": "/attendance/summary" },
+        { "method": "GET", "path": "/attendance/shortage" },
+        { "method": "GET", "path": "/attendance/settings" },
+        { "method": "PUT", "path": "/attendance/settings", "auth": "admin" },
+        { "method": "POST", "path": "/attendance/export-csv", "auth": "admin" }
+      ]},
+      { "prefix": "/holidays", "auth": "user", "endpoints": [
+        { "method": "GET", "path": "/holidays" },
+        { "method": "POST", "path": "/holidays", "auth": "admin" },
+        { "method": "DELETE", "path": "/holidays/:id", "auth": "admin" }
+      ]},
+      { "prefix": "/calendar", "auth": "user", "endpoints": [
+        { "method": "GET", "path": "/calendar/settings" },
+        { "method": "PUT", "path": "/calendar/settings", "auth": "admin" },
+        { "method": "POST", "path": "/calendar/generate", "auth": "admin" },
+        { "method": "GET", "path": "/calendar/month" },
+        { "method": "PUT", "path": "/calendar/day", "auth": "admin" }
+      ]},
+      { "prefix": "/salary-templates", "auth": "user", "admin_writes": true },
+      { "prefix": "/salary-assignments", "auth": "user", "admin_writes": true },
+      { "prefix": "/salary-structures", "auth": "user", "note": "Legacy read-only shim" },
+      { "prefix": "/payroll", "auth": "user", "endpoints": [
+        { "method": "GET", "path": "/payroll", "auth": "admin" },
+        { "method": "GET", "path": "/payroll/me" },
+        { "method": "GET", "path": "/payroll/summary", "auth": "admin" },
+        { "method": "POST", "path": "/payroll/generate", "auth": "admin" },
+        { "method": "PATCH", "path": "/payroll/:id/status", "auth": "admin" },
+        { "method": "DELETE", "path": "/payroll/:id", "auth": "admin" },
+        { "method": "GET", "path": "/payroll/:id/pdf", "auth": "admin_or_owner" }
+      ]},
+      { "prefix": "/fee-categories", "auth": "user", "admin_writes": true },
+      { "prefix": "/fee-structures", "auth": "user", "admin_writes": true },
+      { "prefix": "/fee-payments", "auth": "user", "endpoints": [
+        { "method": "GET", "path": "/fee-payments", "auth": "admin|staff" },
+        { "method": "GET", "path": "/fee-payments/me" },
+        { "method": "POST", "path": "/fee-payments", "auth": "admin|staff" },
+        { "method": "PATCH", "path": "/fee-payments/:id/status", "auth": "admin" },
+        { "method": "GET", "path": "/fee-payments/dues", "auth": "admin|staff" },
+        { "method": "GET", "path": "/fee-payments/summary", "auth": "admin|staff" }
+      ]},
+      { "prefix": "/announcements", "auth": "user", "admin_writes": true },
+      { "prefix": "/notifications", "auth": "user", "endpoints": [
+        { "method": "GET", "path": "/notifications" },
+        { "method": "GET", "path": "/notifications/unread-count" },
+        { "method": "POST", "path": "/notifications", "auth": "admin" },
+        { "method": "PATCH", "path": "/notifications/read-all" },
+        { "method": "PATCH", "path": "/notifications/:id/read" },
+        { "method": "DELETE", "path": "/notifications/:id" }
+      ]},
+      { "prefix": "/reports", "auth": "admin", "endpoints": [
+        { "method": "GET", "path": "/reports/dashboard" },
+        { "method": "GET", "path": "/reports/attendance" },
+        { "method": "GET", "path": "/reports/marks" },
+        { "method": "GET", "path": "/reports/leaves" },
+        { "method": "GET", "path": "/reports/fees" },
+        { "method": "GET", "path": "/reports/payroll" },
+        { "method": "GET", "path": "/reports/charts" }
+      ]},
+      { "prefix": "/timetable", "auth": "user", "admin_writes": true },
+      { "prefix": "/events", "auth": "user", "admin_writes": true },
+      { "prefix": "/hostels", "auth": "user", "admin_writes": true },
+      { "prefix": "/transport", "auth": "user", "admin_writes": true },
+      { "prefix": "/library", "auth": "user", "admin_writes": true },
+      { "prefix": "/learning", "auth": "user", "endpoints": [
+        { "method": "POST", "path": "/learning/video-upload", "auth": "admin" }
+      ]},
+      { "prefix": "/uploads", "auth": "user", "endpoints": [
+        { "method": "POST", "path": "/uploads/photo" },
+        { "method": "GET",  "path": "/uploads/photos/*", "auth": "public" },
+        { "method": "GET",  "path": "/uploads/learning-videos/*", "auth": "public" }
+      ]},
+      { "prefix": "/bulk", "auth": "user", "endpoints": [
+        { "method": "GET", "path": "/bulk/resources" },
+        { "method": "GET", "path": "/bulk/:resource/schema" },
+        { "method": "GET", "path": "/bulk/:resource/template" },
+        { "method": "GET", "path": "/bulk/:resource/docs" },
+        { "method": "POST", "path": "/bulk/:resource/validate" },
+        { "method": "POST", "path": "/bulk/:resource/submit" }
+      ]}
+    ],
+    "graphql": {
+      "endpoint": "POST /api/v1/graphql",
+      "playground": "GET /api/v1/graphql (non-production only)",
+      "schema_file": "backend/graph/schema.graphqls",
+      "resolver_files": [
+        "graph/employees.resolvers.go", "graph/students.resolvers.go",
+        "graph/academic.resolvers.go", "graph/marks.resolvers.go",
+        "graph/attendance.resolvers.go", "graph/fees.resolvers.go",
+        "graph/payroll.resolvers.go", "graph/timetable.resolvers.go",
+        "graph/comms.resolvers.go", "graph/reports.resolvers.go",
+        "graph/learning.resolvers.go", "graph/learning_quiz.resolvers.go"
+      ],
+      "queries": [
+        "health", "employees", "employee", "departments", "users",
+        "students", "student", "courses", "subjects", "subject",
+        "academicYears", "examSchedules",
+        "marks", "publishedResults", "resultSummary",
+        "attendance", "attendanceSummary", "attendanceShortage",
+        "leaves", "leaveTypes", "myLeaveBalance", "leaveBalances",
+        "salaryStructures", "payrolls", "myPayrolls", "payrollSummary",
+        "events", "timetable", "announcements", "notifications",
+        "learningGoals", "learningAssignments", "myGoalProgress", "quizSubmissions"
+      ],
+      "mutations": [
+        "createUser", "updateUser", "deactivateUser",
+        "createEmployee", "updateEmployee", "deleteEmployee",
+        "createStudent", "updateStudent", "deleteStudent",
+        "createDepartment",
+        "createSubject", "updateSubject", "deleteSubject",
+        "createExamSchedule", "updateExamSchedule", "publishExamSchedule", "deleteExamSchedule",
+        "createMark", "publishResults",
+        "markAttendance", "bulkMarkAttendance",
+        "applyLeave", "reviewLeave",
+        "createLeaveType", "updateLeaveType", "deleteLeaveType",
+        "createLearningGoal", "assignGoal", "submitQuiz", "gradeAssignment"
+      ]
+    }
+  },
+
+  "data_model": {
+    "database": "PostgreSQL",
+    "orm": "GORM",
+    "migration_strategy": "AutoMigrate on every boot (additive); separate connection with DisableForeignKeyConstraintWhenMigrating for circular FK chains",
+    "self_heal_drops": ["salary_structures (legacy)", "salary_templates/salary_assignments if core columns missing"],
+    "entities": [
+      "Tenant", "TenantSubscription", "SubscriptionPlan",
+      "OrgProfile", "User", "CustomRole", "Department",
+      "Employee", "EmployeePaymentDetails",
+      "Course", "Student",
+      "AcademicYear", "Semester", "Subject", "ExamSchedule", "Mark",
+      "Attendance", "AttendanceSettings",
+      "Leave", "LeaveTypeConfig", "LeaveBalance",
+      "SalaryTemplate", "SalaryAssignment", "Payroll", "PayrollDeduction",
+      "FeeCategory", "FeeStructure", "FeePayment",
+      "Holiday", "CalendarSettings", "TimetableSlot", "Event",
+      "Announcement", "Notification",
+      "HostelBlock", "HostelRoom", "HostelAllocation",
+      "TransportRoute", "TransportVehicle", "TransportAllocation",
+      "LibraryBook", "LibraryIssue",
+      "LearningGoal", "LearningSection", "LearningUnit",
+      "LearningAssignment", "LearningQuestion",
+      "GoalAssignment", "EmployeeGoalProgress", "UnitProgress", "AssignmentProgress",
+      "ApprovalProcessType", "ApprovalFlow", "ApprovalStep",
+      "ApprovalRequest", "ApprovalAction"
+    ],
+    "tenant_scope_column": "tenant_id",
+    "unique_user_index": "idx_user_tenant_email (tenant_id, email)"
+  },
+
+  "frontend_state": {
+    "store_file": "frontend/store/index.ts",
+    "slices": [
+      "auth", "tenant", "org", "holiday", "calendar",
+      "notification", "report", "subscription",
+      "timetable", "hostel", "transport", "library", "terminology"
+    ],
+    "deprecated_slices_now_in_apollo": [
+      "employees", "students", "users", "attendance", "marks",
+      "leaves", "leaveType", "academic", "payroll", "fee",
+      "events", "results"
+    ]
+  },
+
+  "data_flows": [
+    {
+      "id": "login_flow",
+      "steps": [
+        "POST /auth/login (email, password)",
+        "backend bcrypt-verifies password and signs JWT (userID, tenantID, role, isSuperAdmin)",
+        "frontend stores token + tenantId in localStorage",
+        "Axios + Apollo attach Authorization and X-Tenant-ID headers on every request",
+        "middleware.Authenticate populates fiber locals, handlers filter by tenant_id"
+      ]
+    },
+    {
+      "id": "terminology_flow",
+      "steps": [
+        "After login, GET /terminology",
+        "backend returns labels keyed off Tenant.Type",
+        "terminologySlice caches the map",
+        "useTerminology() resolves keys (Student, Course, …) to vertical-specific labels"
+      ]
+    },
+    {
+      "id": "approval_flow",
+      "steps": [
+        "Admin creates ApprovalFlow with ordered ApprovalSteps tied to an ApprovalProcessType",
+        "Originating user POSTs to /approval-requests",
+        "backend resolves the active flow and creates the first pending step",
+        "Each approver POSTs to /:id/approve or /:id/reject, generating an ApprovalAction",
+        "On terminal approval, approval_callbacks.go fans out to the domain (e.g. marks Leave approved)"
+      ]
+    },
+    {
+      "id": "bulk_upload_flow",
+      "steps": [
+        "Resource declared in backend/handlers/bulk/schema_*.go (columns, validators, FK lookups)",
+        "Client downloads template via /bulk/:resource/template",
+        "User edits rows in components/ui/BulkUpload/EditableTable",
+        "Client POSTs /bulk/:resource/validate, receives row-level errors",
+        "Client POSTs /bulk/:resource/submit in chunks within BodyLimit (16 MiB)"
+      ]
+    },
+    {
+      "id": "payroll_flow",
+      "steps": [
+        "Admin defines SalaryTemplate(s)",
+        "Admin attaches employees via SalaryAssignment (single or /salary-assignments/bulk)",
+        "Admin POSTs /payroll/generate for month/year",
+        "Backend snapshots template + attendance + leave into Payroll rows (status=draft)",
+        "Admin transitions status (draft → approved → paid) via PATCH /:id/status",
+        "Employees or admin download PDF via /payroll/:id/pdf"
+      ]
+    },
+    {
+      "id": "attendance_flow",
+      "steps": [
+        "Teacher/admin uses GraphQL markAttendance / bulkMarkAttendance",
+        "Holiday + CalendarSettings exclude non-working days",
+        "Reports compute summary + shortage via REST so the Redux holidaySlice can consume synchronously",
+        "Admin can export to CSV via POST /attendance/export-csv"
+      ]
+    }
+  ],
+
+  "dependencies": {
+    "backend_go": {
+      "fiber": "github.com/gofiber/fiber/v2",
+      "fiber_middleware": ["cors", "logger", "recover"],
+      "orm": "gorm.io/gorm",
+      "db_driver": "gorm.io/driver/postgres",
+      "uuid": "github.com/google/uuid",
+      "dotenv": "github.com/joho/godotenv",
+      "graphql": "github.com/99designs/gqlgen (generated)"
+    },
+    "frontend_npm": {
+      "next": "14.2.5",
+      "react": "^18",
+      "react-dom": "^18",
+      "@reduxjs/toolkit": "^2.3.0",
+      "react-redux": "^9.1.2",
+      "@apollo/client": "^3.14.1",
+      "graphql": "^16.13.2",
+      "axios": "^1.7.7",
+      "react-hook-form": "^7.53.0",
+      "react-hot-toast": "^2.4.1",
+      "tailwindcss": "^3.4.1",
+      "lucide-react": "^0.439.0",
+      "date-fns": "^3.6.0",
+      "lenis": "^1.1.13",
+      "react-markdown": "^9.0.1",
+      "remark-gfm": "^4.0.0"
+    },
+    "frontend_dev": {
+      "typescript": "^5",
+      "eslint": "^8",
+      "eslint-config-next": "14.2.5",
+      "@playwright/test": "^1.48.0"
+    }
+  },
+
+  "constraints": [
+    "Multi-tenant, every domain row must carry tenant_id and be filtered at the handler/resolver layer.",
+    "Auth is email + password only; no OAuth, no SSO, no MFA today.",
+    "JWT secret is single-key (HS); rotation is a manual deploy.",
+    "Database is a single Postgres instance; AutoMigrate runs on every boot, so schema changes must be additive or paired with a self-heal drop.",
+    "BodyLimit is 16 MiB; larger uploads must be chunked (bulk pipeline already chunks at 100 rows/request).",
+    "CORS is fully open (AllowOrigins=*); harden before exposing to the public internet.",
+    "Static uploads live on the local disk (./uploads/{photos,learning-videos}); not horizontally scalable as-is.",
+    "Salary structures are read-only legacy; new code must use SalaryTemplate + SalaryAssignment.",
+    "Most CRUD now lives in GraphQL via Apollo; REST is reserved for auth, uploads, exports, bulk, and synchronous Redux paths (calendar/holidays settings, attendance summary)."
+  ],
+
+  "architecture_decisions": [
+    { "id": "ADR-01", "title": "Hybrid REST + GraphQL surface", "decision": "CRUD-heavy domains served by GraphQL; REST kept for auth, uploads, exports, calendar settings, and the bulk pipeline.", "rationale": "Apollo gives typed selection and caching; REST keeps binary, sync-Redux, and CSV-style endpoints simple." },
+    { "id": "ADR-02", "title": "Single-DB tenancy with JWT-scoped queries", "decision": "Every row carries tenant_id; handlers and resolvers always filter by it.", "rationale": "Simpler to operate than per-tenant DBs; super admin still operates against the platform tenant." },
+    { "id": "ADR-03", "title": "Vertical-neutral terminology layer", "decision": "Render labels through /terminology + terminologySlice instead of hardcoding 'Student'.", "rationale": "Same product serves education, corporate, healthcare, nonprofit with different vocab." },
+    { "id": "ADR-04", "title": "Schema-driven bulk uploads", "decision": "Each importable resource is declared as a Schema in handlers/bulk; the generic pipeline does validation + insert.", "rationale": "Adding a new bulk-importable resource is a single file, no route plumbing." },
+    { "id": "ADR-05", "title": "Salary templates + assignments", "decision": "Legacy per-employee salary_structures table dropped at boot; new model is reusable templates + assignments.", "rationale": "Composability and bulk assignments; old endpoint kept as a read-only shim." },
+    { "id": "ADR-06", "title": "Generic approval engine", "decision": "Reusable ApprovalFlow + ApprovalStep + ApprovalRequest + ApprovalAction; domains plug in via approval_callbacks.go.", "rationale": "Avoid re-implementing approval logic per module." },
+    { "id": "ADR-07", "title": "Component-per-page colocation", "decision": "app/.../page.tsx stays thin; the actual UI lives in components/pages/.../Page.tsx with sub-pieces in the same folder.", "rationale": "Easier navigation than huge page files; aligns with the project preference for small, readable modules." },
+    { "id": "ADR-08", "title": "AutoMigrate on every boot", "decision": "Run GORM AutoMigrate at startup; self-heal incomplete legacy tables before migration.", "rationale": "Zero-step deploys for additive changes; no migration runner to babysit." }
+  ],
+
+  "running": {
+    "backend": {
+      "default_env": {
+        "PORT": "8080",
+        "JWT_SECRET": "change_this_secret",
+        "DB_PATH": "postgres connection string",
+        "SUPER_ADMIN_EMAIL": "superadmin@platform.com",
+        "SUPER_ADMIN_PASSWORD": "SuperAdmin@123",
+        "APP_ENV": "development"
+      },
+      "commands": {
+        "install": "cd backend && go mod tidy",
+        "run":     "cd backend && go run main.go",
+        "migrate": "cd backend && go run main.go --migrate"
+      }
+    },
+    "frontend": {
+      "default_env": {
+        "NEXT_PUBLIC_API_URL": "http://localhost:8080"
+      },
+      "commands": {
+        "install": "cd frontend && pnpm install (or npm install)",
+        "dev":     "cd frontend && npm run dev",
+        "build":   "cd frontend && npm run build",
+        "test":    "cd frontend && npm run test"
+      }
+    }
+  },
+
+  "known_gaps": [
+    "No CI/CD configuration present in repo.",
+    "No rate limiting on auth or public endpoints.",
+    "Static uploads are local-disk only; needs S3-style adapter for multi-node deploys.",
+    "GraphQL endpoint allows anonymous introspection in dev; tighten before public exposure.",
+    "Email/notification delivery is in-app only; no SMTP/SMS provider wired up.",
+    "Audit logging is implicit (ApprovalAction) and not generalised across modules."
+  ]
+}

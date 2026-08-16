@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Option B — Cloud Hosting Cost Comparison</title>
+<link rel="stylesheet" href="opt_common.css">
+</head>
+<body>
+
+<div class="hdr">
+  <p class="kick">Peepal ERP · Hosting Option B</p>
+  <h1>Cloud Cost Comparison: AWS, GCP, Azure</h1>
+  <p>Like-for-like monthly cost of running the system on a public cloud, sized for a single institute of 200 to 300 users. No hardware to buy, billed monthly.</p>
+</div>
+
+<div class="hero">
+  <div class="card">
+    <div class="lbl">Amazon AWS</div>
+    <div class="big">₹5,600 / mo</div>
+    <div class="sml">approx. US$ 59 per month</div>
+  </div>
+  <div class="card dark">
+    <div class="lbl">Google Cloud · lowest</div>
+    <div class="big">₹5,100 / mo</div>
+    <div class="sml">approx. US$ 54 per month</div>
+  </div>
+  <div class="card">
+    <div class="lbl">Microsoft Azure</div>
+    <div class="big">₹6,200 / mo</div>
+    <div class="sml">approx. US$ 65 per month</div>
+  </div>
+</div>
+
+<div class="blk">
+  <h2><span class="n">1.</span> Monthly cost, item by item</h2>
+  <table>
+    <thead>
+      <tr>
+        <th style="width:26%">What it pays for</th>
+        <th class="r">AWS (US$)</th>
+        <th class="r">GCP (US$)</th>
+        <th class="r">Azure (US$)</th>
+        <th class="r">AWS (₹)</th>
+        <th class="r">GCP (₹)</th>
+        <th class="r">Azure (₹)</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td>Application server (2 vCPU, 4 GB)</td><td class="r">25</td><td class="r">24</td><td class="r">30</td><td class="r">2,375</td><td class="r">2,280</td><td class="r">2,850</td></tr>
+      <tr><td>Managed PostgreSQL database</td><td class="r">24</td><td class="r">22</td><td class="r">25</td><td class="r">2,280</td><td class="r">2,090</td><td class="r">2,375</td></tr>
+      <tr><td>Disk storage, 60 GB total</td><td class="r">6</td><td class="r">5</td><td class="r">6</td><td class="r">570</td><td class="r">475</td><td class="r">570</td></tr>
+      <tr><td>Backups and snapshots</td><td class="r">2</td><td class="r">2</td><td class="r">2</td><td class="r">190</td><td class="r">190</td><td class="r">190</td></tr>
+      <tr><td>Data transfer out, about 50 GB</td><td class="r">2</td><td class="r">1</td><td class="r">2</td><td class="r">190</td><td class="r">95</td><td class="r">190</td></tr>
+      <tr class="total"><td>Total per month</td><td class="r">59</td><td class="r">54</td><td class="r">65</td><td class="r">5,605</td><td class="r">5,130</td><td class="r">6,175</td></tr>
+    </tbody>
+  </table>
+  <p class="small">Indicative on-demand list prices for the cheapest US regions, August 2026, converted at ₹95 per US$. Indian regions (Mumbai) typically run 10 to 20 per cent higher. Taxes are extra.</p>
+</div>
+
+<div class="blk">
+  <h2><span class="n">2.</span> What it costs over time</h2>
+  <table>
+    <thead><tr><th style="width:28%">Period</th><th class="r">AWS</th><th class="r">Google Cloud</th><th class="r">Microsoft Azure</th></tr></thead>
+    <tbody>
+      <tr><td>Per month</td><td class="r">₹5,600 · $59</td><td class="r">₹5,100 · $54</td><td class="r">₹6,200 · $65</td></tr>
+      <tr><td>Per year, pay as you go</td><td class="r">₹67,300 · $708</td><td class="r">₹61,600 · $648</td><td class="r">₹74,100 · $780</td></tr>
+      <tr><td>Per year, with 1-year commitment</td><td class="r">₹44,000 · $463</td><td class="r">₹40,000 · $421</td><td class="r">₹48,000 · $505</td></tr>
+      <tr class="total"><td>Five years, pay as you go</td><td class="r">₹3,36,000 · $3,540</td><td class="r">₹3,08,000 · $3,240</td><td class="r">₹3,70,000 · $3,900</td></tr>
+    </tbody>
+  </table>
+  <p class="small">A one-year or three-year commitment on the server and database typically saves 30 to 40 per cent, in exchange for locking in that spend.</p>
+</div>
+
+<div class="cols2">
+<div>
+  <div class="blk">
+    <h2><span class="n">3.</span> Practical differences</h2>
+    <table>
+      <thead><tr><th style="width:24%">Provider</th><th>Notes that matter commercially</th></tr></thead>
+      <tbody>
+        <tr><td>AWS</td><td>Largest ecosystem and the easiest to hire for. A simplified bundled plan (Lightsail) can cut this to roughly ₹2,800 per month if managed database features are not needed.</td></tr>
+        <tr><td>Google Cloud</td><td>Cheapest of the three at this size and the simplest billing. Sustained-use discounts apply automatically, with no commitment needed.</td></tr>
+        <tr><td>Azure</td><td>Most expensive here, but the natural choice if the institute already runs Microsoft 365 or has Azure credits through an education agreement.</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+<div>
+  <div class="blk">
+    <h2><span class="n">4.</span> Points to note before deciding</h2>
+    <ul>
+      <li>All three offer first-year free credits of roughly US$ 200 to 300, so year one may cost noticeably less than shown.</li>
+      <li>Educational institutions can often apply for additional non-profit or academic credits from all three providers.</li>
+      <li>These figures cover infrastructure only. They do not include anyone's time to manage it.</li>
+      <li>Costs rise with usage. Adding institutes, students or heavy reporting increases the bill; the on-premise option does not change.</li>
+      <li>Data leaves the premises. Confirm this is acceptable for your compliance requirements.</li>
+    </ul>
+  </div>
+</div>
+</div>
+
+<div class="note"><b>Summary.</b> Cloud costs roughly ₹5,000 to ₹6,200 a month with no upfront spend, and gives you resilience, backups and scale without owning hardware. Over five years that is about ₹3.1 to ₹3.7 lakh, compared with roughly ₹47,000 for the on-premise Raspberry Pi option. Cloud is the better fit if uptime guarantees matter, if the institute has no on-site technical staff, or if you expect to grow well beyond a few hundred users.</div>
+
+<div class="foot">
+  <span>Peepal ERP · Hosting Option B · Indicative estimate, not a quotation</span>
+  <span>August 2026 · ₹95 = US$ 1</span>
+</div>
+
+</body>
+</html>

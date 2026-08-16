@@ -1,0 +1,114 @@
+@page {
+  size: A4;
+  margin: 20mm 18mm 18mm 18mm;
+  @top-left {
+    content: "Peepal ERP · Onboarding Guide";
+    font-family: "DejaVu Sans", sans-serif;
+    font-size: 7.5pt;
+    color: #8a94a6;
+  }
+  @bottom-right {
+    content: counter(page);
+    font-family: "DejaVu Sans", sans-serif;
+    font-size: 8pt;
+    color: #8a94a6;
+  }
+  @bottom-left {
+    content: "v1.0 · August 2026";
+    font-family: "DejaVu Sans", sans-serif;
+    font-size: 7.5pt;
+    color: #b3bac6;
+  }
+}
+@page cover { margin: 0; @top-left { content: none } @bottom-right { content: none } @bottom-left { content: none } }
+
+html { font-family: "DejaVu Sans", sans-serif; font-size: 9.6pt; color: #1d2430; line-height: 1.55; }
+body { margin: 0; }
+
+h1, h2, h3, h4 { font-family: "DejaVu Sans", sans-serif; color: #0f2f4f; line-height: 1.25; }
+
+/* Part divider: full-bleed page */
+@page part { margin: 0; @top-left { content: none } @bottom-right { content: none } @bottom-left { content: none } }
+.part {
+  page: part;
+  page-break-before: always;
+  page-break-after: always;
+  height: 297mm;
+  background: #0f2f4f;
+  color: #fff;
+  position: relative;
+}
+.part .pinner { position: absolute; top: 105mm; left: 24mm; right: 30mm; }
+.part .kicker { font-size: 9.5pt; letter-spacing: 3px; text-transform: uppercase; color: #7fc4f5; margin: 0 0 10px; }
+.part h1 { color: #fff; font-size: 30pt; margin: 0 0 7mm; }
+.part .prule { width: 40mm; height: 3px; background: #4a90c4; margin: 0 0 7mm; }
+.part p { color: #cfe2f2; margin: 0; font-size: 10.5pt; line-height: 1.6; }
+
+h1.chapter {
+  font-size: 15.5pt;
+  margin: 0 0 4px;
+  padding-bottom: 5px;
+  border-bottom: 2.5px solid #0f2f4f;
+  page-break-before: always;
+  page-break-after: avoid;
+}
+h1.chapter .num { color: #4a90c4; }
+h2 { font-size: 11.5pt; margin: 16px 0 5px; page-break-after: avoid; }
+h3 { font-size: 10pt; margin: 12px 0 4px; color: #2a4a68; page-break-after: avoid; }
+p { margin: 0 0 7px; }
+ul, ol { margin: 0 0 8px; padding-left: 17px; }
+li { margin-bottom: 3px; }
+
+code, .mono { font-family: "DejaVu Sans Mono", monospace; font-size: 8.3pt; background: #eef2f7; padding: 1px 3.5px; border-radius: 3px; color: #16394f; }
+pre {
+  background: #10202e; color: #dbe7f0; padding: 8px 10px; border-radius: 5px;
+  font-family: "DejaVu Sans Mono", monospace; font-size: 7.9pt; line-height: 1.5;
+  overflow-wrap: break-word; white-space: pre-wrap; margin: 6px 0 10px;
+  page-break-inside: avoid;
+}
+pre code { background: none; color: inherit; padding: 0; font-size: inherit; }
+pre .c { color: #7f9bb0; }
+
+table { width: 100%; border-collapse: collapse; margin: 6px 0 12px; font-size: 8.4pt; page-break-inside: auto; }
+thead { display: table-header-group; }
+th { background: #0f2f4f; color: #fff; text-align: left; padding: 5px 7px; font-weight: bold; }
+td { padding: 4.5px 7px; border-bottom: 1px solid #dfe5ec; vertical-align: top; }
+tbody tr:nth-child(even) { background: #f5f8fb; }
+td code { font-size: 7.8pt; }
+
+.note, .warn, .tip {
+  border-left: 3.5px solid #4a90c4; background: #eff6fc; padding: 7px 10px;
+  margin: 8px 0 11px; font-size: 8.8pt; page-break-inside: avoid; border-radius: 0 4px 4px 0;
+}
+.warn { border-left-color: #d9822b; background: #fdf4ea; }
+.tip { border-left-color: #2e9e6b; background: #edf8f2; }
+.note b, .warn b, .tip b { color: #0f2f4f; }
+
+/* Cover */
+.cover { page: cover; height: 297mm; position: relative; color: #fff; background: #0f2f4f; page-break-after: always; }
+.cover .band { position: absolute; top: 0; left: 0; right: 0; height: 170mm; background: #0f2f4f; }
+.cover .inner { position: absolute; top: 52mm; left: 22mm; right: 22mm; }
+.cover .logo { font-size: 11pt; letter-spacing: 6px; color: #7fc4f5; text-transform: uppercase; margin-bottom: 26mm; }
+.cover h1 { font-size: 40pt; color: #fff; margin: 0 0 6mm; line-height: 1.05; }
+.cover .sub { font-size: 13pt; color: #a9cfe9; margin: 0 0 3mm; }
+.cover .rule { width: 46mm; height: 3px; background: #4a90c4; margin: 8mm 0; }
+.cover .meta { position: absolute; bottom: 26mm; left: 22mm; right: 22mm; color: #8fb6d4; font-size: 9pt; }
+.cover .meta table { font-size: 9pt; }
+.cover .meta td { border: none; padding: 2.5px 0; color: #cfe2f2; }
+.cover .meta td.k { color: #7fa8c9; width: 34mm; }
+.cover .meta tbody tr:nth-child(even) { background: none; }
+
+/* TOC */
+.toc { page-break-after: always; }
+.toc h1 { font-size: 16pt; border-bottom: 2.5px solid #0f2f4f; padding-bottom: 5px; }
+.toc .pt { margin: 14px 0 5px; font-size: 9pt; letter-spacing: 1.6px; text-transform: uppercase; color: #4a90c4; font-weight: bold; }
+.toc ol { list-style: none; padding: 0; margin: 0; }
+.toc li { margin: 0; padding: 3px 0; border-bottom: 1px dotted #d6dde6; font-size: 9.2pt; }
+.toc li .n { display: inline-block; width: 9mm; color: #4a90c4; font-weight: bold; }
+
+.lead { font-size: 10pt; color: #44536a; margin-bottom: 12px; }
+.small { font-size: 8.3pt; color: #66748a; }
+.nb { page-break-inside: avoid; }
+.role-grid td:first-child { font-weight: bold; color: #0f2f4f; white-space: nowrap; }
+hr.soft { border: none; border-top: 1px solid #e2e8ef; margin: 14px 0; }
+.footer-note { margin-top: 18px; padding-top: 8px; border-top: 1px solid #dfe5ec; font-size: 8pt; color: #7c889b; }

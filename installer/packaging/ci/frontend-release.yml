@@ -1,0 +1,57 @@
+# Copy this into the FRONTEND repository as .github/workflows/release.yml.
+#
+# Produces one platform-independent bundle: Next.js standalone output plus the
+# static assets it does not copy itself. The Node runtime is shipped separately
+# by the installer, so nothing here is architecture specific.
+name: Release frontend
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with: { version: 9 }
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Build
+        env:
+          # Emits .next/standalone. Leaving NEXT_PUBLIC_API_URL unset is
+          # deliberate: the browser bundle then calls /api/v1 relatively and
+          # reaches the backend through the agent's proxy.
+          NEXT_STANDALONE: "1"
+          NODE_ENV: production
+        run: pnpm build
+
+      - name: Assemble the bundle
+        run: |
+          # next build copies only traced dependencies into standalone; the
+          # static and public directories have to be placed by hand.
+          mkdir -p out
+          cp -r .next/standalone/. out/
+          mkdir -p out/.next
+          cp -r .next/static out/.next/static
+          [ -d public ] && cp -r public out/public || true
+          tar -C out -czf peepal-frontend.tar.gz .
+
+      - name: Checksum
+        run: sha256sum peepal-frontend.tar.gz > checksums.txt
+
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            peepal-frontend.tar.gz
+            checksums.txt
+          generate_release_notes: true

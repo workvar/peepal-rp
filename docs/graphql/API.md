@@ -1,4 +1,4 @@
-# StepElly GraphQL API
+# Peepal GraphQL API
 
 **Endpoint:** `POST http://localhost:3001/api/v1/graphql`  
 **Playground:** `GET  http://localhost:3001/api/v1/graphql` *(dev only)*

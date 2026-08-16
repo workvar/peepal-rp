@@ -1074,7 +1074,7 @@ git commit -m "feat(batch5): add fees GraphQL query/mutation documents"
 
 The existing page has 4 tabs: payments, structures, dues, categories. Migrate each tab from Redux to Apollo. Keep `useAppSelector(s => s.auth)` for role checks.
 
-Read the existing page at `frontend/app/[tenant]/(dashboard)/fees/page.tsx` first (it is large — read the full file at `/Users/yasharyan/.claude/projects/-Users-yasharyan-Documents-Claude-Projects-StepElly/2c3af479-0d57-4689-8ba8-d01aa929f5f7/tool-results/bvhcetcyv.txt`).
+Read the existing page at `frontend/app/[tenant]/(dashboard)/fees/page.tsx` first (it is large — read the full file at `/Users/yasharyan/.claude/projects/-Users-yasharyan-Documents-Claude-Projects-Peepal/2c3af479-0d57-4689-8ba8-d01aa929f5f7/tool-results/bvhcetcyv.txt`).
 
 - [ ] **Step 1: Replace Redux imports with Apollo**
 

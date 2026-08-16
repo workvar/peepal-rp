@@ -1,0 +1,41 @@
+# nfpm configuration producing both .deb and .rpm from the same definition.
+#
+#   VERSION=1.4.0 ARCH=amd64 envsubst < packaging/linux/nfpm.yaml > /tmp/nfpm.yaml
+#   nfpm package -f /tmp/nfpm.yaml -p deb -t dist/
+#   nfpm package -f /tmp/nfpm.yaml -p rpm -t dist/
+name: peepal
+arch: ${ARCH}
+platform: linux
+version: ${VERSION}
+section: default
+priority: optional
+maintainer: Peepal <support@peepal.example>
+description: |
+  Peepal ERP, installed and kept up to date on this machine.
+  Provisions PostgreSQL, downloads the application from its release
+  repositories, and runs it as a background service on http://localhost.
+vendor: Peepal
+homepage: https://peepal.example
+license: Proprietary
+
+depends:
+  - curl
+  - ca-certificates
+
+contents:
+  - src: dist/linux_${ARCH}/peepal-installer
+    dst: /usr/local/peepal/bin/peepal-installer
+    file_info:
+      mode: 0755
+  - src: dist/linux_${ARCH}/peepal-agent
+    dst: /usr/local/peepal/bin/peepal-agent
+    file_info:
+      mode: 0755
+  - src: packaging/linux/peepal-setup
+    dst: /usr/local/bin/peepal-setup
+    file_info:
+      mode: 0755
+
+scripts:
+  postinstall: packaging/linux/postinstall.sh
+  preremove: packaging/linux/preremove.sh

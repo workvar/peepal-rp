@@ -226,7 +226,7 @@ interface BrowserFrameProps {
   src: string;                       // image path
   alt: string;
   variant?: "browser" | "mac";       // default "browser" (Chrome-style URL bar)
-  url?: string;                      // shown in URL bar; defaults to "stepelly.app/<slug>"
+  url?: string;                      // shown in URL bar; defaults to "peepal.app/<slug>"
   tilt?: number;                     // degrees, default -1
   shadow?: "sm" | "md" | "lg";       // default "lg"
   priority?: boolean;                // forwarded to next/image
@@ -267,14 +267,14 @@ interface ModuleDeepDiveProps {
 
 ### Hero
 
-- **Eyebrow:** `StepElly · ERP for institutes`
+- **Eyebrow:** `Peepal · ERP for institutes`
 - **Headline:** `Run every team. Every workflow.` *(italic-serif "Every" on line 2)*
-- **Subhead:** `StepElly is one workspace for everything an institute runs — students, staff, attendance, marks, leaves, payroll and fees, with reports built in.`
+- **Subhead:** `Peepal is one workspace for everything an institute runs — students, staff, attendance, marks, leaves, payroll and fees, with reports built in.`
 - **CTAs:** `Sign in →` · `Explore modules`
 
 ### Manifesto (#2)
 
-> Most institutes run on six tools and a thousand spreadsheets. StepElly replaces all of them with a single workspace where attendance, payroll, marks, leaves and reports finally talk to each other — and to you.
+> Most institutes run on six tools and a thousand spreadsheets. Peepal replaces all of them with a single workspace where attendance, payroll, marks, leaves and reports finally talk to each other — and to you.
 
 ### Modules grid (#3)
 
@@ -305,7 +305,7 @@ interface ModuleDeepDiveProps {
 
 - **Eyebrow:** `For IT & operations`
 - **Heading:** `Built for the people who actually run it.`
-- **Body:** `StepElly is multi-tenant, role-based and audit-friendly — so the team running the institute can sleep at night.`
+- **Body:** `Peepal is multi-tenant, role-based and audit-friendly — so the team running the institute can sleep at night.`
 - Three columns:
   - **Roles & permissions** — `27+ scopes. Role-based access end-to-end.`
   - **Data ownership** — `Export anything. CSV/PDF baked into every screen.`
@@ -342,7 +342,7 @@ The script is a Node/TypeScript file in the frontend repo that authenticates aga
 
 ### What `scripts/capture-marketing-screenshots.ts` does
 
-1. Reads target URL from env (`STEPELLY_DEV_URL`, default `http://localhost:3000`).
+1. Reads target URL from env (`PEEPAL_DEV_URL`, default `http://localhost:3000`).
 2. Logs in via the UI as the seeded admin.
 3. Resolves the active tenant slug from the post-login redirect.
 4. For each target route, navigates, waits for network-idle + a 500ms settle, and captures a 1280×800 viewport screenshot at `deviceScaleFactor: 2`.
@@ -385,7 +385,7 @@ The plan builder will turn this into discrete tasks. Suggested sequencing:
 | --- | --- |
 | `--primary` swap visually breaks dashboard pages we forgot about (custom hex usage, custom focus rings). | Phase 1 ends with a 30-minute click-through across every dashboard route the seeded admin can reach. Bug list is fixed before Phase 2 starts. |
 | Screenshots go stale as dashboards evolve. | `pnpm screenshots:marketing` is one command and idempotent. Add to README; revisit later for CI automation. |
-| Demo seed conflicts with real data on a developer's local DB. | Seed script is idempotent and namespaces fixture rows (e.g., `email LIKE '%@demo.stepelly.app'`); `--reset` flag deletes only fixture-namespaced rows. |
+| Demo seed conflicts with real data on a developer's local DB. | Seed script is idempotent and namespaces fixture rows (e.g., `email LIKE '%@demo.peepal.app'`); `--reset` flag deletes only fixture-namespaced rows. |
 | Visitor's OS dark-mode bleeds into marketing pages. | `MarketingShell` strips any `dark` class from `<html>` while mounted; CSS for marketing-specific surfaces uses literal hex, not dark-mode-conditional tokens. |
 | Page weight balloons from screenshots. | All screenshots use `next/image`, which serves modern formats (AVIF/WebP) automatically — sources stay as PNG. Hero gets `priority`, others lazy-load. Soft target: each screenshot below 250 KB after `next/image` optimization. |
 | `gsap`/`lenis` stay as deps even though only Lenis is used. | Acceptable — `gsap` is used elsewhere in the codebase. No bundle-size change for `/`. |

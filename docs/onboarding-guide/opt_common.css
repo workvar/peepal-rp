@@ -1,0 +1,43 @@
+@page { size: A4; margin: 12mm 13mm 10mm 13mm; }
+html { font-family: "DejaVu Sans", sans-serif; font-size: 8pt; color: #1d2430; line-height: 1.45; }
+body { margin: 0; }
+
+.hdr { background: #0f2f4f; color: #fff; padding: 7mm 8mm 6mm; margin: -12mm -13mm 5mm -13mm; }
+.hdr .kick { font-size: 7pt; letter-spacing: 3px; text-transform: uppercase; color: #7fc4f5; margin: 0 0 4px; }
+.hdr h1 { font-size: 17pt; margin: 0 0 4px; color: #fff; }
+.hdr p { margin: 0; font-size: 8.2pt; color: #b9d5ea; }
+
+h2 { font-size: 9pt; color: #0f2f4f; margin: 0 0 3px; padding-bottom: 2px; border-bottom: 2px solid #0f2f4f; }
+h2 .n { color: #4a90c4; }
+.blk { margin-bottom: 4.5mm; }
+p { margin: 0 0 4px; }
+
+table { width: 100%; border-collapse: collapse; font-size: 7.6pt; margin-top: 3px; }
+th { background: #0f2f4f; color: #fff; text-align: left; padding: 3.5px 5px; font-weight: bold; font-size: 7.2pt; }
+td { padding: 3.5px 5px; border-bottom: 1px solid #e2e8ef; vertical-align: top; }
+tbody tr:nth-child(even) { background: #f6f9fc; }
+td.r, th.r { text-align: right; }
+tr.total td { background: #e8eef5 !important; font-weight: bold; color: #0f2f4f; border-top: 1.5px solid #0f2f4f; border-bottom: none; }
+
+.hero { display: flex; gap: 4mm; margin-bottom: 5mm; }
+.card { flex: 1; border: 1px solid #cfdae6; border-radius: 4px; padding: 4mm 4mm 3.5mm; text-align: center; }
+.card.dark { background: #0f2f4f; border-color: #0f2f4f; }
+.card .lbl { font-size: 6.8pt; letter-spacing: 1.5px; text-transform: uppercase; color: #6b7d92; margin-bottom: 2mm; }
+.card.dark .lbl { color: #7fc4f5; }
+.card .big { font-size: 15pt; font-weight: bold; color: #0f2f4f; line-height: 1.1; }
+.card.dark .big { color: #fff; }
+.card .sml { font-size: 7pt; color: #6b7d92; margin-top: 1.5mm; }
+.card.dark .sml { color: #b9d5ea; }
+
+.note { border-left: 3px solid #4a90c4; background: #eff6fc; padding: 4px 7px; font-size: 7.2pt; margin-top: 4px; }
+.warn { border-left-color: #d9822b; background: #fdf4ea; }
+.tip { border-left-color: #2e9e6b; background: #edf8f2; }
+.note b { color: #0f2f4f; }
+
+ul { margin: 3px 0 0; padding-left: 13px; }
+li { margin-bottom: 2px; }
+.cols2 { display: flex; gap: 5mm; }
+.cols2 > div { flex: 1; }
+
+.foot { margin-top: 4mm; padding-top: 3px; border-top: 1px solid #dfe5ec; font-size: 6.6pt; color: #7c889b; display: flex; justify-content: space-between; }
+.small { font-size: 7pt; color: #66748a; }

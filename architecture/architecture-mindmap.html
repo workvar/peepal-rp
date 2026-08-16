@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>CollERP, Architecture Mindmap</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  html, body { height: 100%; }
+  body {
+    font-family: 'Inter', system-ui, -apple-system, Segoe UI, sans-serif;
+    background:
+      radial-gradient(1200px 700px at 20% 10%, rgba(99,102,241,0.18), transparent 60%),
+      radial-gradient(1000px 600px at 90% 90%, rgba(236,72,153,0.15), transparent 60%),
+      radial-gradient(900px 500px at 50% 50%, rgba(20,184,166,0.10), transparent 60%),
+      #07091a;
+    color: #e6e8f0;
+    overflow: hidden;
+  }
+  .toolbar {
+    position: fixed; top: 16px; left: 16px; right: 16px; z-index: 30;
+    display: flex; align-items: center; justify-content: space-between;
+    pointer-events: none;
+  }
+  .toolbar > * { pointer-events: auto; }
+  .glass { background: rgba(15,18,40,0.6); border: 1px solid rgba(255,255,255,0.08); backdrop-filter: blur(10px); border-radius: 14px; }
+
+  #viewport {
+    position: absolute; inset: 0; cursor: grab;
+    overflow: hidden;
+  }
+  #viewport.dragging { cursor: grabbing; }
+  #stage {
+    position: absolute; left: 0; top: 0;
+    transform-origin: 0 0;
+    will-change: transform;
+  }
+
+  /* mindmap nodes */
+  .node {
+    position: absolute;
+    transform: translate(-50%, -50%);
+    user-select: none;
+  }
+  .node .card {
+    border: 1px solid rgba(255,255,255,0.10);
+    background: rgba(255,255,255,0.04);
+    padding: 10px 14px;
+    border-radius: 14px;
+    min-width: 120px;
+    text-align: left;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.35);
+    cursor: pointer;
+    transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease;
+  }
+  .node .card:hover {
+    transform: translateY(-2px);
+    border-color: rgba(255,255,255,0.25);
+    box-shadow: 0 12px 32px rgba(0,0,0,0.45);
+  }
+  .node[data-collapsed="true"] .card::after {
+    content: " (+)"; color: #94a3b8; font-size: 11px;
+  }
+  .node .title { font-weight: 700; font-size: 13px; letter-spacing: 0.2px; }
+  .node .sub   { font-size: 10.5px; color: #94a3b8; margin-top: 2px; line-height: 1.3; }
+
+  /* level styles */
+  .lvl-0 .card { background: linear-gradient(135deg, #6366f1, #ec4899); border: none; padding: 16px 22px; box-shadow: 0 16px 50px rgba(99,102,241,0.4); }
+  .lvl-0 .title { font-size: 18px; }
+  .lvl-0 .sub { color: rgba(255,255,255,0.85); }
+
+  .lvl-1.cat-fe   .card { box-shadow: 0 0 0 1px rgba(129,140,248,0.45), 0 10px 30px rgba(99,102,241,0.18); }
+  .lvl-1.cat-be   .card { box-shadow: 0 0 0 1px rgba(45,212,191,0.45), 0 10px 30px rgba(20,184,166,0.18); }
+  .lvl-1.cat-api  .card { box-shadow: 0 0 0 1px rgba(244,114,182,0.45), 0 10px 30px rgba(236,72,153,0.18); }
+  .lvl-1.cat-data .card { box-shadow: 0 0 0 1px rgba(251,191,36,0.45), 0 10px 30px rgba(245,158,11,0.18); }
+  .lvl-1.cat-sec  .card { box-shadow: 0 0 0 1px rgba(167,139,250,0.45), 0 10px 30px rgba(139,92,246,0.18); }
+  .lvl-1.cat-mod  .card { box-shadow: 0 0 0 1px rgba(94,234,212,0.45), 0 10px 30px rgba(20,184,166,0.18); }
+  .lvl-1.cat-ops  .card { box-shadow: 0 0 0 1px rgba(248,113,113,0.45), 0 10px 30px rgba(239,68,68,0.18); }
+
+  .lvl-1 .card { padding: 12px 18px; }
+  .lvl-1 .title { font-size: 14.5px; }
+
+  .lvl-3 .card { padding: 6px 10px; min-width: 0; border-radius: 10px; background: rgba(255,255,255,0.025); }
+  .lvl-3 .title { font-size: 12px; font-weight: 600; }
+  .lvl-3 .sub { font-size: 10px; }
+
+  /* connectors */
+  #links { position: absolute; left: 0; top: 0; pointer-events: none; overflow: visible; }
+  .link {
+    fill: none; stroke-width: 1.5; stroke-linecap: round;
+    transition: stroke-opacity .2s ease;
+  }
+
+  /* category colour helpers for connectors */
+  .stroke-fe   { stroke: #818cf8; }
+  .stroke-be   { stroke: #2dd4bf; }
+  .stroke-api  { stroke: #f472b6; }
+  .stroke-data { stroke: #fbbf24; }
+  .stroke-sec  { stroke: #a78bfa; }
+  .stroke-mod  { stroke: #5eead4; }
+  .stroke-ops  { stroke: #f87171; }
+
+  /* details panel */
+  #detail {
+    position: fixed; right: 16px; bottom: 16px; max-width: 360px;
+    z-index: 25; padding: 14px 16px; display: none;
+  }
+  #detail.open { display: block; }
+  #detail .label { font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: #94a3b8; }
+  #detail h3 { font-size: 15px; font-weight: 700; margin-top: 2px; margin-bottom: 8px; }
+  #detail p { font-size: 12.5px; color: #cbd5e1; line-height: 1.45; }
+  #detail .close { position: absolute; top: 8px; right: 10px; cursor: pointer; color: #94a3b8; font-size: 14px; }
+  #detail ul { font-size: 12px; color: #cbd5e1; margin-top: 6px; }
+  #detail li { margin-left: 16px; list-style: disc; }
+  #detail .endpoint { font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 11.5px; color: #e2e8f0; }
+
+  /* legend */
+  .legend-dot { width: 9px; height: 9px; border-radius: 9999px; display: inline-block; }
+  .btn { padding: 6px 10px; font-size: 12px; border-radius: 10px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.10); }
+  .btn:hover { background: rgba(255,255,255,0.10); }
+  kbd { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); border-radius: 6px; padding: 1px 5px; font-size: 11px; }
+</style>
+</head>
+<body>
+
+<div class="toolbar">
+  <div class="glass px-4 py-3 flex items-center gap-3">
+    <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-pink-500 flex items-center justify-center text-sm font-black">C</div>
+    <div>
+      <div class="text-sm font-bold leading-tight">CollERP - Architecture Mindmap</div>
+      <div class="text-[11px] text-slate-400">Drag to pan - scroll/buttons to zoom - click any node</div>
+    </div>
+  </div>
+  <div class="glass px-3 py-2 flex items-center gap-1">
+    <button id="zoom-out" class="btn">,</button>
+    <span id="zoom-label" class="text-xs text-slate-400 w-12 text-center">100%</span>
+    <button id="zoom-in" class="btn">+</button>
+    <button id="reset" class="btn">Reset</button>
+    <button id="expand" class="btn">Expand all</button>
+    <button id="collapse" class="btn">Collapse</button>
+  </div>
+</div>
+
+<div class="toolbar" style="top: auto; bottom: 16px; left: 16px; right: auto;">
+  <div class="glass px-3 py-2 text-[11px] text-slate-300 flex flex-wrap gap-3">
+    <span class="flex items-center gap-1.5"><span class="legend-dot" style="background:#818cf8"></span>Frontend</span>
+    <span class="flex items-center gap-1.5"><span class="legend-dot" style="background:#2dd4bf"></span>Backend</span>
+    <span class="flex items-center gap-1.5"><span class="legend-dot" style="background:#f472b6"></span>API</span>
+    <span class="flex items-center gap-1.5"><span class="legend-dot" style="background:#fbbf24"></span>Data</span>
+    <span class="flex items-center gap-1.5"><span class="legend-dot" style="background:#a78bfa"></span>Security</span>
+    <span class="flex items-center gap-1.5"><span class="legend-dot" style="background:#5eead4"></span>Modules</span>
+    <span class="flex items-center gap-1.5"><span class="legend-dot" style="background:#f87171"></span>Ops/Flows</span>
+  </div>
+</div>
+
+<div id="viewport">
+  <div id="stage">
+    <svg id="links" width="6000" height="3600" viewBox="0 0 6000 3600"></svg>
+    <div id="nodes"></div>
+  </div>
+</div>
+
+<div id="detail" class="glass">
+  <span class="close" id="detail-close">x</span>
+  <div class="label" id="detail-label">Node</div>
+  <h3 id="detail-title">Title</h3>
+  <p id="detail-desc"></p>
+  <ul id="detail-list"></ul>
+</div>
+
+<script>
+// =============================================================================
+// MINDMAP DATA
+// Each node: { id, title, sub?, desc?, list?, children?, cat? }
+// `cat` controls colour theme. It cascades to children unless overridden.
+// =============================================================================
+const DATA = {
+  id: "root",
+  title: "CollERP",
+  sub: "Multi-tenant ERP, education + corporate + healthcare + nonprofit",
+  desc: "Go Fiber + GORM + PostgreSQL back, Next.js 14 + Apollo + Redux Toolkit front. Email/password auth, JWT-scoped tenancy, vertical-aware terminology.",
+  children: [
+    {
+      id: "frontend", cat: "fe", title: "Frontend", sub: "Next.js 14 (App Router)",
+      desc: "Per-page colocated components in components/pages/[route]/Page.tsx. Apollo for most CRUD, Axios for auth, uploads, exports, bulk.",
+      children: [
+        { id: "fe-pages", title: "App Router", sub: "3 route groups", children: [
+          { id: "fe-tenant", title: "[tenant]/(dashboard)", sub: "tenant users", desc: "Per-tenant dashboard. ~40 pages: dashboard, employees, students, attendance, marks, leaves, payroll, fees, timetable, events, calendar, hostel, transport, library, reports, learning, approvals, org/*..." },
+          { id: "fe-super",  title: "(super-admin)/super", sub: "platform operator", desc: "Tenant + plan + subscription management, super admin user CRUD, impersonation." },
+          { id: "fe-public", title: "Marketing", sub: "/, /about, /modules, /privacy, /terms", desc: "Unauthenticated content. The 401 interceptor in api/client.ts does NOT redirect away from these paths." }
+        ]},
+        { id: "fe-state", title: "Redux store", sub: "13 slices", desc: "Slim global store: auth, tenant, org, holiday, calendar, notification, report, subscription, timetable, hostel, transport, library, terminology. CRUD slices for employees/students/marks/etc retired in favour of Apollo cache.", list: ["auth", "tenant", "org", "holiday", "calendar", "notification", "report", "subscription", "timetable", "hostel", "transport", "library", "terminology"] },
+        { id: "fe-data", title: "Data layer", sub: "Apollo + Axios", children: [
+          { id: "fe-apollo", title: "Apollo client", sub: "lib/apollo.ts", desc: "Attaches Authorization and X-Tenant-ID on every GraphQL request." },
+          { id: "fe-axios",  title: "Axios client", sub: "api/client.ts", desc: "Token + tenant interceptors, public-page guard, auto-redirect on 401 only when a session existed and we are not on a marketing path." },
+          { id: "fe-services", title: "REST services", sub: "api/services/*", list: ["auth", "bulk", "campus", "communications", "finance", "operations", "org", "people", "reports", "superAdmin", "terminology", "organization", "approvals", "uploads"] },
+          { id: "fe-graphql", title: "GraphQL ops", sub: "graphql/{queries,mutations}", list: ["students", "employees", "academic", "marks", "attendance", "leaves", "fees", "payroll", "timetable", "events", "announcements", "notifications", "reports", "learning"] }
+        ]},
+        { id: "fe-ui", title: "UI components", sub: "components/", children: [
+          { id: "ui-shared", title: "Shared UI", sub: "components/ui/*", list: ["button","card","Modal","select","badge","tooltip","PhotoUpload","BulkUpload/*","skeletons/*"] },
+          { id: "ui-layout", title: "Layout chrome", sub: "components/layout/*", list: ["Header","TopBar","UserMenu","NotificationBell","ModuleSwitcher","GridMenu"] },
+          { id: "ui-pages",  title: "Page components", sub: "components/pages/[route]/Page.tsx", desc: "Each route's real UI lives next to its page.tsx in components/pages, with sub-pieces (tabs, modals, tables) in the same folder." },
+          { id: "ui-onb",    title: "Onboarding tour", sub: "components/onboarding/OnboardingTour.tsx" }
+        ]},
+        { id: "fe-lib", title: "lib/", sub: "helpers", list: ["moduleConfig","analytics/{config,events,gtag,hooks,registry,types}","marketing/modules","utils"] }
+      ]
+    },
+
+    {
+      id: "backend", cat: "be", title: "Backend", sub: "Go Fiber",
+      desc: "main.go loads config -> connects DB -> AutoMigrate -> seeds platform tenant + super admin -> mounts middleware -> registers routes.",
+      children: [
+        { id: "be-entry", title: "Entry", sub: "main.go + config", desc: "Port 8080 default. BodyLimit 16 MiB. Global middleware: recover, logger, cors (* origins, X-Tenant-ID header allowed). Health at /health. --migrate one-shot mode." },
+        { id: "be-mw", title: "middleware/", sub: "auth + tenancy", list: ["Authenticate (401 if missing)","OptionalAuthenticate (for /graphql)","RequireRole(roles...)","RequireSuperAdmin","TenantID / UserID / UserRole helpers"] },
+        { id: "be-handlers", title: "handlers/", sub: "REST controllers", children: [
+          { id: "h-auth",    title: "Auth + users", list: ["auth","users","org_admin","super_admin","user_custom_roles"] },
+          { id: "h-people",  title: "People", list: ["employees","students","org_structure"] },
+          { id: "h-academic",title: "Academic", list: ["academic","marks","results","attendance","attendance_export"] },
+          { id: "h-leave",   title: "Leave + approvals", list: ["leaves","leave_types","approval_engine","approval_process_types","approval_callbacks"] },
+          { id: "h-finance", title: "Finance", list: ["fees","salary","payslip"] },
+          { id: "h-ops",     title: "Operations", list: ["hostel","transport","library","timetable","events","calendar","holidays"] },
+          { id: "h-comms",   title: "Comms + reports", list: ["announcements","notifications","reports","dashboard_charts"] },
+          { id: "h-misc",    title: "Misc", list: ["terminology","photo_upload","learning_video","subscriptions"] },
+          { id: "h-bulk",    title: "bulk/", sub: "schema-driven CSV", list: ["registry","handlers","validate","schema_employees","schema_students","schema_users","schema_attendance","schema_marks","schema_leave_types"] }
+        ]},
+        { id: "be-graph", title: "graph/", sub: "gqlgen", desc: "Schema in graph/schema.graphqls. Resolvers split per domain. Reaches into the same GORM models as REST.", list: ["resolver.go","schema.resolvers.go","employees","students","academic","marks","attendance","fees","payroll","timetable","comms","reports","learning","learning_quiz","auth_context","helpers","errors","model/models_gen"] },
+        { id: "be-models", title: "models/", sub: "GORM entities", children: [
+          { id: "m-tenant", title: "Tenant + plans", list: ["Tenant","SubscriptionPlan","TenantSubscription","OrgProfile"] },
+          { id: "m-people", title: "People", list: ["User","CustomRole","Department","Employee","EmployeePaymentDetails","Course","Student"] },
+          { id: "m-academic", title: "Academic", list: ["AcademicYear","Semester","Subject","ExamSchedule","Mark","Attendance","AttendanceSettings"] },
+          { id: "m-leave", title: "Leave", list: ["Leave","LeaveTypeConfig","LeaveBalance"] },
+          { id: "m-money", title: "Finance", list: ["SalaryTemplate","SalaryAssignment","Payroll","PayrollDeduction","FeeCategory","FeeStructure","FeePayment"] },
+          { id: "m-comms", title: "Comms", list: ["Announcement","Notification","Event","Holiday","CalendarSettings","TimetableSlot"] },
+          { id: "m-ops",   title: "Operations", list: ["HostelBlock","HostelRoom","HostelAllocation","TransportRoute","TransportVehicle","TransportAllocation","LibraryBook","LibraryIssue"] },
+          { id: "m-learn", title: "Learning", list: ["LearningGoal","LearningSection","LearningUnit","LearningAssignment","LearningQuestion","GoalAssignment","EmployeeGoalProgress","UnitProgress","AssignmentProgress"] },
+          { id: "m-appr",  title: "Approval engine", list: ["ApprovalProcessType","ApprovalFlow","ApprovalStep","ApprovalRequest","ApprovalAction"] }
+        ]},
+        { id: "be-utils", title: "utils/", sub: "primitives", list: ["jwt.go","password.go","response.go (APIResponse envelope)","payslip_pdf.go","video_storage.go"] }
+      ]
+    },
+
+    {
+      id: "api", cat: "api", title: "API surface", sub: "/api/v1",
+      desc: "Hybrid. CRUD-heavy domains served by GraphQL. REST kept for auth, uploads, exports, calendar settings, and the bulk pipeline.",
+      children: [
+        { id: "api-rest", title: "REST", sub: "Fiber routes", desc: "Registered in backend/routes/routes.go", children: [
+          { id: "r-auth",   title: "/auth", list: ["POST /login","GET /me","PUT /profile","PUT /password"] },
+          { id: "r-super",  title: "/super", sub: "super_admin only", list: ["/stats","/tenants {GET POST}","/tenants/:id {GET PUT DELETE}","/tenants/:id/status PATCH","/tenants/:id/impersonate POST","/admins","/plans","/subscriptions"] },
+          { id: "r-org",    title: "/org", sub: "admin only", list: ["/profile","/setup-status","/subscription","/departments","/academic-years","/semesters","/roles","/users/:id/manager","/users/:id/custom-role","/approval-flows","/approval-process-types"] },
+          { id: "r-orgst",  title: "/organization", sub: "any user", list: ["/users","/structure"] },
+          { id: "r-appr",   title: "/approval-requests", list: ["GET /pending","GET /mine","GET /active-flows","GET /:id","POST /","POST /:id/approve","POST /:id/reject"] },
+          { id: "r-students", title: "/students", list: ["GET /me","POST /bulk-import (admin)"] },
+          { id: "r-att",    title: "/attendance + /calendar + /holidays", list: ["/attendance/summary","/attendance/shortage","/attendance/settings","/attendance/export-csv","/calendar/{settings,month,generate,day}","/holidays"] },
+          { id: "r-fin",    title: "Finance", list: ["/salary-templates","/salary-assignments","/salary-structures (legacy)","/payroll {generate, status, pdf}","/fee-categories","/fee-structures","/fee-payments {/me,/dues,/summary}"] },
+          { id: "r-comms",  title: "/announcements + /notifications", list: ["/announcements{,/all}","/notifications{,/unread-count,/read-all,/:id/read}"] },
+          { id: "r-reports",title: "/reports", sub: "admin only", list: ["/dashboard","/attendance","/marks","/leaves","/fees","/payroll","/charts"] },
+          { id: "r-ops",    title: "Operations", list: ["/timetable","/events","/hostels/{blocks,rooms,allocations}","/transport/{routes,vehicles,allocations}","/library/{books,issues}"] },
+          { id: "r-misc",   title: "Misc", list: ["/terminology","/tenants/lookup/:subdomain","/learning/video-upload","/uploads/photo","/uploads/photos/*","/uploads/learning-videos/*"] },
+          { id: "r-bulk",   title: "/bulk", sub: "schema-driven CSV", list: ["GET /resources","GET /:resource/schema","GET /:resource/template","GET /:resource/docs","POST /:resource/validate","POST /:resource/submit"] }
+        ]},
+        { id: "api-gql", title: "GraphQL", sub: "POST /api/v1/graphql", desc: "Optional auth (introspection works without). Playground at GET in non-prod.", children: [
+          { id: "g-queries", title: "Queries", list: ["employees","departments","users","students","courses","subjects","academicYears","examSchedules","marks","publishedResults","resultSummary","attendance","attendanceSummary","attendanceShortage","leaves","leaveTypes","myLeaveBalance","salaryStructures","payrolls","myPayrolls","payrollSummary","events","timetable","announcements","notifications","learningGoals","myGoalProgress"] },
+          { id: "g-mut",     title: "Mutations", list: ["createUser","updateUser","deactivateUser","createEmployee","updateEmployee","deleteEmployee","createStudent","updateStudent","deleteStudent","createDepartment","createSubject","createExamSchedule","publishExamSchedule","createMark","publishResults","markAttendance","bulkMarkAttendance","applyLeave","reviewLeave","createLeaveType","createLearningGoal","assignGoal","submitQuiz","gradeAssignment"] }
+        ]}
+      ]
+    },
+
+    {
+      id: "data", cat: "data", title: "Data", sub: "PostgreSQL + GORM",
+      desc: "Single Postgres instance. AutoMigrate runs on every boot (additive). Self-heal drops legacy salary_structures and reborn-empty salary_* tables. Migration uses a separate connection with FK constraints disabled to handle the Employee <-> Salary cycle.",
+      children: [
+        { id: "db-conn", title: "Connection", sub: "config.App.DBPath", desc: "Postgres URL from DB_PATH env. GORM with logger.Info." },
+        { id: "db-mig",  title: "Migration", sub: "AutoMigrate, ~50 entities", desc: "Idempotent. Side-connection drops FK constraints to migrate circular references. dropIfMissingColumn() self-heals partially-created tables." },
+        { id: "db-files",title: "File storage", sub: "Local disk", list: ["./uploads/photos -> /uploads/photos/*","./uploads/learning-videos -> /uploads/learning-videos/*"] }
+      ]
+    },
+
+    {
+      id: "sec", cat: "sec", title: "Security", sub: "Auth + tenancy",
+      desc: "Email + password only, JWT bearer, single-key HS, bcrypt password hashes. Tenant scope enforced by JWT claim, not row-level security.",
+      children: [
+        { id: "s-jwt", title: "JWT", sub: "Authorization: Bearer", list: ["Sign in utils/jwt.go","Parsed by middleware.Authenticate","Claims: userID, tenantID, role, isSuperAdmin"] },
+        { id: "s-roles", title: "Roles", sub: "5 base + custom", list: ["super_admin","admin","teacher","student","staff","CustomRole (tenant-scoped permissions)"] },
+        { id: "s-tenant",title: "Tenancy", sub: "tenant_id column", desc: "Every row carries tenant_id. Platform tenant 00000000-0000-0000-0000-000000000001 hosts super admin users." },
+        { id: "s-term",  title: "Terminology", sub: "/terminology + slice", desc: "Vertical-aware label map: Student -> Member/Patient/Employee per Tenant.Type." }
+      ]
+    },
+
+    {
+      id: "modules", cat: "mod", title: "Product modules", sub: "What CollERP actually does",
+      desc: "27 product modules grouped by domain. Most have a frontend page, a Redux slice or Apollo query, and a backend handler or resolver.",
+      children: [
+        { id: "p-people",  title: "People", list: ["Users","Employees","Students","Departments","Custom roles","Org structure"] },
+        { id: "p-academic",title: "Academic", list: ["Academic years","Semesters","Subjects","Exam schedules","Marks","Results"] },
+        { id: "p-att",     title: "Attendance + calendar", list: ["Attendance (mark, bulk, summary, shortage)","Holidays","Institutional calendar","Timetable","Events"] },
+        { id: "p-leave",   title: "Leave", list: ["Leave types","Apply leave","Review leave","Leave balance"] },
+        { id: "p-fin",     title: "Finance", list: ["Salary templates","Salary assignments","Payroll (draft/approved/paid)","Payslip PDF","Fee categories","Fee structures","Fee payments + dues"] },
+        { id: "p-ops",     title: "Operations", list: ["Hostel blocks/rooms/allocations","Transport routes/vehicles/allocations","Library books/issues"] },
+        { id: "p-comms",   title: "Comms", list: ["Announcements","Notifications","Notification bell"] },
+        { id: "p-reports", title: "Reports + dashboard", list: ["Dashboard charts","Attendance / marks / leaves / fees / payroll reports"] },
+        { id: "p-learn",   title: "Learning Matrix", list: ["Goals + sections + units","Assignments + quizzes","Per-employee progress","Video uploads"] },
+        { id: "p-platform",title: "Platform tier", list: ["Tenants","Plans","Subscriptions","Super admin users","Impersonation"] }
+      ]
+    },
+
+    {
+      id: "flows", cat: "ops", title: "Cross-cutting flows", sub: "How it all moves",
+      desc: "The interesting trans-module mechanics.",
+      children: [
+        { id: "f-login", title: "Login + tenant resolution", list: ["POST /auth/login","JWT signed","localStorage token + tenantId","Headers Authorization + X-Tenant-ID","middleware.Authenticate -> locals","Handlers filter by tenant_id"] },
+        { id: "f-term",  title: "Terminology load", list: ["GET /terminology after login","Cached in terminologySlice","useTerminology() resolves labels"] },
+        { id: "f-appr",  title: "Approval engine", list: ["Admin defines ApprovalFlow + ApprovalStep","User POST /approval-requests","Approvers approve / reject","ApprovalAction recorded","approval_callbacks.go fans out (e.g. mark Leave approved)"] },
+        { id: "f-bulk",  title: "Bulk CSV", list: ["Resource declared in handlers/bulk/schema_*.go","GET /:resource/template","Edit in BulkUpload/EditableTable","POST /:resource/validate","POST /:resource/submit (chunked, within 16 MiB)"] },
+        { id: "f-pay",   title: "Payroll", list: ["Define SalaryTemplate","Link via SalaryAssignment","POST /payroll/generate","Status: draft -> approved -> paid","GET /:id/pdf"] },
+        { id: "f-att",   title: "Attendance", list: ["GraphQL markAttendance / bulkMarkAttendance","Holiday + CalendarSettings exclude non-working days","Sync REST summary/shortage for Redux","POST /attendance/export-csv"] }
+      ]
+    }
+  ]
+};
+
+// =============================================================================
+// LAYOUT
+// Horizontal mindmap: root on the left, levels grow to the right.
+// Children are vertically stacked by leaf-count weight so subtrees do not overlap.
+// =============================================================================
+const COL_X = [200, 700, 1400, 2200];     // x position per depth
+const ROW_H = 36;                          // vertical pixels per leaf
+const stage = document.getElementById('stage');
+const nodesEl = document.getElementById('nodes');
+const links = document.getElementById('links');
+
+function countLeaves(n) {
+  if (!n.children || n.children.length === 0) return 1;
+  return n.children.reduce((s, c) => s + countLeaves(c), 0);
+}
+
+function layout(node, depth, yTop, parent, cat) {
+  node._depth = depth;
+  node._cat   = cat = node.cat || cat || 'fe';
+  node._parent = parent || null;
+  node._leaves = countLeaves(node);
+  node._x = COL_X[Math.min(depth, COL_X.length - 1)];
+  node._y = yTop + (node._leaves * ROW_H) / 2;
+  node._collapsed = depth >= 3 ? false : false; // expand by default; deep details only on click
+
+  if (node.children) {
+    let cursorY = yTop;
+    for (const c of node.children) {
+      const leaves = countLeaves(c);
+      layout(c, depth + 1, cursorY, node, cat);
+      cursorY += leaves * ROW_H;
+    }
+  }
+}
+layout(DATA, 0, 80, null, 'fe');
+
+// Spread the level-1 children further apart so the canvas breathes.
+function spreadL1() {
+  if (!DATA.children) return;
+  const minGap = 140;
+  let cursorY = 80;
+  for (const c of DATA.children) {
+    const h = Math.max(countLeaves(c) * ROW_H, minGap);
+    const nextTop = cursorY;
+    relayoutSubtree(c, c._depth, nextTop);
+    cursorY += h;
+  }
+  // Place root in the middle of the level-1 span
+  const first = DATA.children[0];
+  const last  = DATA.children[DATA.children.length - 1];
+  DATA._y = (first._y + last._y) / 2;
+}
+function relayoutSubtree(node, depth, yTop) {
+  node._depth = depth;
+  node._x = COL_X[Math.min(depth, COL_X.length - 1)];
+  node._leaves = countLeaves(node);
+  node._y = yTop + (node._leaves * ROW_H) / 2;
+  if (node.children) {
+    let cursorY = yTop;
+    for (const c of node.children) {
+      const leaves = countLeaves(c);
+      relayoutSubtree(c, depth + 1, cursorY);
+      cursorY += leaves * ROW_H;
+    }
+  }
+}
+spreadL1();
+
+// =============================================================================
+// RENDER
+// =============================================================================
+const ALL_NODES = [];
+function walk(n, fn) { fn(n); if (n.children) n.children.forEach(c => walk(c, fn)); }
+walk(DATA, n => ALL_NODES.push(n));
+
+function renderNode(n) {
+  const div = document.createElement('div');
+  div.className = `node lvl-${n._depth} cat-${n._cat}`;
+  div.style.left = n._x + 'px';
+  div.style.top  = n._y + 'px';
+  div.dataset.id = n.id;
+
+  const card = document.createElement('div');
+  card.className = 'card';
+  card.innerHTML = `
+    <div class="title">${n.title}</div>
+    ${n.sub ? `<div class="sub">${n.sub}</div>` : ''}
+  `;
+  div.appendChild(card);
+
+  card.addEventListener('click', e => {
+    e.stopPropagation();
+    onNodeClick(n);
+  });
+
+  nodesEl.appendChild(div);
+  n._el = div;
+}
+ALL_NODES.forEach(renderNode);
+
+function renderLinks() {
+  links.innerHTML = '';
+  for (const n of ALL_NODES) {
+    if (!n._parent) continue;
+    if (n._parent._collapsed) continue;
+    const p = n._parent;
+    const x1 = p._x, y1 = p._y;
+    const x2 = n._x, y2 = n._y;
+    const mid = (x1 + x2) / 2;
+    const d = `M${x1},${y1} C${mid},${y1} ${mid},${y2} ${x2},${y2}`;
+    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    path.setAttribute('d', d);
+    path.setAttribute('class', `link stroke-${n._cat}`);
+    path.setAttribute('stroke-opacity', '0.55');
+    links.appendChild(path);
+  }
+}
+renderLinks();
+
+// =============================================================================
+// COLLAPSE / EXPAND
+// =============================================================================
+function setCollapsed(n, collapsed) {
+  n._collapsed = collapsed;
+  if (n._el) n._el.dataset.collapsed = collapsed ? 'true' : 'false';
+  walk(n, child => {
+    if (child === n) return;
+    if (!child._el) return;
+    child._el.style.display = collapsed ? 'none' : '';
+    if (collapsed) child._collapsed = false; // children rendered visible when re-expanded
+  });
+  renderLinks();
+}
+
+function onNodeClick(n) {
+  if (n.children && n.children.length) {
+    setCollapsed(n, !n._collapsed);
+  }
+  openDetail(n);
+}
+
+// =============================================================================
+// DETAIL PANEL
+// =============================================================================
+const detailEl   = document.getElementById('detail');
+const dLabel     = document.getElementById('detail-label');
+const dTitle     = document.getElementById('detail-title');
+const dDesc      = document.getElementById('detail-desc');
+const dList      = document.getElementById('detail-list');
+document.getElementById('detail-close').onclick = () => detailEl.classList.remove('open');
+
+function openDetail(n) {
+  const path = [];
+  let cur = n;
+  while (cur) { path.unshift(cur.title); cur = cur._parent; }
+  dLabel.textContent = path.slice(0, -1).join(' / ') || 'Root';
+  dTitle.textContent = n.title + (n.sub ? `, ${n.sub}` : '');
+  dDesc.textContent = n.desc || '';
+  dList.innerHTML = '';
+  if (n.list) {
+    for (const item of n.list) {
+      const li = document.createElement('li');
+      li.innerHTML = `<span class="endpoint">${item}</span>`;
+      dList.appendChild(li);
+    }
+  } else if (n.children) {
+    for (const c of n.children) {
+      const li = document.createElement('li');
+      li.innerHTML = `<b>${c.title}</b>${c.sub ? ` , ${c.sub}` : ''}`;
+      dList.appendChild(li);
+    }
+  }
+  detailEl.classList.add('open');
+}
+
+// =============================================================================
+// PAN + ZOOM
+// =============================================================================
+const viewport = document.getElementById('viewport');
+let scale = 0.7;
+let tx = 80, ty = 0;
+function applyTransform() {
+  stage.style.transform = `translate(${tx}px, ${ty}px) scale(${scale})`;
+  document.getElementById('zoom-label').textContent = `${Math.round(scale * 100)}%`;
+}
+function centerOnRoot() {
+  scale = 0.7;
+  const w = viewport.clientWidth;
+  const h = viewport.clientHeight;
+  tx = w * 0.06 - DATA._x * scale;
+  ty = h * 0.5 - DATA._y * scale;
+  applyTransform();
+}
+centerOnRoot();
+window.addEventListener('resize', () => applyTransform());
+
+let dragging = false, sx = 0, sy = 0;
+viewport.addEventListener('mousedown', e => {
+  if (e.target.closest('.card')) return;
+  dragging = true; sx = e.clientX - tx; sy = e.clientY - ty;
+  viewport.classList.add('dragging');
+});
+window.addEventListener('mousemove', e => {
+  if (!dragging) return;
+  tx = e.clientX - sx; ty = e.clientY - sy; applyTransform();
+});
+window.addEventListener('mouseup', () => { dragging = false; viewport.classList.remove('dragging'); });
+
+viewport.addEventListener('wheel', e => {
+  e.preventDefault();
+  const dir = e.deltaY > 0 ? -1 : 1;
+  const factor = 1 + dir * 0.08;
+  const rect = viewport.getBoundingClientRect();
+  const mx = e.clientX - rect.left;
+  const my = e.clientY - rect.top;
+  const beforeX = (mx - tx) / scale;
+  const beforeY = (my - ty) / scale;
+  scale = Math.max(0.3, Math.min(2.0, scale * factor));
+  tx = mx - beforeX * scale;
+  ty = my - beforeY * scale;
+  applyTransform();
+}, { passive: false });
+
+document.getElementById('zoom-in').onclick  = () => { scale = Math.min(2.0, scale * 1.15); applyTransform(); };
+document.getElementById('zoom-out').onclick = () => { scale = Math.max(0.3, scale / 1.15); applyTransform(); };
+document.getElementById('reset').onclick    = () => { centerOnRoot(); };
+document.getElementById('expand').onclick   = () => { ALL_NODES.forEach(n => setCollapsed(n, false)); };
+document.getElementById('collapse').onclick = () => { DATA.children.forEach(c => setCollapsed(c, true)); };
+
+document.addEventListener('keydown', e => {
+  if (e.key === '+' || e.key === '=') { scale = Math.min(2.0, scale * 1.15); applyTransform(); }
+  if (e.key === '-' || e.key === '_') { scale = Math.max(0.3, scale / 1.15); applyTransform(); }
+  if (e.key === '0') centerOnRoot();
+  if (e.key === 'Escape') detailEl.classList.remove('open');
+});
+
+// Start with level-2 collapsed so the canvas is not overwhelming.
+DATA.children.forEach(c => {
+  if (c.children) {
+    c.children.forEach(g => { if (g.children) setCollapsed(g, true); });
+  }
+});
+renderLinks();
+</script>
+</body>
+</html>

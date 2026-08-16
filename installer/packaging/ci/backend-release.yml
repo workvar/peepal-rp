@@ -1,0 +1,67 @@
+# Copy this into the BACKEND repository as .github/workflows/release.yml.
+#
+# The agent on every client machine polls this repo's releases and installs
+# any tag newer than the one it is running. The asset names below are a
+# contract: internal/ghrelease/naming.go looks for exactly these files.
+name: Release backend
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - { goos: linux,   goarch: amd64 }
+          - { goos: linux,   goarch: arm64 }
+          - { goos: darwin,  goarch: amd64 }
+          - { goos: darwin,  goarch: arm64 }
+          - { goos: windows, goarch: amd64 }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with: { go-version: "1.25" }
+
+      - name: Build
+        env:
+          GOOS: ${{ matrix.goos }}
+          GOARCH: ${{ matrix.goarch }}
+          CGO_ENABLED: "0"
+        run: |
+          ext=""; [ "$GOOS" = windows ] && ext=".exe"
+          mkdir -p out
+          go build -trimpath \
+            -ldflags "-s -w -X main.version=${GITHUB_REF_NAME}" \
+            -o "out/peepal-backend${ext}" .
+
+      - name: Package
+        run: |
+          # The archive is unpacked straight over app/backend on the client,
+          # so it contains only what the server needs at runtime.
+          tar -C out -czf "peepal-backend_${{ matrix.goos }}_${{ matrix.goarch }}.tar.gz" .
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.goos }}-${{ matrix.goarch }}
+          path: peepal-backend_*.tar.gz
+
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with: { path: artifacts }
+      - name: Collect and checksum
+        run: |
+          mkdir -p out && find artifacts -type f -name '*.tar.gz' -exec mv {} out/ \;
+          cd out && sha256sum * > checksums.txt && cat checksums.txt
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: out/*
+          generate_release_notes: true

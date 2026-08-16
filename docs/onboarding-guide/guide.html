@@ -1,0 +1,900 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Peepal ERP — Onboarding Guide</title>
+<link rel="stylesheet" href="guide.css">
+</head>
+<body>
+
+<!-- ================= COVER ================= -->
+<div class="cover">
+  <div class="inner">
+    <div class="logo">Peepal</div>
+    <h1>Onboarding<br>Guide</h1>
+    <div class="rule"></div>
+    <div class="sub">A complete reference for institute users,<br>administrators, and the engineering team.</div>
+  </div>
+  <div class="meta">
+    <table>
+      <tr><td class="k">Product</td><td>Peepal ERP (rosERP)</td></tr>
+      <tr><td class="k">Audience</td><td>End users, institute admins, developers, ops</td></tr>
+      <tr><td class="k">Document version</td><td>1.0</td></tr>
+      <tr><td class="k">Date</td><td>August 2026</td></tr>
+      <tr><td class="k">Stack</td><td>Next.js 14 · TypeScript · Redux Toolkit · Apollo · Go Fiber · gqlgen · GORM · PostgreSQL</td></tr>
+    </table>
+  </div>
+</div>
+
+<!-- ================= TOC ================= -->
+<div class="toc">
+  <h1>Contents</h1>
+
+  <div class="pt">Part 1 · Using Peepal</div>
+  <ol>
+    <li><span class="n">1</span> What Peepal is</li>
+    <li><span class="n">2</span> Getting access and signing in</li>
+    <li><span class="n">3</span> Finding your way around</li>
+    <li><span class="n">4</span> Roles and what each one sees</li>
+    <li><span class="n">5</span> Administrator: first-week checklist</li>
+    <li><span class="n">6</span> Module reference</li>
+    <li><span class="n">7</span> Everyday workflows</li>
+    <li><span class="n">8</span> Troubleshooting for users</li>
+  </ol>
+
+  <div class="pt">Part 2 · Technical and operations</div>
+  <ol>
+    <li><span class="n">9</span> Architecture overview</li>
+    <li><span class="n">10</span> System requirements</li>
+    <li><span class="n">11</span> Local installation</li>
+    <li><span class="n">12</span> Codebase conventions</li>
+    <li><span class="n">13</span> Building a feature end to end</li>
+    <li><span class="n">14</span> Release and deployment</li>
+    <li><span class="n">15</span> Cloud infrastructure and environment</li>
+    <li><span class="n">16</span> Security, backups and support</li>
+    <li><span class="n">17</span> Quick reference</li>
+  </ol>
+
+  <div class="pt">Appendix</div>
+  <ol>
+    <li><span class="n">A</span> Glossary</li>
+    <li><span class="n">B</span> Industry availability matrix</li>
+  </ol>
+</div>
+<!-- ================= PART 1 ================= -->
+<div class="part">
+  <div class="pinner">
+    <p class="kicker">Part One</p>
+    <h1>Using Peepal</h1>
+    <div class="prule"></div>
+    <p>For students, teachers, staff, clinicians and institute administrators. No technical background needed.</p>
+  </div>
+</div>
+
+<h1 class="chapter"><span class="num">1.</span> What Peepal is</h1>
+
+<p class="lead">Peepal is a multi-tenant ERP that runs the daily operations of an institution: the people, the academic or clinical calendar, money, facilities, approvals and reporting, all in one place.</p>
+
+<p>Three ideas explain almost everything about how the product behaves.</p>
+
+<h2>1.1 Every institution is a tenant</h2>
+<p>Your institution is a <b>tenant</b> with its own isolated data. You reach it either at a subdomain such as <code>https://yourschool.roserp.workvar.com</code> or through a path such as <code>/yourschool/dashboard</code>. Nobody outside your tenant can see your records, and every row of business data is filtered by tenant on the server.</p>
+
+<h2>1.2 The product adapts to your industry</h2>
+<p>Peepal supports several verticals. The industry chosen for your tenant decides which modules exist at all, and the vocabulary used across the interface.</p>
+
+<table>
+  <thead><tr><th style="width:26%">Industry</th><th>What the sidebar emphasises</th></tr></thead>
+  <tbody>
+    <tr><td>Education</td><td>Students, courses, subjects, marks, exams, timetable, fees, hostel, transport, library</td></tr>
+    <tr><td>Healthcare</td><td>Patients, appointments, OPD visits, admissions, laboratory, radiology, nursing, pharmacy, billing and claims</td></tr>
+    <tr><td>Corporate</td><td>Employees, payroll, leaves, approvals, finance, procurement, learning</td></tr>
+    <tr><td>Nonprofit</td><td>Shared people, approvals, finance and reporting modules</td></tr>
+  </tbody>
+</table>
+
+<p>Shared modules such as Employees, Leaves, Payroll, Approvals, Finance, Announcements and Reports appear for every industry. A hospital never sees Marks; a college never sees Radiology. This is enforced on the server, not just hidden in the menu.</p>
+
+<div class="note"><b>Terminology layer.</b> Words in the interface are configurable per tenant. A "Student" may read as "Trainee", a "Course" as "Programme", a "Department" as "Unit". If the labels in this guide differ slightly from your screen, the underlying feature is the same.</div>
+
+<h2>1.3 What you can see is decided in two layers</h2>
+<ol>
+  <li><b>Subscription</b> decides which module families your institution has paid for.</li>
+  <li><b>Access matrix</b> decides, per role, which modules within that set you may view, create, edit or delete.</li>
+</ol>
+<p>If a colleague sees a menu item you do not, the difference is almost always one of those two layers, not a bug.</p>
+
+<h1 class="chapter"><span class="num">2.</span> Getting access and signing in</h1>
+
+<h2>2.1 Accounts are created for you</h2>
+<p>Peepal has no public sign-up. Your institute administrator creates your account, either directly with a password, or by sending you an <b>invitation email</b> containing a one-time setup link where you choose your own password.</p>
+
+<div class="warn"><b>Invitation links expire.</b> If your setup link no longer works, ask your administrator to resend the invite rather than trying to register yourself.</div>
+
+<h2>2.2 Email is not always your username</h2>
+<p>Some institutions run without staff or student email addresses. In that case you sign in with your <b>Employee ID</b> or <b>Roll Number</b> instead, and only administrators hold an email-based account. Your administrator will tell you which mode your tenant uses.</p>
+
+<h2>2.3 Signing in</h2>
+<ol>
+  <li>Open your tenant URL, for example <code>https://yourschool.roserp.workvar.com/login</code>.</li>
+  <li>Enter your email (or ID) and password.</li>
+  <li>You land on the Dashboard scoped to your role.</li>
+</ol>
+<p>Your session is held in a secure, browser-managed cookie that lasts up to <b>24 hours</b>. After that you are asked to sign in again. First-party cookies must be allowed for the Peepal domain, otherwise login will appear to succeed and then bounce you back.</p>
+
+<h2>2.4 First things to do</h2>
+<ul>
+  <li>Change the password you were given, from <b>My Profile</b>.</li>
+  <li>Check that your name, department and contact details are correct, and report corrections to your administrator.</li>
+  <li>Open <b>Notifications</b> so you know where alerts arrive.</li>
+</ul>
+
+<h1 class="chapter"><span class="num">3.</span> Finding your way around</h1>
+
+<h2>3.1 The layout</h2>
+<table>
+  <thead><tr><th style="width:26%">Area</th><th>What it does</th></tr></thead>
+  <tbody>
+    <tr><td>Left sidebar</td><td>All modules you are allowed to open, grouped into collapsible sections such as Attendance, Academic, Fees, Facilities and Organisation. On a small screen it becomes a slide-out menu.</td></tr>
+    <tr><td>Top bar</td><td>Global search, the notification bell, and your user menu.</td></tr>
+    <tr><td>Search</td><td>Jumps straight to a page or record without hunting through the menu. Fastest way to move around.</td></tr>
+    <tr><td>Notification bell</td><td>Approvals waiting on you, announcements, and system alerts.</td></tr>
+    <tr><td>User menu</td><td>My Profile, theme, and sign out.</td></tr>
+    <tr><td>Quota banner</td><td>A persistent strip that appears when your institution is at or over its licensed student or employee count. Only an administrator can resolve it.</td></tr>
+  </tbody>
+</table>
+
+<h2>3.2 Sections you will see in the sidebar</h2>
+<p>The sidebar only renders sections that contain at least one module you can open, so your menu will be shorter than the full list below.</p>
+
+<table>
+  <thead><tr><th style="width:30%">Section</th><th>Contains</th></tr></thead>
+  <tbody>
+    <tr><td>Top level</td><td>Dashboard, Ask PeepalAI, My Portal, My Fees, My Hall Tickets, Admins, Employees, Students, My Approvals, Org Structure</td></tr>
+    <tr><td>Attendance</td><td>Attendance, Attendance Summary, Shortage List, Attendance Export</td></tr>
+    <tr><td>Academic</td><td>Marks, Results, Courses, Subjects, Curriculum, Exams, Exam Schedules, Timetable</td></tr>
+    <tr><td>Exam Cell</td><td>Question Bank, Question Papers, Hall Tickets</td></tr>
+    <tr><td>Patient Care</td><td>Patients, Appointments, OPD Visits, Admissions, Schedules</td></tr>
+    <tr><td>Diagnostics</td><td>Laboratory, Radiology</td></tr>
+    <tr><td>Ward &amp; Theatre</td><td>Nursing, OT Schedule, Triage</td></tr>
+    <tr><td>Support Services</td><td>Blood Bank, Ambulance, Dietary, Telemedicine, Referrals</td></tr>
+    <tr><td>Billing &amp; Claims</td><td>Billing, Claims</td></tr>
+    <tr><td>Inventory / Procurement</td><td>Pharmacy, Stores, Vendors, Purchase Orders</td></tr>
+    <tr><td>Leaves</td><td>Leaves, Leave Types</td></tr>
+    <tr><td>Payroll</td><td>Payroll, Salary Templates, Salary Assignments</td></tr>
+    <tr><td>Fees</td><td>Categories, Add-ons, Structures, Allocations, Payments, Student Fees, Overview</td></tr>
+    <tr><td>Finance</td><td>Chart of Accounts, General Ledger, Receivables, Payables</td></tr>
+    <tr><td>Reports</td><td>Attendance, Marks, Fees, Payroll, Leaves</td></tr>
+    <tr><td>Facilities</td><td>Hostel, Transport, Library, Wards &amp; Beds</td></tr>
+    <tr><td>Campus Life</td><td>Events</td></tr>
+    <tr><td>Learning</td><td>Goal Library, Assignments, My Learning</td></tr>
+    <tr><td>Communication</td><td>Announcements, Notifications</td></tr>
+    <tr><td>Organisation</td><td>Org Profile, Departments, Academic Years, Roles, Access Control, Audit Trail, Email, Holidays, Calendar, Approval Types, Approval Flows</td></tr>
+  </tbody>
+</table>
+
+<h1 class="chapter"><span class="num">4.</span> Roles and what each one sees</h1>
+
+<p class="lead">Peepal ships six built-in roles. Institutions layer custom roles on top of these, so your job title may be "Receptionist" or "Pharmacist" while the system still treats you as staff underneath.</p>
+
+<table class="role-grid">
+  <thead><tr><th style="width:20%">Role</th><th>Typical scope</th></tr></thead>
+  <tbody>
+    <tr><td>Admin</td><td>Full control of the tenant. Creates people and accounts, configures roles, access, approvals, fees, payroll, academic years and holidays. Sees every report and the audit trail.</td></tr>
+    <tr><td>Teacher</td><td>Teaching and clinical-practitioner work: attendance, marks, results, courses, subjects, exams, timetable, assignments, leaves, approvals assigned to them. In healthcare tenants this is the clinician role, with My Schedule.</td></tr>
+    <tr><td>Staff</td><td>Operational work: employees, attendance, fee payments, facilities, inventory and procurement, billing and claims, front desk, leaves.</td></tr>
+    <tr><td>Student</td><td>Self-service only: My Portal, My Fees, My Grades, My Hall Tickets, My Assignments, My Mess, plus attendance, marks, timetable, library and events in read-only form.</td></tr>
+    <tr><td>Patient</td><td>Healthcare self-service: My Health, plus dashboard, notifications and profile. Nothing else.</td></tr>
+    <tr><td>Super admin</td><td>Platform operator, outside any single tenant. Manages tenants, plans, subscriptions, module configuration and platform analytics from the <code>/super</code> console.</td></tr>
+  </tbody>
+</table>
+
+<h2>4.1 Custom roles</h2>
+<p>Administrators create named roles under <b>Organisation → Roles</b> and grant them permissions per module under <b>Access Control</b>. Healthcare tenants are seeded with Receptionist, Doctor and Pharmacist roles automatically. A custom role can never exceed the ceiling of the base role it sits on, so a custom role built on staff cannot reach admin-only pages.</p>
+
+<h2>4.2 Role-locked pages</h2>
+<p>A handful of pages hold data that only exists for one role, and are therefore hidden from everyone else including administrators: My Portal, My Fees, My Grades, My Hall Tickets, My Assignments, My Mess, My Health and My Schedule. If you are an administrator wanting to see a student's fees, use <b>Fees → Student Fees</b> rather than the student portal.</p>
+
+<h1 class="chapter"><span class="num">5.</span> Administrator: first-week checklist</h1>
+
+<p class="lead">Work through this in order. Each step depends on the ones above it.</p>
+
+<h2>Day 1 · Secure the tenant</h2>
+<ol>
+  <li>Receive your tenant URL and administrator credentials from the platform owner.</li>
+  <li>Sign in and change the password immediately.</li>
+  <li>Open <b>Organisation → Org Profile</b> and set the institution name, address, logo and identity policy (whether staff and students need email addresses).</li>
+  <li>Confirm your subscription and enabled modules with support, so you are not configuring something you cannot use.</li>
+</ol>
+
+<h2>Day 2 · Structure</h2>
+<ol>
+  <li><b>Departments</b>: create the organisational units everything else hangs off.</li>
+  <li><b>Academic Years</b> (education): define the current year and term.</li>
+  <li><b>Holidays</b> and <b>Calendar</b>: load the annual calendar so attendance and leave calculations are correct from the start.</li>
+  <li><b>Roles</b> and <b>Access Control</b>: create the roles your institution actually uses and grant least-privilege permissions.</li>
+</ol>
+
+<h2>Day 3 · People</h2>
+<ol>
+  <li><b>Employees</b>: add staff and teachers. Creating an employee also creates their login account in the same step, so choose the role and either set a password or send an invite.</li>
+  <li><b>Students</b>: enrol students the same way, or use bulk upload for a whole intake.</li>
+  <li><b>Admins</b>: add any additional administrators, sparingly.</li>
+</ol>
+
+<h2>Day 4 · Academic or clinical setup</h2>
+<ol>
+  <li>Education: Courses, Subjects, Curriculum, Exams and exam types, Grading scheme, Timetable.</li>
+  <li>Healthcare: Schedules for clinicians, Wards and Beds, Laboratory test catalogue, Pharmacy drug list.</li>
+</ol>
+
+<h2>Day 5 · Money and process</h2>
+<ol>
+  <li><b>Fees</b>: Categories, then Structures per course, then Allocations, which generate each student's fee record and instalments.</li>
+  <li><b>Payroll</b>: Salary Templates, then Salary Assignments per employee.</li>
+  <li><b>Leave Types</b> and <b>Approval Types / Approval Flows</b>: define who approves what, in what order.</li>
+  <li><b>Email</b>: configure SMTP so invitations and notifications can actually be delivered.</li>
+</ol>
+
+<h2>Day 5 · Verify</h2>
+<ol>
+  <li>Sign in as one user per major role and confirm each sees only what they should.</li>
+  <li>Submit one test leave request and approve it, to prove the approval chain works.</li>
+  <li>Record one fee payment and download the receipt.</li>
+  <li>Open <b>Audit Trail</b> and confirm your test actions were logged.</li>
+</ol>
+
+<div class="tip"><b>Order matters.</b> Fees cannot be allocated before structures exist, structures need courses, courses need departments. Working top-down saves rework.</div>
+
+<h1 class="chapter"><span class="num">6.</span> Module reference</h1>
+
+<p class="lead">What each area of the product is for, and who normally uses it. Availability depends on your industry and subscription.</p>
+
+<h2>6.1 People and organisation</h2>
+<table>
+  <thead><tr><th style="width:27%">Module</th><th>Purpose</th><th style="width:24%">Typical users</th></tr></thead>
+  <tbody>
+    <tr><td>Dashboard</td><td>Role-aware landing page with live charts and counts sourced from the reporting layer.</td><td>Everyone</td></tr>
+    <tr><td>Employees</td><td>Staff and teacher records, departments, reporting lines. Creating a record creates the login account with it.</td><td>Admin, staff</td></tr>
+    <tr><td>Students</td><td>Enrolment, course and batch assignment, roll numbers, contact details.</td><td>Admin, teacher</td></tr>
+    <tr><td>Admins</td><td>The short list of accounts holding administrator rights.</td><td>Admin</td></tr>
+    <tr><td>Org Structure</td><td>Visual reporting hierarchy across the institution.</td><td>Admin, teacher, staff</td></tr>
+    <tr><td>Organisation</td><td>Profile, departments, academic years, roles, access control, holidays, calendar, email, approvals, audit trail.</td><td>Admin</td></tr>
+    <tr><td>Audit Trail</td><td>Who changed what and when, including logins and bulk uploads (flagged separately).</td><td>Admin</td></tr>
+  </tbody>
+</table>
+
+<h2>6.2 Academic (education)</h2>
+<table>
+  <thead><tr><th style="width:27%">Module</th><th>Purpose</th><th style="width:24%">Typical users</th></tr></thead>
+  <tbody>
+    <tr><td>Attendance</td><td>Mark attendance individually or in bulk, for students and employees. Summary, shortage list and export views sit alongside it.</td><td>Admin, teacher, staff</td></tr>
+    <tr><td>Marks</td><td>Enter assessment marks. The assessment type list and maximum marks are driven by the Exams module.</td><td>Admin, teacher</td></tr>
+    <tr><td>Results</td><td>Consolidated published results per student.</td><td>Admin, teacher, student</td></tr>
+    <tr><td>Courses / Subjects</td><td>Programmes offered, and the subjects within them, including course outcomes and unit plans.</td><td>Admin, teacher</td></tr>
+    <tr><td>Curriculum</td><td>Assign subjects to each course and semester.</td><td>Admin</td></tr>
+    <tr><td>Exams / Exam Schedules</td><td>Assessment definitions (department-scoped) and the dated exam calendar.</td><td>Admin, teacher</td></tr>
+    <tr><td>Grading</td><td>Per-tenant grading scheme and grade bands. Drives live SGPA and CGPA from published marks.</td><td>Admin</td></tr>
+    <tr><td>Timetable</td><td>Period-wise schedule per course, semester and section.</td><td>Everyone</td></tr>
+    <tr><td>Exam Cell</td><td>Question Bank, generated Question Papers, and QR-coded Hall Tickets.</td><td>Admin, teacher, staff</td></tr>
+    <tr><td>Assignments</td><td>Set work for a cohort; students submit and track it from their portal.</td><td>Admin, teacher</td></tr>
+  </tbody>
+</table>
+
+<h2>6.3 Clinical (healthcare)</h2>
+<table>
+  <thead><tr><th style="width:27%">Module</th><th>Purpose</th><th style="width:24%">Typical users</th></tr></thead>
+  <tbody>
+    <tr><td>Patients</td><td>Patient master with UHID, demographics and history.</td><td>Admin, clinician, staff</td></tr>
+    <tr><td>Appointments</td><td>Booking against clinician schedules, which gate available slots.</td><td>Front desk, clinician</td></tr>
+    <tr><td>OPD Visits</td><td>Encounters with CR numbers, notes and orders.</td><td>Clinician</td></tr>
+    <tr><td>Admissions / Wards &amp; Beds</td><td>Inpatient admission, transfer and discharge, with a live ward and bed visualiser and discharge summary PDF.</td><td>Admin, staff</td></tr>
+    <tr><td>Laboratory / Radiology</td><td>Test catalogues, orders, results and reports.</td><td>Clinician, staff</td></tr>
+    <tr><td>Nursing</td><td>Medication administration record and vitals.</td><td>Nursing staff</td></tr>
+    <tr><td>OT Schedule / Triage</td><td>Theatre scheduling and emergency triage.</td><td>Clinician, staff</td></tr>
+    <tr><td>Pharmacy</td><td>Drug stock with atomic dispensing against prescriptions.</td><td>Pharmacist</td></tr>
+    <tr><td>Billing / Claims</td><td>Billable services, invoices, receipts and payments; insurance and TPA claims with an approval engine.</td><td>Admin, billing staff</td></tr>
+    <tr><td>Support services</td><td>Blood bank, ambulance, dietary, telemedicine and referrals with commission settlement.</td><td>Staff, clinician</td></tr>
+    <tr><td>My Health / My Schedule</td><td>Patient self-service portal, and the clinician's own calendar.</td><td>Patient / clinician</td></tr>
+  </tbody>
+</table>
+
+<h2>6.4 Money</h2>
+<table>
+  <thead><tr><th style="width:27%">Module</th><th>Purpose</th><th style="width:24%">Typical users</th></tr></thead>
+  <tbody>
+    <tr><td>Fees</td><td>Categories define what is charged; Structures set course-scoped amounts per year; Allocations turn those into per-student fees and instalments by frequency; Payments record receipts; Overview and Student Fees show outstanding dues.</td><td>Admin, accounts staff</td></tr>
+    <tr><td>Payroll</td><td>Salary templates, per-employee assignments, and payslip generation as PDF.</td><td>Admin</td></tr>
+    <tr><td>Finance</td><td>Chart of accounts, general ledger, receivables and payables.</td><td>Admin</td></tr>
+    <tr><td>Procurement</td><td>Vendors, purchase orders and stores, feeding inventory and pharmacy.</td><td>Admin, staff</td></tr>
+  </tbody>
+</table>
+
+<h2>6.5 Facilities, campus life and communication</h2>
+<table>
+  <thead><tr><th style="width:27%">Module</th><th>Purpose</th><th style="width:24%">Typical users</th></tr></thead>
+  <tbody>
+    <tr><td>Hostel</td><td>Bed-wise allocation through a visual block and room map, with gender-restricted blocks. Mess menus and meal attendance sit here.</td><td>Admin, staff</td></tr>
+    <tr><td>Transport</td><td>Routes, vehicles, student allocations, plus live vehicle tracking and driver attendance.</td><td>Admin, staff</td></tr>
+    <tr><td>Library</td><td>Catalogue, issue and return.</td><td>Everyone</td></tr>
+    <tr><td>Events</td><td>Institution calendar with custom, tenant-defined categories.</td><td>Everyone</td></tr>
+    <tr><td>Learning</td><td>Goal library, goal assignments, and each person's own learning track.</td><td>Admin, everyone</td></tr>
+    <tr><td>Announcements / Notifications</td><td>Broadcast messages and personal alerts.</td><td>Everyone</td></tr>
+    <tr><td>Leaves</td><td>Apply, track and approve leave against configurable leave types scoped by role.</td><td>Everyone except students</td></tr>
+    <tr><td>Duty Roster</td><td>Shift rostering across departments, available in every industry.</td><td>Admin, staff</td></tr>
+    <tr><td>Ask PeepalAI</td><td>Ask questions about your own data in plain language. Answers are scoped to what your role is allowed to see.</td><td>Everyone</td></tr>
+  </tbody>
+</table>
+
+<h1 class="chapter"><span class="num">7.</span> Everyday workflows</h1>
+
+<h2>7.1 Bulk upload with CSV</h2>
+<p>Most list pages that accept large volumes carry a <b>Bulk Upload</b> button. The flow is the same everywhere.</p>
+<ol>
+  <li>Click <b>Bulk Upload</b> and download the field guide, which lists every column, whether it is required, and the accepted values.</li>
+  <li>Fill the CSV. Keep referenced values exactly as they appear in the application: department names, course codes, roll numbers and similar.</li>
+  <li>Upload and review the validation result before committing.</li>
+  <li>Rows referencing something that does not exist fail individually; the rest still import. Fix and re-upload only the failures.</li>
+</ol>
+<div class="warn"><b>Reference values are validated, not created.</b> A misspelled department will fail the row rather than silently creating a new department. Create the reference data first.</div>
+
+<h2>7.2 Applying for and approving leave</h2>
+<ol>
+  <li>Open <b>Leaves</b> and submit a request against an available leave type.</li>
+  <li>The request routes through the approval flow configured for that type.</li>
+  <li>Approvers see it under <b>My Approvals</b> and in the notification bell.</li>
+  <li>Each decision is recorded in the audit trail.</li>
+</ol>
+
+<h2>7.3 Recording a fee payment</h2>
+<ol>
+  <li>Go to <b>Fees → Payments</b> and search for the student.</li>
+  <li>Select the outstanding instalment and record the amount, mode and reference.</li>
+  <li>Download the receipt PDF, which is generated on the server.</li>
+  <li>Confirm the balance updated in <b>Fees → Overview</b>.</li>
+</ol>
+
+<h2>7.4 Marking attendance</h2>
+<ol>
+  <li>Open <b>Attendance</b>, choose the date, course, semester and section.</li>
+  <li>Mark the roster individually, or use bulk mark for a whole class.</li>
+  <li>Use <b>Attendance Summary</b> for percentages and <b>Shortage List</b> to find students below the threshold.</li>
+  <li><b>Attendance Export</b> produces a downloadable file for external reporting.</li>
+</ol>
+
+<h2>7.5 Documents you can download</h2>
+<table>
+  <thead><tr><th style="width:34%">Document</th><th>Where it comes from</th></tr></thead>
+  <tbody>
+    <tr><td>Payslip</td><td>Payroll</td></tr>
+    <tr><td>Fee receipt and fee schedule</td><td>Fees → Payments / Student Fees</td></tr>
+    <tr><td>Grade report</td><td>Grading, and My Grades for students</td></tr>
+    <tr><td>Hall ticket</td><td>Exam Cell, and My Hall Tickets for students</td></tr>
+    <tr><td>Invoice and receipt</td><td>Billing (healthcare)</td></tr>
+    <tr><td>Discharge summary</td><td>Admissions (healthcare)</td></tr>
+    <tr><td>Institution brochure</td><td>Public brochure page, editable by administrators</td></tr>
+  </tbody>
+</table>
+
+<h1 class="chapter"><span class="num">8.</span> Troubleshooting for users</h1>
+
+<table>
+  <thead><tr><th style="width:33%">Symptom</th><th>Most likely cause and fix</th></tr></thead>
+  <tbody>
+    <tr><td>Login succeeds then returns to the login page</td><td>Cookies are blocked for the Peepal domain, or a captive-portal network is stripping them. Allow first-party cookies and retry outside the portal.</td></tr>
+    <tr><td>Signed out unexpectedly</td><td>Sessions last up to 24 hours. Sign in again; nothing is lost apart from an unsaved form.</td></tr>
+    <tr><td>A menu item a colleague has is missing for you</td><td>Your role lacks the permission, or the page is role-locked. Ask your administrator to check Access Control.</td></tr>
+    <tr><td>A whole section is missing for everyone</td><td>The module is not part of your subscription, or does not exist for your industry. Contact support.</td></tr>
+    <tr><td>Nobody can sign in at all</td><td>The subscription may have lapsed. Login is blocked without an active subscription. Contact your platform owner.</td></tr>
+    <tr><td>A banner says you are over quota</td><td>Your licensed student or employee count is exceeded. New records are blocked until an administrator upgrades the plan or removes records.</td></tr>
+    <tr><td>Bulk upload rejects rows</td><td>A referenced department, course or roll number does not match an existing record. Create the reference first, then re-upload only the failed rows.</td></tr>
+    <tr><td>Invitation email never arrived</td><td>Check spam, then ask your administrator to confirm SMTP is configured under Organisation → Email and resend.</td></tr>
+    <tr><td>A page renders but tables are cramped</td><td>Dense admin tables and bulk tools are designed for desktop. Use a screen of at least 1280×720.</td></tr>
+  </tbody>
+</table>
+
+<div class="note"><b>Reporting a problem.</b> Include the time, your tenant name, your role, the page you were on, and what you expected to happen. That is usually enough for support to reproduce it without a follow-up round trip.</div>
+
+<p>Escalation path: institute administrator, then Peepal support, then engineering on call.</p>
+<!-- ================= PART 2 ================= -->
+<div class="part">
+  <div class="pinner">
+    <p class="kicker">Part Two</p>
+    <h1>Technical and operations</h1>
+    <div class="prule"></div>
+    <p>For developers joining the codebase, and for the team that installs, deploys and operates Peepal.</p>
+  </div>
+</div>
+
+<h1 class="chapter"><span class="num">9.</span> Architecture overview</h1>
+
+<pre><code>Browser  (tenant slug, or /super)
+      |
+      v
+Next.js 14 frontend  --PM2--&gt;  :3000
+  - App Router, TypeScript, Tailwind
+  - Apollo Client  -&gt; GraphQL
+  - axios          -&gt; thin REST (auth, uploads, bulk CSV, super-admin)
+  - Redux Toolkit  -&gt; auth, org chrome, terminology
+  - JWT in httpOnly cookie `peepal_token`
+      |   rewrite /api/* -&gt; NEXT_PUBLIC_API_URL
+      v
+Go Fiber API  --PM2--&gt;  :8080
+  - GraphQL (gqlgen) at POST /api/v1/graphql   &lt;- default surface
+  - REST for login, files, bulk CSV, super-admin
+  - GORM (pgx), JWT + bcrypt, tenant scoping, field middleware
+      |
+      v
+PostgreSQL (Aiven-managed)
+  - One shared database; every business row carries tenant_id
+  - Schema changes only via `go run main.go --migrate`</code></pre>
+
+<h2>9.1 Repository layout</h2>
+<pre><code>Peepal/
+  backend/    Go Fiber API (GraphQL + thin REST)
+  frontend/   Next.js 14 app
+  docs/       identity modes, multi-industry, compliance notes
+  installer/  native on-prem installers and the peepal-agent supervisor</code></pre>
+
+<h2>9.2 Backend anatomy</h2>
+<table>
+  <thead><tr><th style="width:30%">Path</th><th>Contents</th></tr></thead>
+  <tbody>
+    <tr><td><code>main.go</code></td><td>Entry point. Reads <code>--migrate</code> and other flags, wires config, DB, middleware and routes.</td></tr>
+    <tr><td><code>graph/</code></td><td>gqlgen schema and resolvers, split per module as <code>&lt;module&gt;.resolvers.go</code>. This is where new work goes.</td></tr>
+    <tr><td><code>models/</code></td><td>GORM models. Every business model carries <code>tenant_id</code> and a UUID hook.</td></tr>
+    <tr><td><code>handlers/</code></td><td>Remaining REST handlers: auth, terminology, super-admin, file streaming.</td></tr>
+    <tr><td><code>handlers/bulk/</code></td><td>Shared bulk-CSV framework: a registry plus one <code>schema_*.go</code> per resource, self-registered via <code>init()</code>.</td></tr>
+    <tr><td><code>middleware/</code></td><td>JWT auth, role guards, tenant scoping, access field middleware, audit.</td></tr>
+    <tr><td><code>audit/</code></td><td>Audit recording. GraphQL mutations are logged automatically; REST handlers must call <code>Record</code> explicitly.</td></tr>
+    <tr><td><code>pdf-template/</code></td><td>Server-side PDF generation for payslips, receipts, fee schedules and grade reports.</td></tr>
+    <tr><td><code>mailer/</code>, <code>invites/</code></td><td>SMTP delivery and the invitation flow.</td></tr>
+  </tbody>
+</table>
+
+<h2>9.3 Frontend anatomy</h2>
+<table>
+  <thead><tr><th style="width:30%">Path</th><th>Contents</th></tr></thead>
+  <tbody>
+    <tr><td><code>app/</code></td><td>App Router. <code>app/[tenant]/(dashboard)/...</code> for tenant pages, <code>app/(super-admin)/super/...</code> for the platform console. Page files stay thin.</td></tr>
+    <tr><td><code>components/</code></td><td>All real UI. Page logic lives under <code>components/pages/...</code> and is imported by the route file.</td></tr>
+    <tr><td><code>store/</code></td><td>Redux Toolkit slices: auth, access, terminology, org chrome. Shared hooks in <code>store/hooks.ts</code>.</td></tr>
+    <tr><td><code>lib/</code></td><td><code>access.ts</code> (industry map, role-locked modules, path-to-module resolution), Apollo client, helpers.</td></tr>
+    <tr><td><code>constants/navigation/</code></td><td><code>BASE_MODULES</code> and the sidebar <code>navConfig.ts</code>. A module must be registered here to appear.</td></tr>
+    <tr><td><code>types/</code></td><td>Shared TypeScript types, including <code>Role</code> and <code>TenantType</code>.</td></tr>
+    <tr><td><code>tests/</code></td><td>Playwright end-to-end suite, ordered with LIFO cleanup.</td></tr>
+  </tbody>
+</table>
+
+<h2>9.4 Multi-tenancy and access, in three layers</h2>
+<ol>
+  <li><b>Industry</b>. <code>models/access_industries.go</code> on the server and <code>MODULE_INDUSTRIES</code> in <code>lib/access.ts</code> decide whether a module exists for the tenant at all.</li>
+  <li><b>Subscription</b>. <code>models/subscription_modules.go</code> maps fine-grained modules onto coarse subscription modules; effective modules are enforced through <code>myAccess</code> and the access field middleware. Super admin is exempt; administrators are not.</li>
+  <li><b>Access matrix</b>. Per-tenant role to module CRUD grants (<code>AccessRule</code>), edited at <code>/org/access-control</code>, with a role ceiling derived from resolver <code>requireRole</code> guards so navigation never links to a forbidden page.</li>
+</ol>
+<div class="warn"><b>Golden rule.</b> Never query a business table without a tenant filter.</div>
+
+<h1 class="chapter"><span class="num">10.</span> System requirements</h1>
+
+<h2>10.1 Developer workstation</h2>
+<table>
+  <thead><tr><th style="width:24%">Resource</th><th style="width:38%">Minimum</th><th>Recommended</th></tr></thead>
+  <tbody>
+    <tr><td>OS</td><td>macOS 12+, Windows 10/11 with WSL2, or Ubuntu 22.04+</td><td>macOS 14+ or Ubuntu 24.04 LTS</td></tr>
+    <tr><td>CPU / RAM</td><td>2 cores, 8 GB</td><td>4+ cores, 16 GB</td></tr>
+    <tr><td>Disk</td><td>10 GB free</td><td>25 GB free SSD</td></tr>
+    <tr><td>Node.js</td><td>18.x LTS</td><td>20.x LTS</td></tr>
+    <tr><td>Package manager</td><td>pnpm 8+</td><td>pnpm 9+</td></tr>
+    <tr><td>Go</td><td>1.21+</td><td>1.22+ (project targets 1.25)</td></tr>
+    <tr><td>Git</td><td>2.40+</td><td>Latest</td></tr>
+    <tr><td>Network</td><td>Access to GitHub and the managed Postgres</td><td>Same, plus VPN if org policy requires</td></tr>
+  </tbody>
+</table>
+<p class="small">Optional: Docker for isolated backend builds, PM2 to mirror production process management locally.</p>
+
+<h2>10.2 Production or staging host</h2>
+<p>Assumes the Next.js app and the Go API on one host, with the database managed externally.</p>
+<table>
+  <thead><tr><th style="width:24%">Resource</th><th style="width:38%">Minimum</th><th>Recommended</th></tr></thead>
+  <tbody>
+    <tr><td>OS</td><td>Ubuntu 22.04 LTS</td><td>Ubuntu 24.04 LTS</td></tr>
+    <tr><td>CPU / RAM</td><td>2 vCPU, 4 GB</td><td>4 vCPU, 8 GB (16 GB for heavy reporting)</td></tr>
+    <tr><td>Disk</td><td>40 GB SSD</td><td>80+ GB SSD, separate volume for <code>backend/uploads/</code></td></tr>
+    <tr><td>Process manager</td><td>PM2</td><td>PM2 with <code>pm2 startup</code> and <code>pm2 save</code></td></tr>
+    <tr><td>Reverse proxy</td><td>Nginx or Caddy with TLS</td><td>Nginx with HTTP/2, compression and HSTS</td></tr>
+    <tr><td>Outbound</td><td>HTTPS to the managed Postgres; DNS for the tenant wildcard</td><td>Same, plus monitoring egress</td></tr>
+  </tbody>
+</table>
+
+<h2>10.3 Managed PostgreSQL</h2>
+<table>
+  <thead><tr><th style="width:24%">Resource</th><th style="width:38%">Minimum</th><th>Recommended</th></tr></thead>
+  <tbody>
+    <tr><td>PostgreSQL</td><td>14+</td><td>15 or 16</td></tr>
+    <tr><td>Storage</td><td>10 GB</td><td>50+ GB with growth alerts</td></tr>
+    <tr><td>Availability</td><td>Single node (non-production)</td><td>Multi-node HA</td></tr>
+    <tr><td>Backups</td><td>Daily snapshots</td><td>Daily plus point-in-time recovery</td></tr>
+    <tr><td>Connectivity</td><td>TLS required, IP allowlist</td><td>Private networking or VPC peering</td></tr>
+  </tbody>
+</table>
+
+<h2>10.4 End-user devices</h2>
+<p>Chrome, Edge, Firefox or Safari within the last two major versions; 1280×720 minimum, 1440×900 recommended; first-party cookies allowed for the Peepal domain. Mobile browsers work for most modules, but dense admin tables and bulk tools are desktop-first.</p>
+
+<h1 class="chapter"><span class="num">11.</span> Local installation</h1>
+
+<h2>11.1 Prerequisites</h2>
+<ol>
+  <li>Install Node.js 18+ and pnpm.</li>
+  <li>Install Go 1.21+.</li>
+  <li>Get access to the backend and frontend remotes, and a non-production Postgres DSN.</li>
+  <li>Ask a platform owner for non-production credentials. Never use production admin passwords locally.</li>
+</ol>
+
+<h2>11.2 Backend</h2>
+<pre><code>cd backend
+cp .env.example .env
+<span class="c"># set at minimum:</span>
+<span class="c">#   DB_PATH=&lt;postgres DSN&gt;</span>
+<span class="c">#   PORT=3001            (default in .env.example; config falls back to 8080)</span>
+<span class="c">#   COOKIE_DOMAIN=       (MUST be empty for localhost)</span>
+
+go mod tidy
+
+<span class="c"># first boot, with schema sync</span>
+go run main.go --migrate
+
+<span class="c"># subsequent boots, no schema changes</span>
+go run main.go</code></pre>
+
+<p>On first run a default administrator is seeded:</p>
+<table>
+  <thead><tr><th style="width:24%">Field</th><th>Value</th></tr></thead>
+  <tbody>
+    <tr><td>Email</td><td><code>admin@college.edu</code></td></tr>
+    <tr><td>Password</td><td><code>Admin@123</code></td></tr>
+  </tbody>
+</table>
+<div class="warn"><b>Change the seeded credentials</b> before the instance is reachable by anyone else.</div>
+
+<div class="note"><b>Migrations are opt-in.</b> A normal restart does not run GORM AutoMigrate. Pass <code>--migrate</code> only when models changed. Other one-off maintenance flags exist, for example <code>--backfill-uhid</code>; check <code>main.go</code> before inventing a new script.</div>
+
+<div class="warn"><b>Never run <code>git checkout</code> or <code>git restore</code> in this repository.</b> The working tree is significantly ahead of HEAD, and a checkout will destroy uncommitted work including the generated GraphQL schema.</div>
+
+<h2>11.3 Frontend</h2>
+<pre><code>cd frontend
+cp .env.local.example .env.local
+<span class="c"># NEXT_PUBLIC_API_URL=http://localhost:3001   (match the backend PORT)</span>
+<span class="c"># NEXT_PUBLIC_GA_MEASUREMENT_ID=              (leave blank locally)</span>
+<span class="c"># NEXT_PUBLIC_CLARITY_PROJECT_ID=             (leave blank locally)</span>
+
+pnpm install
+pnpm dev        <span class="c"># http://localhost:3000</span></code></pre>
+
+<p><code>next.config</code> rewrites <code>/api/:path*</code> to <code>${NEXT_PUBLIC_API_URL}/api/:path*</code>. GraphQL requests go to <code>{API}/api/v1/graphql</code> with credentials included, and carry <code>X-Tenant-ID</code> when a tenant context is set.</p>
+
+<h2>11.4 Verification</h2>
+<table>
+  <thead><tr><th style="width:40%">Check</th><th>Expected</th></tr></thead>
+  <tbody>
+    <tr><td>Backend starts</td><td>Listening on the configured port with no migration errors</td></tr>
+    <tr><td><code>http://localhost:3000</code></td><td>Marketing or login page renders</td></tr>
+    <tr><td>Sign in as a test admin</td><td><code>peepal_token</code> cookie set, redirect into the dashboard</td></tr>
+    <tr><td><code>/super/login</code></td><td>Platform console reachable for authorised users</td></tr>
+    <tr><td><code>/{slug}/login</code></td><td>Tenant-scoped session</td></tr>
+  </tbody>
+</table>
+
+<pre><code><span class="c"># end-to-end suite, with backend and pnpm dev running</span>
+pnpm test:install
+cp tests/.env.example tests/.env
+pnpm test</code></pre>
+
+<h2>11.5 Optional: Docker for the backend</h2>
+<pre><code>cd backend
+docker build -t peepal-backend .
+docker run -p 8080:8080 \
+  -e DB_PATH="&lt;dsn&gt;" \
+  -v peepal-uploads:/app/uploads \
+  peepal-backend</code></pre>
+
+<h1 class="chapter"><span class="num">12.</span> Codebase conventions</h1>
+
+<h2>12.1 GraphQL first</h2>
+<p>The backend exposes GraphQL and a shrinking set of REST routes side by side. <b>Default all new work to GraphQL.</b></p>
+<ul>
+  <li>Add features as gqlgen resolvers in a per-module <code>graph/&lt;module&gt;.resolvers.go</code>.</li>
+  <li>Do not add REST routes or handlers unless GraphQL genuinely cannot serve the case: file streaming, third-party webhooks, CSV upload.</li>
+  <li>Existing REST endpoints (auth and login, terminology, super-admin, bulk upload) stay as they are.</li>
+  <li>On the frontend, call GraphQL queries and mutations rather than REST through axios.</li>
+  <li>When extending an existing feature, match the API it already uses. Default any net-new surface to GraphQL.</li>
+</ul>
+
+<h2>12.2 Small files, split logic</h2>
+<p>Keep route files thin and put the real work in <code>components/pages/...</code>. Split large modules into several files rather than growing one. The same applies on the backend: one resolvers file per module, one bulk schema file per resource.</p>
+
+<h2>12.3 Naming across the boundary</h2>
+<div class="warn"><b>gqlgen emits camelCase.</b> A few legacy TypeScript types are snake_case, and nothing transforms between them automatically. A mismatch produces silent <code>undefined</code> reads on read and an HTTP 422 on write. Map explicitly at the slice boundary with <code>fromGql</code> and <code>toGqlInput</code> helpers.</div>
+
+<h2>12.4 Authentication</h2>
+<ul>
+  <li>The JWT lives in an httpOnly cookie named <code>peepal_token</code>, valid for 24 hours. Never store tokens in localStorage.</li>
+  <li>Redux holds only a <code>hasSession</code> marker. That marker can drift from the real cookie, so always await logout before navigating, and call <code>useHydrateSession()</code> on login pages.</li>
+  <li>Resolvers enforce authorisation with <code>requireAuth</code> and <code>requireRole</code>. Frontend guards are for user experience only.</li>
+  <li><code>COOKIE_DOMAIN</code> must be empty on localhost. A domain value is rejected by the browser and freezes a stale auth cookie, which shows up as <code>me()</code> returning the previous user.</li>
+</ul>
+
+<h2>12.5 Data integrity</h2>
+<ul>
+  <li>There are no database-level foreign keys. Bulk CSV rows validate their references through <code>handlers/bulk/reference_lookups.go</code>; a non-blank miss fails that row only.</li>
+  <li>Deleting a person cascades every relation through <code>graph/cascade_delete.go</code> and <code>deleteUserCascade</code>. Extend those helpers whenever you add a per-person table.</li>
+  <li>Audit logging is automatic for GraphQL mutations. REST handlers, including bulk row submission, must call the <code>audit</code> package's <code>Record</code> themselves.</li>
+</ul>
+
+<h2>12.6 Vocabulary</h2>
+<p>Shared UI must read its words from the terminology tokens and <code>roleLabels.ts</code>, never hardcoded education nouns. Role identifiers in the database never change; only the display label does.</p>
+
+<h1 class="chapter"><span class="num">13.</span> Building a feature end to end</h1>
+
+<h2>13.1 First day</h2>
+<ol>
+  <li>Read this guide, the root <code>CLAUDE.md</code>, and <code>frontend/ONBOARDING.md</code>.</li>
+  <li>Install the toolchain and bring up both services.</li>
+  <li>Sign in and browse the in-product technical docs at <code>/{tenant}/docs/dev</code> and <code>/super/tech-docs</code>.</li>
+  <li>Open <code>/super/db-visualizer</code> to see the schema as an interactive map.</li>
+  <li>Run a focused Playwright smoke test if credentials allow.</li>
+</ol>
+
+<h2>13.2 The workflow</h2>
+<ol>
+  <li><b>Model.</b> Add a GORM model under <code>backend/models</code> with <code>tenant_id</code> and the UUID hook.</li>
+  <li><b>Migrate.</b> <code>go run main.go --migrate</code>, once.</li>
+  <li><b>API.</b> Write a gqlgen resolver in <code>graph/&lt;module&gt;.resolvers.go</code>. Guard it with <code>requireAuth</code> and, where relevant, <code>requireRole</code>.</li>
+  <li><b>Access.</b> Register the new module id so it appears in the access matrix, and add it to <code>MODULE_INDUSTRIES</code> if it is industry-specific, or <code>ROLE_LOCKED_MODULES</code> if it is single-role self-service.</li>
+  <li><b>Frontend.</b> Thin <code>app/.../page.tsx</code>, real logic in <code>components/pages/...</code>.</li>
+  <li><b>State.</b> Apollo for server data, Redux for auth, chrome and terminology.</li>
+  <li><b>Navigation.</b> Add the entry to <code>BASE_MODULES</code> and <code>navConfig.ts</code> so the tile appears.</li>
+  <li><b>Bulk.</b> If the resource needs CSV import, add a <code>schema_*.go</code> under <code>handlers/bulk/</code> and drop <code>&lt;BulkUploadButton resource="..." /&gt;</code> on the page. For resources whose creation has side effects, prefer a per-row GraphQL mutation loop instead.</li>
+  <li><b>Tests.</b> Extend the Playwright hierarchy carefully; it is ordered with LIFO cleanup.</li>
+</ol>
+
+<div class="note"><b>Forgetting step 4 is the classic mistake.</b> A module missing from <code>ROLE_LOCKED_MODULES</code> leaks into the admin sidebar (administrators hold a blanket view grant) and then 404s when opened.</div>
+
+<h2>13.3 Regenerating GraphQL</h2>
+<p>Regenerate the schema from live introspection rather than hand-editing generated artefacts. After a migration, regenerate the frontend schema documentation with <code>pnpm gen:schema</code>. Note that a small number of mutations have been hand-wired into the generated code, so run a full regeneration deliberately and review the diff.</p>
+
+<h1 class="chapter"><span class="num">14.</span> Release and deployment</h1>
+
+<h2>14.1 Cadence</h2>
+<table>
+  <thead><tr><th style="width:20%">Channel</th><th style="width:20%">Frequency</th><th>Contents and impact</th></tr></thead>
+  <tbody>
+    <tr><td>Hotfix</td><td>As needed, same day</td><td>Security issues, auth bugs, data-exposure fixes. Brief window if a restart is required.</td></tr>
+    <tr><td>Patch</td><td>Weekly</td><td>Bug fixes, copy, small UX. Rolling restart.</td></tr>
+    <tr><td>Minor</td><td>Every two to four weeks</td><td>New modules, new GraphQL fields, non-breaking schema. Run <code>--migrate</code> if models changed.</td></tr>
+    <tr><td>Major</td><td>Quarterly, planned</td><td>Breaking API or schema, role-model changes, infrastructure moves. Announced in advance with an admin checklist.</td></tr>
+  </tbody>
+</table>
+
+<h2>14.2 Weekly rhythm</h2>
+<table>
+  <thead><tr><th style="width:20%">Day</th><th>Activity</th></tr></thead>
+  <tbody>
+    <tr><td>Monday</td><td>Triage; freeze candidates for the Tuesday patch.</td></tr>
+    <tr><td>Tuesday</td><td>Deploy to staging, smoke test, then production in a low-traffic window.</td></tr>
+    <tr><td>Wednesday to Thursday</td><td>Feature development; schema work on feature branches.</td></tr>
+    <tr><td>Friday</td><td>No production schema migrations unless hotfixing. Tag the weekly build.</td></tr>
+  </tbody>
+</table>
+
+<h2>14.3 Production install and deploy</h2>
+<pre><code><span class="c"># --- backend ---</span>
+cd backend
+go build -o collegeerp .
+pm2 start ecosystem.config.js
+
+<span class="c"># apply schema only as a planned step of the release</span>
+./collegeerp --migrate
+
+<span class="c"># --- frontend ---</span>
+cd ../frontend
+pnpm install --frozen-lockfile
+pnpm build
+pm2 start ecosystem.config.js     <span class="c"># peepal-frontend -&gt; next start :3000</span>
+
+pm2 save
+pm2 startup</code></pre>
+
+<h2>14.4 Release checklist</h2>
+<ol>
+  <li><b>Announce</b> the window to administrators if downtime or a migration is expected.</li>
+  <li><b>Back up</b>: take a snapshot, or confirm the latest automated backup is green.</li>
+  <li>Deploy the <b>backend</b> first, kept compatible with the old frontend where possible.</li>
+  <li>If models changed, run <code>--migrate</code> <b>once</b> against the production DSN from a controlled shell.</li>
+  <li>Deploy the <b>frontend</b> and reload PM2.</li>
+  <li><b>Smoke test</b>: super-admin login, one tenant login, one GraphQL list query, one file upload, one PDF download.</li>
+  <li><b>Monitor</b> error logs and analytics for 30 to 60 minutes.</li>
+  <li><b>Rollback</b> by restoring the previous PM2 binary and build. Restore the database only if the migration was destructive; prefer forward fixes.</li>
+</ol>
+
+<h2>14.5 Schema discipline</h2>
+<ul>
+  <li>Use expand, migrate, deploy, contract for breaking changes.</li>
+  <li>Never run destructive SQL in production without a backup and a written rollback plan.</li>
+  <li>Mount <code>backend/uploads/</code> on durable storage. Photos and generated PDFs live there, outside the binary, and must be in the backup policy.</li>
+</ul>
+
+<h2>14.6 Dependency updates</h2>
+<table>
+  <thead><tr><th style="width:44%">Class</th><th>Schedule</th></tr></thead>
+  <tbody>
+    <tr><td>Security patches (Node, Go, Next, Fiber)</td><td>Within 7 days of the advisory</td></tr>
+    <tr><td>Routine npm and Go module bumps</td><td>Monthly on staging, then production</td></tr>
+    <tr><td>Major framework upgrades</td><td>Dedicated major release with a full regression run</td></tr>
+  </tbody>
+</table>
+
+<h1 class="chapter"><span class="num">15.</span> Cloud infrastructure and environment</h1>
+
+<h2>15.1 Topology</h2>
+<table>
+  <thead><tr><th style="width:26%">Component</th><th>Notes</th></tr></thead>
+  <tbody>
+    <tr><td>Web app</td><td>Next.js under PM2 as <code>peepal-frontend</code>, port 3000, behind a reverse proxy.</td></tr>
+    <tr><td>API</td><td>Go Fiber binary under PM2, port 8080 in production, public hostname <code>api-roserp.workvar.com</code>.</td></tr>
+    <tr><td>Database</td><td>Aiven-managed PostgreSQL over TLS, DSN in <code>DB_PATH</code>, GORM with the pgx driver.</td></tr>
+    <tr><td>Files</td><td><code>backend/uploads/</code> on a persistent disk: photos, payslips and generated PDFs.</td></tr>
+    <tr><td>DNS and TLS</td><td>Tenant wildcard <code>*.roserp.workvar.com</code>, certificates terminated at the proxy.</td></tr>
+    <tr><td>Analytics</td><td>Google Analytics 4 and Microsoft Clarity, both no-ops when the IDs are unset.</td></tr>
+    <tr><td>Marketing and legal</td><td><code>peepal.app</code>, with <code>/terms</code> and <code>/privacy</code>.</td></tr>
+    <tr><td>On-premises</td><td>The <code>installer/</code> module builds native installers plus a <code>peepal-agent</code> supervisor that proxies port 80, serves a maintenance page, and auto-updates from private release repositories.</td></tr>
+  </tbody>
+</table>
+
+<h2>15.2 Environment variables</h2>
+<p><b>Frontend</b> (<code>.env.local</code> or the PM2 env block):</p>
+<table>
+  <thead><tr><th style="width:38%">Variable</th><th>Purpose</th></tr></thead>
+  <tbody>
+    <tr><td><code>NEXT_PUBLIC_API_URL</code></td><td>Origin of the Go API</td></tr>
+    <tr><td><code>NEXT_PUBLIC_GA_MEASUREMENT_ID</code></td><td>GA4 measurement ID; empty locally and in CI</td></tr>
+    <tr><td><code>NEXT_PUBLIC_CLARITY_PROJECT_ID</code></td><td>Optional Clarity project ID</td></tr>
+    <tr><td><code>NODE_ENV</code>, <code>PORT</code></td><td>Production process settings</td></tr>
+  </tbody>
+</table>
+<p><b>Backend</b> (see <code>.env.example</code> for the full list):</p>
+<table>
+  <thead><tr><th style="width:38%">Variable</th><th>Purpose</th></tr></thead>
+  <tbody>
+    <tr><td><code>DB_PATH</code></td><td>PostgreSQL DSN</td></tr>
+    <tr><td><code>PORT</code></td><td>API listen port; defaults to 8080 when unset</td></tr>
+    <tr><td><code>COOKIE_DOMAIN</code></td><td>Cookie scope. <b>Must be empty on localhost.</b></td></tr>
+    <tr><td>JWT and admin seed secrets</td><td>Unique per environment; rotate on compromise</td></tr>
+    <tr><td>SMTP settings</td><td>Invitation and notification delivery</td></tr>
+  </tbody>
+</table>
+<div class="warn">Never commit a real <code>.env</code> or <code>.env.local</code>. Use a secret manager or host-level injection in production.</div>
+
+<h2>15.3 Networking checklist</h2>
+<ol>
+  <li>Allowlist the application hosts on the database, or use private networking.</li>
+  <li>Expose only 443 publicly, with 80 redirecting. Keep the app ports on localhost or a private interface.</li>
+  <li>Configure CORS and cookie domains consistently with the tenant hostnames and any custom domains.</li>
+  <li>Ensure the reverse proxy forwards cookies and does not strip the tenant header.</li>
+</ol>
+
+<h2>15.4 Observability</h2>
+<table>
+  <thead><tr><th style="width:34%">Signal</th><th>Where</th></tr></thead>
+  <tbody>
+    <tr><td>Process health</td><td><code>pm2 status</code>, <code>pm2 logs</code></td></tr>
+    <tr><td>Product analytics</td><td>GA4; the event registry is listed at <code>/dev/analytics</code></td></tr>
+    <tr><td>Session replay</td><td>Microsoft Clarity</td></tr>
+    <tr><td>Platform health</td><td><code>/super/dashboard</code>, live from the <code>platformAnalytics</code> query</td></tr>
+    <tr><td>Database</td><td>Aiven console: connections, disk, backups</td></tr>
+    <tr><td>Change history</td><td>The in-app Audit Trail, per tenant</td></tr>
+  </tbody>
+</table>
+
+<h1 class="chapter"><span class="num">16.</span> Security, backups and support</h1>
+
+<table>
+  <thead><tr><th style="width:26%">Topic</th><th>Practice</th></tr></thead>
+  <tbody>
+    <tr><td>Secrets</td><td>Unique JWT and admin secrets per environment; rotate after staff offboarding.</td></tr>
+    <tr><td>Passwords</td><td>bcrypt hashed. Sessions are 24-hour JWTs in httpOnly cookies.</td></tr>
+    <tr><td>Authorisation</td><td>Enforced on the API through resolver guards and access field middleware. Frontend guards are UX only.</td></tr>
+    <tr><td>Encryption</td><td>At rest and in transit on the managed database. Sensitive fields such as payment details carry column-level encryption on top.</td></tr>
+    <tr><td>Backups</td><td>Managed database schedules, plus the uploads volume. Test a restore quarterly.</td></tr>
+    <tr><td>Least privilege</td><td>Prefer role templates over per-user grants; audit administrator accounts monthly.</td></tr>
+    <tr><td>Production access</td><td>Engineering access to production data is exceptional, ticketed and logged.</td></tr>
+    <tr><td>Data residency</td><td>Confirm region placement with the platform owner for DPDP, GDPR or local compliance.</td></tr>
+    <tr><td>Incidents</td><td>Capture <code>pm2 logs</code>, the approximate UTC time, the tenant slug and the user role before escalating.</td></tr>
+  </tbody>
+</table>
+
+<p>Support escalation: institute administrator, then Peepal support, then engineering on call.</p>
+
+<h1 class="chapter"><span class="num">17.</span> Quick reference</h1>
+
+<table>
+  <thead><tr><th style="width:34%">Item</th><th>Value</th></tr></thead>
+  <tbody>
+    <tr><td>Frontend dev</td><td><code>pnpm dev</code> at <code>http://localhost:3000</code></td></tr>
+    <tr><td>Backend dev</td><td><code>go run main.go</code>, port from <code>PORT</code> (3001 in <code>.env.example</code>, 8080 default)</td></tr>
+    <tr><td>Apply schema</td><td><code>go run main.go --migrate</code></td></tr>
+    <tr><td>GraphQL endpoint</td><td><code>POST {API}/api/v1/graphql</code></td></tr>
+    <tr><td>Production API</td><td><code>https://api-roserp.workvar.com</code></td></tr>
+    <tr><td>Auth cookie</td><td><code>peepal_token</code>, httpOnly, 24 hours</td></tr>
+    <tr><td>REST envelope</td><td><code>{ success, data, message, error }</code></td></tr>
+    <tr><td>Database</td><td>Aiven PostgreSQL via <code>DB_PATH</code></td></tr>
+    <tr><td>Process manager</td><td>PM2 with <code>ecosystem.config.js</code></td></tr>
+    <tr><td>Uploads</td><td><code>backend/uploads/</code> on persistent disk</td></tr>
+    <tr><td>Package manager</td><td>pnpm for the frontend</td></tr>
+    <tr><td>Toolchain</td><td>Node 18+ (20 recommended), Go 1.21+ (project targets 1.25)</td></tr>
+    <tr><td>Default seed admin</td><td><code>admin@college.edu</code> / <code>Admin@123</code></td></tr>
+    <tr><td>In-app docs</td><td><code>/{tenant}/docs/dev</code>, <code>/{tenant}/docs/users</code>, <code>/super/tech-docs</code></td></tr>
+    <tr><td>Schema visualiser</td><td><code>/super/db-visualizer</code></td></tr>
+    <tr><td>Analytics registry</td><td><code>/dev/analytics</code></td></tr>
+    <tr><td>Legal</td><td><code>peepal.app/terms</code>, <code>peepal.app/privacy</code></td></tr>
+  </tbody>
+</table>
+
+<!-- ================= APPENDIX ================= -->
+<h1 class="chapter"><span class="num">A.</span> Glossary</h1>
+
+<table>
+  <thead><tr><th style="width:26%">Term</th><th>Meaning</th></tr></thead>
+  <tbody>
+    <tr><td>Tenant</td><td>One institution with isolated data, reached by subdomain or path slug.</td></tr>
+    <tr><td>Industry / tenant type</td><td>education, healthcare, corporate or nonprofit. Decides which modules exist. <code>college</code> and <code>enterprise</code> are legacy aliases for education and corporate.</td></tr>
+    <tr><td>Module</td><td>A named feature area that can be granted, gated by subscription, and filtered by industry.</td></tr>
+    <tr><td>Access matrix</td><td>The per-tenant grid of role to module CRUD permissions, edited at <code>/org/access-control</code>.</td></tr>
+    <tr><td>Role ceiling</td><td>The maximum a custom role can reach, derived from the resolver role guards of each module.</td></tr>
+    <tr><td>Role-locked module</td><td>A page whose data only exists for one role, hidden even from administrators.</td></tr>
+    <tr><td>Terminology layer</td><td>Per-tenant vocabulary tokens that rename entities in the interface without changing the data model.</td></tr>
+    <tr><td>Quota</td><td>The licensed student and employee count. Exceeding it blocks new records and shows a persistent banner.</td></tr>
+    <tr><td>Super admin</td><td>Platform operator outside any tenant, working from the <code>/super</code> console.</td></tr>
+    <tr><td>Bulk framework</td><td>The shared CSV import system: a registry, one schema per resource, and a reusable upload button.</td></tr>
+    <tr><td>UHID / CR number</td><td>Healthcare identifiers for a patient and an encounter respectively.</td></tr>
+  </tbody>
+</table>
+
+<h1 class="chapter"><span class="num">B.</span> Industry availability matrix</h1>
+
+<p class="lead">A condensed view of which module families exist for which industry. Shared modules appear for every tenant.</p>
+
+<table>
+  <thead><tr><th style="width:30%">Module family</th><th style="width:23%">Education</th><th style="width:23%">Healthcare</th><th>Corporate / Nonprofit</th></tr></thead>
+  <tbody>
+    <tr><td>Dashboard, Profile, Ask PeepalAI</td><td>Yes</td><td>Yes</td><td>Yes</td></tr>
+    <tr><td>Employees, Org structure, Departments</td><td>Yes</td><td>Yes</td><td>Yes</td></tr>
+    <tr><td>Attendance (core)</td><td>Yes</td><td>Yes</td><td>Yes</td></tr>
+    <tr><td>Attendance summary, shortage, export</td><td>Yes</td><td>No</td><td>No</td></tr>
+    <tr><td>Students, Marks, Results, Courses, Subjects</td><td>Yes</td><td>No</td><td>No</td></tr>
+    <tr><td>Curriculum, Grading, Timetable, Exams</td><td>Yes</td><td>No</td><td>No</td></tr>
+    <tr><td>Exam cell (question bank, papers, hall tickets)</td><td>Yes</td><td>No</td><td>No</td></tr>
+    <tr><td>Fees (all sub-modules)</td><td>Yes</td><td>No</td><td>No</td></tr>
+    <tr><td>Hostel, Transport, Library, Mess</td><td>Yes</td><td>No</td><td>No</td></tr>
+    <tr><td>Student portal (My Fees, My Grades, …)</td><td>Yes</td><td>No</td><td>No</td></tr>
+    <tr><td>Patients, Appointments, OPD, Admissions</td><td>No</td><td>Yes</td><td>No</td></tr>
+    <tr><td>Laboratory, Radiology, Nursing, OT, Triage</td><td>No</td><td>Yes</td><td>No</td></tr>
+    <tr><td>Pharmacy, Inventory, Blood bank, Ambulance</td><td>No</td><td>Yes</td><td>No</td></tr>
+    <tr><td>Clinical billing, Claims</td><td>No</td><td>Yes</td><td>No</td></tr>
+    <tr><td>Dietary, Telemedicine, Referrals</td><td>No</td><td>Yes</td><td>No</td></tr>
+    <tr><td>Wards &amp; Beds, Clinician schedules, Patient portal</td><td>No</td><td>Yes</td><td>No</td></tr>
+    <tr><td>Leaves, Payroll, Approvals, Duty roster</td><td>Yes</td><td>Yes</td><td>Yes</td></tr>
+    <tr><td>Finance, Vendors, Purchase orders</td><td>Yes</td><td>Yes</td><td>Yes</td></tr>
+    <tr><td>Events, Learning, Announcements, Notifications</td><td>Yes</td><td>Yes</td><td>Yes</td></tr>
+    <tr><td>Organisation settings, Access control, Audit trail</td><td>Yes</td><td>Yes</td><td>Yes</td></tr>
+  </tbody>
+</table>
+
+<div class="note">Availability is also subject to your subscription. The authoritative source is the live access matrix at <code>/org/access-control</code> and the module configuration in the super-admin console, not this table.</div>
+
+<div class="footer-note">
+Peepal ERP Onboarding Guide, version 1.0, August 2026. Derived from the project conventions, the backend and frontend documentation, and the live module registry. Update this document when ports, domains, roles or migration policy change.
+</div>
+
+</body>
+</html>
