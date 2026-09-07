@@ -1,0 +1,16 @@
+{
+  "name": "peepal-rp",
+  "version": "1.0.0",
+  "private": true,
+  "description": "PeepalRP monorepo: frontend (Next.js), backend (Go), installer (Go).",
+  "scripts": {
+    "dev": "pnpm --filter collegeerp-frontend dev",
+    "build": "pnpm --filter collegeerp-frontend build",
+    "lint": "pnpm --filter collegeerp-frontend lint",
+    "test": "pnpm --filter collegeerp-frontend test",
+    "backend:build": "cd backend && go build ./...",
+    "backend:run": "cd backend && go run ./cmd",
+    "installer:build": "cd installer && go build ./..."
+  },
+  "license": "UNLICENSED"
+}

@@ -1,2 +1,42 @@
+# OS
 .DS_Store
 **/.DS_Store
+
+# editors / local tool state
+.claude/
+**/.claude/settings.local.json
+.cursor/
+.vscode/
+*.code-review-graph/
+.code-review-graph/
+.ds-sync/
+.design-sync/
+.superpowers/
+
+# node
+node_modules/
+frontend/.next/
+frontend/dist/
+
+# env files
+.env
+.env.local
+*.env.local
+**/.env
+**/.env.local
+
+# go build artifacts
+backend/collegeerp
+backend/collegeerp.db
+backend/main
+backend/*.exe
+installer/*.exe
+installer/dist/
+bin/
+
+# go workspace local state
+go.work.sum
+
+# scratch
+_to_delete/
+_tmp_*

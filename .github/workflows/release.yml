@@ -1,0 +1,144 @@
+# Publishes deployable backend + frontend bundles to a GitHub Release.
+#
+# Trigger:  git tag v1.2.3 && git push origin v1.2.3
+#
+# Assets (names are a contract - installer/internal/ghrelease/naming.go
+# looks for exactly these files, so do not rename them):
+#   peepal-backend_linux_amd64.tar.gz
+#   peepal-backend_linux_arm64.tar.gz
+#   peepal-frontend.tar.gz
+#   checksums.txt
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Existing tag to build and publish (e.g. v1.2.3)"
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  backend:
+    name: Backend (${{ matrix.goos }}/${{ matrix.goarch }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { goos: linux, goarch: amd64 }
+          - { goos: linux, goarch: arm64 }
+          # Add { goos: darwin, goarch: arm64 } etc. here if admins ever need
+          # to run the server off-Linux; the packaging step is platform-neutral.
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.tag || github.ref }}
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: backend/go.mod
+          cache-dependency-path: backend/go.sum
+
+      - name: Build static binary
+        working-directory: backend
+        env:
+          GOOS: ${{ matrix.goos }}
+          GOARCH: ${{ matrix.goarch }}
+          CGO_ENABLED: "0"
+        run: |
+          mkdir -p out
+          go build -trimpath -ldflags "-s -w" -o out/peepal-backend .
+
+      - name: Package
+        working-directory: backend
+        run: |
+          # The archive is unpacked straight over app/backend on the server,
+          # so it carries only what the process needs at runtime.
+          cp .env.example out/ 2>/dev/null || true
+          tar -C out -czf "peepal-backend_${{ matrix.goos }}_${{ matrix.goarch }}.tar.gz" .
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: backend-${{ matrix.goos }}-${{ matrix.goarch }}
+          path: backend/peepal-backend_*.tar.gz
+          retention-days: 1
+
+  frontend:
+    name: Frontend (standalone bundle)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.tag || github.ref }}
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: pnpm
+          cache-dependency-path: frontend/pnpm-lock.yaml
+
+      - name: Install dependencies
+        working-directory: frontend
+        run: pnpm install --frozen-lockfile
+
+      - name: Build
+        working-directory: frontend
+        env:
+          # Emits .next/standalone: server.js plus only the node_modules the
+          # app actually imports. NEXT_PUBLIC_API_URL is deliberately unset so
+          # the browser bundle calls /api relatively and is proxied to the Go
+          # backend by next.config.js at runtime.
+          NEXT_STANDALONE: "1"
+          NODE_ENV: production
+        run: pnpm build
+
+      - name: Assemble the bundle
+        working-directory: frontend
+        run: |
+          # next build traces dependencies into .next/standalone but does not
+          # copy static assets; those have to be placed by hand.
+          mkdir -p out
+          cp -a .next/standalone/. out/   # -a keeps the symlinks pnpm traces into node_modules
+          mkdir -p out/.next
+          cp -a .next/static out/.next/static
+          [ -d public ] && cp -a public out/public || true
+          tar -C out -czf peepal-frontend.tar.gz .
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: frontend-bundle
+          path: frontend/peepal-frontend.tar.gz
+          retention-days: 1
+
+  publish:
+    name: Publish release
+    needs: [backend, frontend]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Collect assets and checksum
+        run: |
+          mkdir -p out
+          find artifacts -type f -name '*.tar.gz' -exec mv {} out/ \;
+          cd out
+          sha256sum * > checksums.txt
+          cat checksums.txt
+
+      - uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ inputs.tag || github.ref_name }}
+          files: out/*
+          generate_release_notes: true
+          fail_on_unmatched_files: true
