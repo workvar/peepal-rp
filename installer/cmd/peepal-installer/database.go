@@ -32,9 +32,22 @@ func setupDatabase(ctx context.Context, l paths.Layout, a *answers) string {
 		RunAs:    sysuser.Account(),
 	}
 
-	// The Windows vendor installer initialises its own cluster and registers
-	// a service; everywhere else we run initdb and start the server ourselves.
-	if install.Managed {
+	if !install.Managed {
+		ui.Info("Using the PostgreSQL already installed on this computer")
+		if err := pgsql.EnsureSystemRunning(ctx, install, ui.Info); err != nil {
+			ui.Fail("%v", err)
+		}
+		port, ok := pgsql.ListeningPort(install, 5432, a.Config.PostgresPort, 5433)
+		if !ok {
+			ui.Fail("PostgreSQL is installed but not accepting connections.")
+		}
+		a.Config.PostgresPort = port
+		cluster.Port = port
+		cluster.RunAs = pgsql.DistroOSUser
+		cluster.Peer = true
+		ui.OK("Reusing PostgreSQL on port %d (not creating a second cluster)", port)
+	} else {
+		// Portable / Homebrew: we own the data directory and start the server.
 		if err := cluster.Init(ctx, ui.Info); err != nil {
 			ui.Fail("Could not initialise the database: %v", err)
 		}

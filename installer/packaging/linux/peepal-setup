@@ -1,3 +1,6 @@
 #!/bin/sh
-# Convenience wrapper so administrators can type "sudo peepal-setup".
+# Convenience wrapper so administrators can type "peepal-setup".
+if [ "$(id -u)" -ne 0 ]; then
+  exec sudo -- "$0" "$@"
+fi
 exec /usr/local/apps/peepal-rp/bin/peepal-installer --dir /opt/apps/peepal-rp "$@"

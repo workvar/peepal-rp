@@ -1,5 +1,14 @@
 # Release notes
 
+## v1.2.2 — Reuse system PostgreSQL
+
+The ARM64 installer found Postgres 17 on Raspberry Pi OS, then `initdb`'d a
+second cluster on port 5433 that never came up. Distro Postgres is now reused
+on 5432 (role + database only). Copy the `.deb` to `/tmp` before `apt install`
+so `_apt` can read it. `peepal-setup` elevates with sudo on its own.
+
+---
+
 ## v1.2.1 — Fix Postgres init as the peepal user
 
 `data/` was `0750` and owned by root, so `initdb` (running as `peepal`) could

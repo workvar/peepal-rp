@@ -21,9 +21,11 @@ type Cluster struct {
 	DataDir  string
 	Port     int
 	SuperPwd string
-	// RunAs is the OS account the server runs under. PostgreSQL refuses to
-	// start as root, so on Unix this is a dedicated service user.
+	// RunAs is the OS account the server (or peer psql) runs under.
 	RunAs string
+	// Peer is true when we talk to a distro cluster over the local unix
+	// socket as the postgres OS user, instead of TCP + password.
+	Peer bool
 }
 
 // Initialised reports whether DataDir already holds a cluster.
@@ -36,11 +38,31 @@ func pwFileFor(dataDir string) string {
 	return filepath.Join(filepath.Dir(dataDir), ".pgpw")
 }
 
+func socketDirFor(dataDir string) string {
+	return filepath.Join(filepath.Dir(dataDir), "pgrun")
+}
+
+func (c Cluster) socketDir() string { return socketDirFor(c.DataDir) }
+
 // ownershipPaths are handed to the service account before initdb. The parent
 // of DataDir must be included: data/ is 0750, so peepal cannot read .pgpw
 // (or traverse into pgdata) while it is still owned by root.
 func ownershipPaths(dataDir, pwFile string) []string {
-	return []string{dataDir, filepath.Dir(dataDir), pwFile}
+	return []string{dataDir, filepath.Dir(dataDir), pwFile, socketDirFor(dataDir)}
+}
+
+func (c Cluster) extraConf() string {
+	return strings.Join([]string{
+		"# Managed by Peepal. Edit postgresql.conf for local overrides.",
+		"listen_addresses = '127.0.0.1'",
+		"port = " + strconv.Itoa(c.Port),
+		"max_connections = 100",
+		"shared_buffers = 128MB",
+		"unix_socket_directories = '" + c.socketDir() + "'",
+		"log_destination = 'stderr'",
+		"logging_collector = off",
+		"",
+	}, "\n")
 }
 
 // Init runs initdb, writes a locked-down configuration and leaves the server
@@ -58,6 +80,9 @@ func (c Cluster) Init(ctx context.Context, log Logf) error {
 		return err
 	}
 	if err := os.MkdirAll(c.DataDir, 0o700); err != nil {
+		return err
+	}
+	if err := os.MkdirAll(c.socketDir(), 0o750); err != nil {
 		return err
 	}
 	pwFile := pwFileFor(c.DataDir)
@@ -92,18 +117,11 @@ func (c Cluster) Init(ctx context.Context, log Logf) error {
 // writeConf appends our overrides. Keeping them in a separate include file
 // means a customer's manual edits to postgresql.conf are never clobbered.
 func (c Cluster) writeConf() error {
+	if err := os.MkdirAll(c.socketDir(), 0o750); err != nil {
+		return err
+	}
 	conf := filepath.Join(c.DataDir, "peepal.conf")
-	body := strings.Join([]string{
-		"# Managed by Peepal. Edit postgresql.conf for local overrides.",
-		"listen_addresses = '127.0.0.1'",
-		"port = " + strconv.Itoa(c.Port),
-		"max_connections = 100",
-		"shared_buffers = 256MB",
-		"log_destination = 'stderr'",
-		"logging_collector = off",
-		"",
-	}, "\n")
-	if err := os.WriteFile(conf, []byte(body), 0o600); err != nil {
+	if err := os.WriteFile(conf, []byte(c.extraConf()), 0o600); err != nil {
 		return err
 	}
 	main := filepath.Join(c.DataDir, "postgresql.conf")
@@ -122,7 +140,10 @@ func (c Cluster) writeConf() error {
 		}
 	}
 	if c.RunAs != "" {
-		return chownTree(conf, c.RunAs)
+		if err := chownTree(c.DataDir, c.RunAs); err != nil {
+			return err
+		}
+		return chownTree(c.socketDir(), c.RunAs)
 	}
 	return nil
 }
@@ -173,9 +194,8 @@ func (c Cluster) EnsureRoleAndDB(ctx context.Context, user, password, dbName str
 
 func (c Cluster) psql(ctx context.Context, db, sql string) error {
 	cmd := exec.CommandContext(ctx, c.Install.Bin("psql"),
-		"-h", "127.0.0.1", "-p", strconv.Itoa(c.Port), "-U", SuperUser, "-d", db,
-		"-v", "ON_ERROR_STOP=1", "-q", "-c", sql)
-	cmd.Env = append(os.Environ(), "PGPASSWORD="+c.SuperPwd)
+		append(c.psqlConnArgs(), "-d", db, "-v", "ON_ERROR_STOP=1", "-q", "-c", sql)...)
+	c.applyPsqlEnv(cmd)
 	if out, err := cmd.CombinedOutput(); err != nil {
 		return fmt.Errorf("psql: %w\n%s", err, out)
 	}
@@ -184,14 +204,29 @@ func (c Cluster) psql(ctx context.Context, db, sql string) error {
 
 func (c Cluster) queryBool(ctx context.Context, sql string) (bool, error) {
 	cmd := exec.CommandContext(ctx, c.Install.Bin("psql"),
-		"-h", "127.0.0.1", "-p", strconv.Itoa(c.Port), "-U", SuperUser, "-d", "postgres",
-		"-tAc", sql)
-	cmd.Env = append(os.Environ(), "PGPASSWORD="+c.SuperPwd)
+		append(c.psqlConnArgs(), "-d", "postgres", "-tAc", sql)...)
+	c.applyPsqlEnv(cmd)
 	out, err := cmd.Output()
 	if err != nil {
 		return false, fmt.Errorf("psql query: %w", err)
 	}
 	return strings.TrimSpace(string(out)) == "1", nil
+}
+
+func (c Cluster) psqlConnArgs() []string {
+	host := "127.0.0.1"
+	if c.Peer {
+		host = "/var/run/postgresql"
+	}
+	return []string{"-h", host, "-p", strconv.Itoa(c.Port), "-U", SuperUser}
+}
+
+func (c Cluster) applyPsqlEnv(cmd *exec.Cmd) {
+	cmd.Env = os.Environ()
+	if !c.Peer {
+		cmd.Env = append(cmd.Env, "PGPASSWORD="+c.SuperPwd)
+	}
+	applyCredential(cmd, c.RunAs)
 }
 
 // command builds a child process, dropping privileges on Unix.

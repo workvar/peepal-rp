@@ -18,11 +18,11 @@ func Locate(pgRoot string) (Install, bool) {
 	}
 	if p, err := exec.LookPath(exeName("initdb")); err == nil {
 		dir := filepath.Dir(p)
-		return Install{BinDir: dir, Managed: runtime.GOOS != "windows", Source: "system PATH"}, true
+		return Install{BinDir: dir, Managed: managedInstall(dir), Source: "system PATH"}, true
 	}
 	for _, dir := range systemDirs() {
 		if hasInitdb(dir) {
-			return Install{BinDir: dir, Managed: runtime.GOOS != "windows", Source: "system install"}, true
+			return Install{BinDir: dir, Managed: managedInstall(dir), Source: "system install"}, true
 		}
 	}
 	return Install{}, false
@@ -76,6 +76,21 @@ func distroBinDirs(pattern string) []string {
 func postgresDirVersion(dir string) int {
 	n, _ := strconv.Atoi(filepath.Base(filepath.Dir(dir)))
 	return n
+}
+
+func isDistroBinDir(dir string) bool {
+	n := filepath.ToSlash(dir)
+	return strings.Contains(n, "/usr/lib/postgresql/") || strings.Contains(n, "/usr/pgsql-")
+}
+
+// managedInstall is true when the agent should initdb and supervise Postgres.
+// Distro packages (Debian / Raspberry Pi OS) already run a systemd cluster;
+// we reuse that server instead of creating a second one on 5433.
+func managedInstall(binDir string) bool {
+	if runtime.GOOS == "windows" {
+		return false
+	}
+	return !isDistroBinDir(binDir)
 }
 
 func insideDpkg() bool {

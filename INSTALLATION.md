@@ -244,9 +244,15 @@ Pi’s IP) is turned on automatically.
 3. Install:
 
 ```bash
+sudo cp ./peepal_*_arm64.deb /tmp/
+sudo chmod a+r /tmp/peepal_*_arm64.deb
 sudo apt update
-sudo apt install -y ./peepal_*_arm64.deb
+sudo apt install -y /tmp/peepal_*_arm64.deb
 ```
+
+Copying the package to `/tmp` avoids apt’s `_apt` sandbox warning when the
+`.deb` sits in `~/Downloads`. Postgres already on the machine is reused (the
+wizard does not `initdb` a second cluster).
 
 4. Answer the prompts (admin email/password, optional AI, updates).
 5. From another device on the same Wi‑Fi, open:
@@ -265,6 +271,8 @@ To run setup again later (without `apt`):
 ```bash
 sudo peepal-setup
 ```
+
+`peepal-setup` re-runs itself with `sudo` if needed.
 
 ### Enable `raspberrypi.local` after an existing install
 
