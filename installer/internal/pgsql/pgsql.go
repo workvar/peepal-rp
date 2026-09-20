@@ -44,7 +44,7 @@ type Logf func(string, ...any)
 // only by the Windows unattended installer, which initialises its own cluster.
 func Ensure(ctx context.Context, pgRoot, dataDir, cacheDir, superPassword string, port int, log Logf) (Install, error) {
 	if in, ok := Locate(pgRoot); ok {
-		log("Found PostgreSQL %s at %s", MajorVersion, in.BinDir)
+		log("Found PostgreSQL at %s", in.BinDir)
 		return in, nil
 	}
 	switch runtime.GOOS {

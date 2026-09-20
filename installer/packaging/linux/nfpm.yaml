@@ -22,6 +22,26 @@ depends:
   - curl
   - ca-certificates
 
+# ARM64 has no portable PostgreSQL archive, so the .deb must pull the distro
+# server *before* postinst runs. Nested apt from the wizard holds dpkg's lock
+# and fails. avahi-daemon makes http://raspberrypi.local resolve on the LAN.
+overrides:
+  deb:
+    depends:
+      - curl
+      - ca-certificates
+      - postgresql
+      - postgresql-contrib
+      - avahi-daemon
+  rpm:
+    depends:
+      - curl
+      - ca-certificates
+      - postgresql-server
+
+recommends:
+  - avahi-daemon
+
 contents:
   - src: dist/linux_${ARCH}/peepal-installer
     dst: /usr/local/apps/peepal-rp/bin/peepal-installer

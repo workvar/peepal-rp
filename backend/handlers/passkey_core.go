@@ -54,8 +54,7 @@ func relyingParty(c *fiber.Ctx) (*webauthn.WebAuthn, error) {
 //
 // The rule is the browser's own: an origin may use a credential bound to an RP
 // ID when its host is that domain or a subdomain of it. Plain http is accepted
-// only for loopback, which is the one place browsers relax the secure-context
-// requirement (so local development works without a certificate).
+// for loopback, and for *.local hosts when RPI_LOCAL_ENABLE is on.
 func allowedOrigin(c *fiber.Ctx) (string, error) {
 	raw := strings.TrimSpace(c.Get("Origin"))
 	if raw == "" {
@@ -69,7 +68,8 @@ func allowedOrigin(c *fiber.Ctx) (string, error) {
 	}
 	host := u.Hostname()
 	loopback := host == "localhost" || host == "127.0.0.1" || host == "::1"
-	if u.Scheme != "https" && !(u.Scheme == "http" && loopback) {
+	mdns := config.App.RPILocal && strings.HasSuffix(strings.ToLower(host), ".local")
+	if u.Scheme != "https" && !(u.Scheme == "http" && (loopback || mdns)) {
 		return "", errInvalidOrigin
 	}
 	rpID := config.App.WebAuthnRPID

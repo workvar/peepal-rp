@@ -57,6 +57,7 @@ type Options struct {
 	Uninstall     bool
 	KeepData      bool
 	ShowVersion   bool
+	RPILocal      bool
 }
 
 func parseFlags() Options {
@@ -72,6 +73,7 @@ func parseFlags() Options {
 	flag.BoolVar(&o.Uninstall, "uninstall", false, "remove the service and the installed files")
 	flag.BoolVar(&o.KeepData, "keep-data", true, "keep the database and uploads when uninstalling")
 	flag.BoolVar(&o.ShowVersion, "version", false, "print the installer version and exit")
+	flag.BoolVar(&o.RPILocal, "rpi-local", false, "enable http://raspberrypi.local (cookies, CORS, mDNS)")
 	flag.Parse()
 	return o
 }

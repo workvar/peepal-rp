@@ -18,8 +18,12 @@ type Config struct {
 	AppEnv             string
 	// CORSOrigins is a comma-separated allowlist of frontend origins.
 	CORSOrigins string
-	// CookieSecure controls the Secure flag on the auth cookie (true in production).
+	// CookieSecure controls the Secure flag on the auth cookie (true in production
+	// unless RPI_LOCAL_ENABLE is on — that mode is plain HTTP on the LAN).
 	CookieSecure bool
+	// RPILocal is RPI_LOCAL_ENABLE: serve and accept cookies at
+	// http://raspberrypi.local (mDNS) and other LAN / *.local origins.
+	RPILocal bool
 	// CookieDomain scopes the auth cookie. Empty = host-only (correct for local
 	// dev where frontend and API share "localhost"). In production set it to the
 	// shared parent domain (e.g. ".workvar.com") so the cookie is readable by
@@ -99,6 +103,7 @@ func Load() {
 		WebAuthnRPName:     getEnv("WEBAUTHN_RP_NAME", "Peepal"),
 		PeepalAgentURL:     getEnv("PEEPAL_AGENT_URL", "http://127.0.0.1:9080"),
 		PeepalAgentToken:   os.Getenv("PEEPAL_AGENT_TOKEN"),
+		RPILocal:           envBool(getEnv("RPI_LOCAL_ENABLE", "false")),
 	}
 	App.CookieSecure = App.AppEnv == "production"
 	// Default the passkey domain to the app's own host. That is correct for a
@@ -107,6 +112,7 @@ func Load() {
 	if App.WebAuthnRPID == "" {
 		App.WebAuthnRPID = hostOf(App.AppBaseURL)
 	}
+	applyRPILocal(&App)
 }
 
 // getDuration reads a Go duration string (e.g. "15m", "720h") from the

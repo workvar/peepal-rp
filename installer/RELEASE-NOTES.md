@@ -1,5 +1,33 @@
 # Release notes
 
+## v1.2.0 — Raspberry Pi LAN install
+
+Customers can install the ARM64 `.deb` on Raspberry Pi OS and open the app at
+`http://raspberrypi.local` or the Pi’s LAN IP. Setup is `apt install` plus the
+usual wizard — no nested `apt`, no extra Postgres or Avahi steps.
+
+### Raspberry Pi / LAN
+
+- `RPI_LOCAL_ENABLE` turns off `Secure` cookies on HTTP, keeps host-only
+  cookies (`.local` is a public suffix), and allows CORS from `*.local` and
+  private LAN IPs so login works at `http://raspberrypi.local` and at the IP.
+- Detected automatically on a Raspberry Pi; `--rpi-local` still forces it.
+- Linux `.deb` depends on `postgresql`, `postgresql-contrib`, and
+  `avahi-daemon` so `apt` installs them **before** the wizard runs.
+- Finds any distro Postgres under `/usr/lib/postgresql/*/bin` (Trixie ships
+  17, not 16). Never calls `apt` from a `.deb` postinst (`DPKG_RUNNING_VERSION`).
+- A failed wizard no longer leaves the package unconfigured (that bricked
+  `apt` on the next command). Re-run with `sudo peepal-setup`.
+
+### Upgrade notes
+
+- **Pi that already failed on v1.1.0:** `sudo dpkg --remove peepal` then
+  `sudo apt install -y ./peepal_1.2.0_arm64.deb`.
+- Restart the agent after enabling `RPI_LOCAL_ENABLE` on an existing install.
+- Passkeys are bound to `raspberrypi.local`; password login works on the IP too.
+
+---
+
 ## v1.1.0 — On-prem installer & tenant update UX
 
 Extends `peepal-installer` / `peepal-agent` so customer machines install to

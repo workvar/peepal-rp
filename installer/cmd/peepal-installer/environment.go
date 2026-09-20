@@ -12,6 +12,7 @@ import (
 	"github.com/peepal/installer/internal/envfile"
 	"github.com/peepal/installer/internal/llm"
 	"github.com/peepal/installer/internal/paths"
+	"github.com/peepal/installer/internal/rpilocal"
 	"github.com/peepal/installer/internal/sysinfo"
 	"github.com/peepal/installer/internal/sysuser"
 	"github.com/peepal/installer/internal/ui"
@@ -108,6 +109,24 @@ func envAsk(a *answers) envexample.AskFunc {
 			if a.AdminPassword != "" {
 				return a.AdminPassword, nil
 			}
+		case "RPI_LOCAL_ENABLE":
+			if a.RPILocal {
+				return "true", nil
+			}
+			if a.Unattended {
+				if v.Default != "" {
+					return v.Default, nil
+				}
+				return "false", nil
+			}
+			if v.Comment != "" {
+				ui.Info("%s", v.Comment)
+			}
+			if ui.Confirm("Allow sign-in at http://raspberrypi.local (Raspberry Pi / LAN mDNS)?", false) {
+				a.RPILocal = true
+				return "true", nil
+			}
+			return "false", nil
 		}
 
 		if a.Unattended {
@@ -161,6 +180,10 @@ func hardcodedEnvironment(a *answers, origin string) envfile.Vars {
 		"SUPER_ADMIN_PASSWORD": a.AdminPassword,
 		"CORS_ORIGINS":         origin,
 		"COOKIE_DOMAIN":        "",
+		"RPI_LOCAL_ENABLE":     "false",
+	}
+	if a.RPILocal {
+		vars["RPI_LOCAL_ENABLE"] = "true"
 	}
 	if a.Model != "" {
 		vars["OLLAMA_URL"] = llm.DefaultURL
@@ -178,6 +201,11 @@ func injectInstallerVars(vars envfile.Vars, a *answers, origin string) {
 	vars["CORS_ORIGINS"] = origin
 	vars["PEEPAL_AGENT_URL"] = "http://127.0.0.1:9080"
 	vars["PEEPAL_AGENT_TOKEN"] = a.Config.AgentToken
+	if a.RPILocal {
+		vars["RPI_LOCAL_ENABLE"] = "true"
+	}
+	rpilocal.Apply(vars, a.Config.HTTPPort)
+	a.RPILocal = rpilocal.Enabled(vars["RPI_LOCAL_ENABLE"])
 	if a.Model != "" {
 		vars["OLLAMA_URL"] = llm.DefaultURL
 		vars["OLLAMA_MODEL"] = a.Model

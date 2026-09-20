@@ -111,12 +111,20 @@ func main() {
 	// CORS: strict origin allowlist from config (CORS_ORIGINS env, comma-separated).
 	// AllowCredentials is required for the httpOnly auth cookie; it is incompatible
 	// with a wildcard origin, which is another reason "*" must never be used here.
-	app.Use(cors.New(cors.Config{
+	corsCfg := cors.Config{
 		AllowOrigins:     config.App.CORSOrigins,
 		AllowHeaders:     "Origin, Content-Type, Accept, Authorization, X-Tenant-ID",
 		AllowMethods:     "GET, POST, PUT, PATCH, DELETE, OPTIONS",
 		AllowCredentials: true,
-	}))
+	}
+	if config.App.RPILocal {
+		allowed := config.App.CORSOrigins
+		corsCfg.AllowOrigins = ""
+		corsCfg.AllowOriginsFunc = func(origin string) bool {
+			return config.CORSOriginAllowed(allowed, origin)
+		}
+	}
+	app.Use(cors.New(corsCfg))
 
 	// 7. Register routes
 	routes.Register(app)

@@ -77,12 +77,16 @@ func installViaBrew(ctx context.Context, log Logf) (Install, error) {
 // installViaPackageManager is the last resort on Linux distributions where no
 // portable build exists (notably arm64 servers).
 func installViaPackageManager(ctx context.Context, log Logf) (Install, error) {
+	if insideDpkg() {
+		return Install{}, fmt.Errorf("cannot install PostgreSQL with apt while dpkg is still configuring this package")
+	}
 	type mgr struct {
 		bin  string
 		args [][]string
 	}
 	candidates := []mgr{
-		{"apt-get", [][]string{{"update"}, {"install", "-y", "postgresql-" + MajorVersion}}},
+		// Distro metapackage (17 on Debian Trixie / Raspberry Pi OS, 16 on Bookworm).
+		{"apt-get", [][]string{{"update"}, {"install", "-y", "postgresql"}}},
 		{"dnf", [][]string{{"install", "-y", "postgresql-server"}}},
 		{"yum", [][]string{{"install", "-y", "postgresql-server"}}},
 		{"zypper", [][]string{{"--non-interactive", "install", "postgresql-server"}}},

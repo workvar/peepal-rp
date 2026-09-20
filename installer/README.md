@@ -45,7 +45,8 @@ an update can replace `app/backend` wholesale without touching customer data.
    verified against each release's `checksums.txt`.
 6. **Configuration** — `backend.env` with a freshly generated JWT secret and
    database password. `COOKIE_DOMAIN` is left empty on purpose; a value there
-   breaks the login cookie on `localhost`.
+   breaks the login cookie on `localhost`. Set `RPI_LOCAL_ENABLE=true` (or pass
+   `--rpi-local`) so the same host-only cookie works at `http://raspberrypi.local`.
 7. **AI (optional)** — see below.
 8. **Service** — systemd unit, launchd daemon, or a SYSTEM scheduled task.
 
@@ -143,8 +144,10 @@ Logs are in `data/logs/agent.log`, rotated at 8 MiB.
 - **Code signing.** Unsigned builds trigger SmartScreen on Windows and
   Gatekeeper on macOS. Both workflows accept a certificate and a notary
   profile; supply them before shipping to customers.
-- **Linux arm64 PostgreSQL.** EnterpriseDB publishes no arm64 build, so those
-  machines fall back to the distro package. The version may be older than 16.
+- **Linux arm64 PostgreSQL.** EnterpriseDB publishes no arm64 build. The `.deb`
+  depends on the distro `postgresql` package (17 on Debian Trixie / Raspberry Pi
+  OS) so `apt` installs it *before* setup, and the wizard never nests `apt`
+  inside `dpkg`.
 - **macOS Intel PostgreSQL.** Without Homebrew the installer uses the x86_64
   EnterpriseDB archive, which needs Rosetta on Apple Silicon.
 - **Windows service model.** The agent runs as a SYSTEM scheduled task rather

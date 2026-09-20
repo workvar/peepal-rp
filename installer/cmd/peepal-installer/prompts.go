@@ -17,6 +17,7 @@ type answers struct {
 	AdminPassword string
 	Model         string // empty when the AI assistant is off
 	Unattended    bool
+	RPILocal      bool
 }
 
 // ask runs the interactive part. In unattended mode every value comes from
@@ -36,7 +37,7 @@ func ask(o Options, m sysinfo.Machine) answers {
 	cfg.FrontendPort = sysinfo.FirstFreePort(cfg.FrontendPort)
 	cfg.PostgresPort = sysinfo.FirstFreePort(cfg.PostgresPort)
 
-	a := answers{Config: cfg, AdminEmail: o.AdminEmail, AdminPassword: o.AdminPassword, Unattended: o.Unattended}
+	a := answers{Config: cfg, AdminEmail: o.AdminEmail, AdminPassword: o.AdminPassword, Unattended: o.Unattended, RPILocal: o.RPILocal}
 
 	if o.Unattended {
 		if a.AdminEmail == "" || a.AdminPassword == "" {
