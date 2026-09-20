@@ -1,0 +1,164 @@
+"use strict";
+var __dsPreview = (() => {
+  var __create = Object.create;
+  var __defProp = Object.defineProperty;
+  var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+  var __getOwnPropNames = Object.getOwnPropertyNames;
+  var __getProtoOf = Object.getPrototypeOf;
+  var __hasOwnProp = Object.prototype.hasOwnProperty;
+  var __esm = (fn, res, err) => function __init() {
+    if (err) throw err[0];
+    try {
+      return fn && (res = (0, fn[__getOwnPropNames(fn)[0]])(fn = 0)), res;
+    } catch (e) {
+      throw err = [e], e;
+    }
+  };
+  var __commonJS = (cb, mod) => function __require() {
+    try {
+      return mod || (0, cb[__getOwnPropNames(cb)[0]])((mod = { exports: {} }).exports, mod), mod.exports;
+    } catch (e) {
+      throw mod = 0, e;
+    }
+  };
+  var __export = (target, all) => {
+    for (var name in all)
+      __defProp(target, name, { get: all[name], enumerable: true });
+  };
+  var __copyProps = (to, from, except, desc) => {
+    if (from && typeof from === "object" || typeof from === "function") {
+      for (let key of __getOwnPropNames(from))
+        if (!__hasOwnProp.call(to, key) && key !== except)
+          __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
+    }
+    return to;
+  };
+  var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__getProtoOf(mod)) : {}, __copyProps(
+    // If the importer is in node compatibility mode or this is not an ESM
+    // file that has been converted to a CommonJS file using a Babel-
+    // compatible transform (i.e. "__esModule" has not been set), then set
+    // "default" to the CommonJS "module.exports" for node compatibility.
+    isNodeMode || !mod || !mod.__esModule ? __defProp(target, "default", { value: mod, enumerable: true }) : target,
+    mod
+  ));
+  var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
+
+  // <define:import.meta.env>
+  var init_define_import_meta_env = __esm({
+    "<define:import.meta.env>"() {
+    }
+  });
+
+  // shim:react-shim
+  var require_react_shim = __commonJS({
+    "shim:react-shim"(exports, module) {
+      init_define_import_meta_env();
+      var R = window.React;
+      function np(p, k) {
+        var o = {};
+        for (var x in p) if (x !== "children") o[x] = p[x];
+        if (k !== void 0) o.key = k;
+        return o;
+      }
+      function jsx4(t, p, k) {
+        var c = p && p.children;
+        return c === void 0 ? R.createElement(t, np(p, k)) : R.createElement(t, np(p, k), c);
+      }
+      function jsxs2(t, p, k) {
+        return R.createElement.apply(R, [t, np(p, k)].concat(p.children));
+      }
+      module.exports = R;
+      module.exports.jsx = jsx4;
+      module.exports.jsxs = jsxs2;
+      module.exports.jsxDEV = function(t, p, k, s) {
+        return (s ? jsxs2 : jsx4)(t, p, k);
+      };
+      module.exports.Fragment = R.Fragment;
+    }
+  });
+
+  // .design-sync/previews/Label.tsx
+  var Label_exports = {};
+  __export(Label_exports, {
+    Default: () => Default,
+    Standalone: () => Standalone
+  });
+  init_define_import_meta_env();
+
+  // components/ui/label.tsx
+  init_define_import_meta_env();
+
+  // lib/utils.ts
+  init_define_import_meta_env();
+  function cn(...classes) {
+    const parts = [];
+    for (const cls of classes) {
+      if (cls) parts.push(...cls.split(/\s+/).filter(Boolean));
+    }
+    const seen = /* @__PURE__ */ new Map();
+    for (const token of parts) {
+      const key = token.replace(/^([\w-]+:)*/, "").replace(/-[^-/\[]+(\[.*?\])?$/, "");
+      seen.set(`${token.replace(/-[^-/\[]+(\[.*?\])?$/, "")}`, token);
+    }
+    return parts.filter((t, i, arr) => arr.lastIndexOf(t) === i).join(" ");
+  }
+
+  // components/ui/label.tsx
+  var import_react = __toESM(require_react_shim());
+  var import_jsx_runtime = __toESM(require_react_shim());
+  var Label = (0, import_react.forwardRef)(
+    ({ className, ...props }, ref) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
+      "label",
+      {
+        ref,
+        className: cn(
+          "text-xs font-semibold uppercase tracking-wider text-muted-foreground",
+          "leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70",
+          className
+        ),
+        ...props
+      }
+    )
+  );
+  Label.displayName = "Label";
+
+  // components/ui/input.tsx
+  init_define_import_meta_env();
+  var import_react2 = __toESM(require_react_shim());
+  var import_jsx_runtime2 = __toESM(require_react_shim());
+  var Input = (0, import_react2.forwardRef)(
+    ({ className, type, ...props }, ref) => {
+      return /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(
+        "input",
+        {
+          type,
+          ref,
+          className: cn(
+            "flex h-10 w-full rounded-xl border border-input bg-secondary px-3 py-2 text-sm",
+            "text-foreground placeholder:text-muted-foreground",
+            "ring-offset-background",
+            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1",
+            "disabled:cursor-not-allowed disabled:opacity-50",
+            "transition-all duration-150",
+            className
+          ),
+          ...props
+        }
+      );
+    }
+  );
+  Input.displayName = "Input";
+
+  // .design-sync/previews/Label.tsx
+  var import_jsx_runtime3 = __toESM(require_react_shim());
+  var Default = () => /* @__PURE__ */ (0, import_jsx_runtime3.jsxs)("div", { className: "w-72 space-y-1.5", children: [
+    /* @__PURE__ */ (0, import_jsx_runtime3.jsx)(Label, { htmlFor: "student-name", children: "Student name" }),
+    /* @__PURE__ */ (0, import_jsx_runtime3.jsx)(Input, { id: "student-name", placeholder: "Full legal name" })
+  ] });
+  var Standalone = () => /* @__PURE__ */ (0, import_jsx_runtime3.jsxs)("div", { className: "flex flex-wrap gap-4", children: [
+    /* @__PURE__ */ (0, import_jsx_runtime3.jsx)(Label, { children: "Roll Number" }),
+    /* @__PURE__ */ (0, import_jsx_runtime3.jsx)(Label, { children: "Date of Birth" }),
+    /* @__PURE__ */ (0, import_jsx_runtime3.jsx)(Label, { children: "Guardian Contact" })
+  ] });
+  return __toCommonJS(Label_exports);
+})();

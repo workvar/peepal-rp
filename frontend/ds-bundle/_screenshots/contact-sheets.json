@@ -1,0 +1,51 @@
+[
+  {
+    "sheet": 1,
+    "components": [
+      "Badge",
+      "Button",
+      "Card",
+      "CardContent",
+      "CardDescription",
+      "CardFooter",
+      "CardHeader",
+      "CardTitle",
+      "Dialog",
+      "DialogBody",
+      "DialogContent",
+      "DialogDescription",
+      "DialogDivider",
+      "DialogField",
+      "DialogFooter",
+      "DialogGrid"
+    ]
+  },
+  {
+    "sheet": 2,
+    "components": [
+      "DialogHeader",
+      "DialogOverlay",
+      "DialogSection",
+      "DialogTitle",
+      "Input",
+      "Label",
+      "Select",
+      "SelectContent",
+      "SelectGroup",
+      "SelectItem",
+      "SelectLabel",
+      "SelectSeparator",
+      "SelectTrigger",
+      "SelectValue",
+      "Separator",
+      "Skeleton"
+    ]
+  },
+  {
+    "sheet": 3,
+    "components": [
+      "Switch",
+      "Tooltip"
+    ]
+  }
+]

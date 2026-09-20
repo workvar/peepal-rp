@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>CollERP E2E Dashboard</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="dot" id="status-dot"></span>
+      <h1>CollERP E2E</h1>
+      <span class="run-status" id="run-status">idle</span>
+    </div>
+    <div class="actions">
+      <button class="btn restart" id="restart-btn" title="Re-run the full suite">
+        <span class="btn-icon">↻</span> Restart
+      </button>
+    </div>
+    <div class="stats">
+      <div class="stat" data-kind="total"><label>Total</label><span id="stat-total">0</span></div>
+      <div class="stat passed"><label>Passed</label><span id="stat-passed">0</span></div>
+      <div class="stat failed"><label>Failed</label><span id="stat-failed">0</span></div>
+      <div class="stat skipped"><label>Skipped</label><span id="stat-skipped">0</span></div>
+      <div class="stat"><label>Elapsed</label><span id="stat-elapsed">0.0s</span></div>
+    </div>
+  </header>
+
+  <div class="progress">
+    <div class="bar" id="progress-bar"></div>
+  </div>
+
+  <main>
+    <aside class="filters">
+      <h2>Filters</h2>
+      <button class="filter active" data-filter="all">All</button>
+      <button class="filter" data-filter="running">Running</button>
+      <button class="filter" data-filter="passed">Passed</button>
+      <button class="filter" data-filter="failed">Failed</button>
+      <button class="filter" data-filter="skipped">Skipped</button>
+      <button class="filter" data-filter="pending">Pending</button>
+    </aside>
+
+    <section class="test-panel">
+      <div class="empty" id="empty">Waiting for tests to start…</div>
+      <div id="tree-list" class="tree-list"></div>
+    </section>
+
+    <section class="detail" id="detail">
+      <div class="detail-empty">Live view will appear here when a test starts</div>
+    </section>
+  </main>
+
+  <div id="toast" class="toast" hidden></div>
+
+  <script src="app.js" type="module"></script>
+</body>
+</html>

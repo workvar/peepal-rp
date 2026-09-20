@@ -1,0 +1,11 @@
+.env
+.env.local
+collegeerp.db
+
+# build artifacts
+collegeerp
+main
+*.exe
+
+# local uploads
+uploads/

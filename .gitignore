@@ -30,6 +30,8 @@ backend/collegeerp
 backend/collegeerp.db
 backend/main
 backend/*.exe
+backend/fix-fee-structures
+backend/fix-fee-structures-go-tmp-umask
 installer/*.exe
 installer/dist/
 bin/
@@ -37,6 +39,12 @@ bin/
 # go workspace local state
 go.work.sum
 
+# editor / tool backup leftovers (e.g. file.go.1234567890)
+**/*.go.[0-9]*
+
 # scratch
 _to_delete/
 _tmp_*
+**/_cptest.txt
+**/_mvtest.txt
+frontend/err.txt

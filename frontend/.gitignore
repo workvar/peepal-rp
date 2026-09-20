@@ -1,0 +1,11 @@
+.env
+.env.local
+node_modules
+.code-review-graph
+.claude
+.cursor
+.cursorrules
+/.next
+.windsurfrules
+dist/
+.superpowers/

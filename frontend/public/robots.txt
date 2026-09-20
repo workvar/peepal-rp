@@ -1,0 +1,45 @@
+User-agent: *
+Allow: /
+
+# Authenticated areas — no SEO value, often returns 401/redirect
+Disallow: /login
+Disallow: /super/
+Disallow: /api/
+
+# Tenant dashboards (per-org private workspace)
+# Pattern: /<tenant>/<page> — covered by per-route noindex headers; this
+# is a belt-and-braces hint to crawlers.
+Disallow: /*/dashboard
+Disallow: /*/students
+Disallow: /*/employees
+Disallow: /*/attendance
+Disallow: /*/marks
+Disallow: /*/leaves
+Disallow: /*/fees
+Disallow: /*/payroll
+Disallow: /*/reports
+Disallow: /*/announcements
+Disallow: /*/notifications
+Disallow: /*/timetable
+Disallow: /*/events
+Disallow: /*/calendar
+Disallow: /*/library
+Disallow: /*/hostel
+Disallow: /*/transport
+Disallow: /*/results
+Disallow: /*/profile
+Disallow: /*/users
+Disallow: /*/portal
+Disallow: /*/learning
+Disallow: /*/salary
+Disallow: /*/salary-structures
+Disallow: /*/salary-assignments
+Disallow: /*/leave-types
+Disallow: /*/approval-flows
+Disallow: /*/my-approvals
+Disallow: /*/organization-structure
+Disallow: /*/org
+Disallow: /*/docs
+Disallow: /*/login
+
+Sitemap: https://peepal.app/sitemap.xml

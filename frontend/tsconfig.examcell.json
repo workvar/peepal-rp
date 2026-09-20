@@ -1,0 +1,38 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "incremental": false,
+    "noEmit": true
+  },
+  "files": [
+    "next-env.d.ts",
+    "graphql/queries/exam-cell.ts",
+    "graphql/mutations/exam-cell.ts",
+    "api/services/examCell.ts",
+    "constants/navigation/modules.ts",
+    "components/layout/sidebar/navConfig.ts",
+    "lib/access.ts",
+    "components/pages/[tenant]/(dashboard)/academic/question-bank/ScopePicker.tsx",
+    "components/pages/[tenant]/(dashboard)/academic/question-bank/QuestionModal.tsx",
+    "components/pages/[tenant]/(dashboard)/academic/question-bank/QuestionTable.tsx",
+    "components/pages/[tenant]/(dashboard)/academic/question-bank/types.ts",
+    "components/pages/[tenant]/(dashboard)/academic/question-bank/useQuestionBank.ts",
+    "components/pages/[tenant]/(dashboard)/academic/question-bank/Page.tsx",
+    "app/[tenant]/(dashboard)/academic/question-bank/page.tsx",
+    "components/pages/[tenant]/(dashboard)/academic/question-papers/PaperPreview.tsx",
+    "components/pages/[tenant]/(dashboard)/academic/question-papers/types.ts",
+    "components/pages/[tenant]/(dashboard)/academic/question-papers/PaperCard.tsx",
+    "components/pages/[tenant]/(dashboard)/academic/question-papers/GenerateModal.tsx",
+    "components/pages/[tenant]/(dashboard)/academic/question-papers/Page.tsx",
+    "components/pages/[tenant]/(dashboard)/academic/question-papers/useQuestionPapers.ts",
+    "app/[tenant]/(dashboard)/academic/question-papers/page.tsx",
+    "components/pages/[tenant]/(dashboard)/academic/hall-tickets/IssueModal.tsx",
+    "components/pages/[tenant]/(dashboard)/academic/hall-tickets/types.ts",
+    "components/pages/[tenant]/(dashboard)/academic/hall-tickets/HallTicketTable.tsx",
+    "components/pages/[tenant]/(dashboard)/academic/hall-tickets/useHallTickets.ts",
+    "components/pages/[tenant]/(dashboard)/academic/hall-tickets/Page.tsx",
+    "app/[tenant]/(dashboard)/academic/hall-tickets/page.tsx",
+    "components/pages/[tenant]/(dashboard)/portal/hall-tickets/Page.tsx",
+    "app/[tenant]/(dashboard)/portal/hall-tickets/page.tsx"
+  ]
+}

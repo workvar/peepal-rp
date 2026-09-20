@@ -1,0 +1,6 @@
+.env
+.playwright-output/
+.playwright-report/
+playwright-report/
+test-results/
+node_modules/

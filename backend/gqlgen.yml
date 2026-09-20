@@ -1,0 +1,89 @@
+schema:
+  - graph/schema.graphqls
+
+exec:
+  filename: graph/generated.go
+  package: graph
+
+model:
+  filename: graph/model/models_gen.go
+  package: model
+
+resolver:
+  layout: follow-schema
+  dir: graph
+  package: graph
+  filename_template: "{name}.resolvers.go"
+
+autobind: []
+
+# Manually defined models — gqlgen will use these instead of generating them.
+models:
+  UpdateDepartmentInput: { model: "collegeerp/graph/model.UpdateDepartmentInput" }
+  HostelBlock:            { model: "collegeerp/graph/model.HostelBlock" }
+  HostelRoom:             { model: "collegeerp/graph/model.HostelRoom" }
+  HostelAllocation:       { model: "collegeerp/graph/model.HostelAllocation" }
+  CreateHostelBlockInput: { model: "collegeerp/graph/model.CreateHostelBlockInput" }
+  CreateHostelRoomInput:  { model: "collegeerp/graph/model.CreateHostelRoomInput" }
+  UpdateHostelRoomInput:  { model: "collegeerp/graph/model.UpdateHostelRoomInput" }
+  AllocateHostelRoomInput: { model: "collegeerp/graph/model.AllocateHostelRoomInput" }
+  VacateHostelRoomInput:  { model: "collegeerp/graph/model.VacateHostelRoomInput" }
+  RoomClass:              { model: "collegeerp/graph/model.RoomClass" }
+  CreateRoomClassInput:   { model: "collegeerp/graph/model.CreateRoomClassInput" }
+  UpdateRoomClassInput:   { model: "collegeerp/graph/model.UpdateRoomClassInput" }
+  TransportRoute:              { model: "collegeerp/graph/model.TransportRoute" }
+  TransportVehicle:            { model: "collegeerp/graph/model.TransportVehicle" }
+  TransportAllocation:         { model: "collegeerp/graph/model.TransportAllocation" }
+  CreateTransportRouteInput:   { model: "collegeerp/graph/model.CreateTransportRouteInput" }
+  UpdateTransportRouteInput:   { model: "collegeerp/graph/model.UpdateTransportRouteInput" }
+  CreateTransportVehicleInput: { model: "collegeerp/graph/model.CreateTransportVehicleInput" }
+  UpdateTransportVehicleInput: { model: "collegeerp/graph/model.UpdateTransportVehicleInput" }
+  AllocateTransportInput:            { model: "collegeerp/graph/model.AllocateTransportInput" }
+  RemoveTransportAllocationInput:    { model: "collegeerp/graph/model.RemoveTransportAllocationInput" }
+  LibraryBook:             { model: "collegeerp/graph/model.LibraryBook" }
+  LibraryIssue:            { model: "collegeerp/graph/model.LibraryIssue" }
+  CreateLibraryBookInput:  { model: "collegeerp/graph/model.CreateLibraryBookInput" }
+  UpdateLibraryBookInput:  { model: "collegeerp/graph/model.UpdateLibraryBookInput" }
+  IssueLibraryBookInput:   { model: "collegeerp/graph/model.IssueLibraryBookInput" }
+  ReturnLibraryBookInput:  { model: "collegeerp/graph/model.ReturnLibraryBookInput" }
+  Holiday:             { model: "collegeerp/graph/model.Holiday" }
+  CreateHolidayInput:  { model: "collegeerp/graph/model.CreateHolidayInput" }
+  CopyResult:          { model: "collegeerp/graph/model.CopyResult" }
+  CalendarSettings:            { model: "collegeerp/graph/model.CalendarSettings" }
+  CalendarDay:                 { model: "collegeerp/graph/model.CalendarDay" }
+  CalendarMonth:               { model: "collegeerp/graph/model.CalendarMonth" }
+  UpdateCalendarSettingsInput: { model: "collegeerp/graph/model.UpdateCalendarSettingsInput" }
+  GenerateCalendarResult:      { model: "collegeerp/graph/model.GenerateCalendarResult" }
+  UpsertCalendarDayInput:      { model: "collegeerp/graph/model.UpsertCalendarDayInput" }
+  AttendanceSettings:            { model: "collegeerp/graph/model.AttendanceSettings" }
+  UpdateAttendanceSettingsInput: { model: "collegeerp/graph/model.UpdateAttendanceSettingsInput" }
+  OrgProfile:           { model: "collegeerp/graph/model.OrgProfile" }
+  OrgSetupStatus:       { model: "collegeerp/graph/model.OrgSetupStatus" }
+  UpdateOrgProfileInput: { model: "collegeerp/graph/model.UpdateOrgProfileInput" }
+  Semester:             { model: "collegeerp/graph/model.Semester" }
+  CreateAcademicYearInput: { model: "collegeerp/graph/model.CreateAcademicYearInput" }
+  UpdateAcademicYearInput: { model: "collegeerp/graph/model.UpdateAcademicYearInput" }
+  CreateSemesterInput:     { model: "collegeerp/graph/model.CreateSemesterInput" }
+  CustomRole:            { model: "collegeerp/graph/model.CustomRole" }
+  CreateCustomRoleInput: { model: "collegeerp/graph/model.CreateCustomRoleInput" }
+  UpdateCustomRoleInput: { model: "collegeerp/graph/model.UpdateCustomRoleInput" }
+  OrgUser:      { model: "collegeerp/graph/model.OrgUser" }
+  OrgNode:      { model: "collegeerp/graph/model.OrgNode" }
+  OrgStructure: { model: "collegeerp/graph/model.OrgStructure" }
+  SalaryTemplate:                { model: "collegeerp/graph/model.SalaryTemplate" }
+  SalaryAssignment:              { model: "collegeerp/graph/model.SalaryAssignment" }
+  CreateSalaryTemplateInput:     { model: "collegeerp/graph/model.CreateSalaryTemplateInput" }
+  UpdateSalaryTemplateInput:     { model: "collegeerp/graph/model.UpdateSalaryTemplateInput" }
+  AssignSalaryTemplateInput:     { model: "collegeerp/graph/model.AssignSalaryTemplateInput" }
+  BulkAssignSalaryTemplateInput: { model: "collegeerp/graph/model.BulkAssignSalaryTemplateInput" }
+  BulkAssignResult:              { model: "collegeerp/graph/model.BulkAssignResult" }
+  UpdateSalaryAssignmentInput:   { model: "collegeerp/graph/model.UpdateSalaryAssignmentInput" }
+  TerminologyLabels:  { model: "collegeerp/graph/model.TerminologyLabels" }
+  TerminologyPayload: { model: "collegeerp/graph/model.TerminologyPayload" }
+  ApprovalRequest: { model: "collegeerp/graph/model.ApprovalRequest" }
+  ModuleAccess:          { model: "collegeerp/graph/model.ModuleAccess" }
+  AccessModuleMeta:      { model: "collegeerp/graph/model.AccessModuleMeta" }
+  RoleAccess:            { model: "collegeerp/graph/model.RoleAccess" }
+  AccessMatrix:          { model: "collegeerp/graph/model.AccessMatrix" }
+  ModuleAccessInput:     { model: "collegeerp/graph/model.ModuleAccessInput" }
+  UpdateRoleAccessInput: { model: "collegeerp/graph/model.UpdateRoleAccessInput" }
