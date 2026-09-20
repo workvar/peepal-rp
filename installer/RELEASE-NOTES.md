@@ -1,5 +1,55 @@
 # Release notes
 
+## v1.1.0 — On-prem installer & tenant update UX
+
+Extends `peepal-installer` / `peepal-agent` so customer machines install to
+stable app paths, configure every backend env key interactively, and let
+tenant admins apply updates from the ERP UI while optional auto-apply continues
+in the background.
+
+### Install & layout
+
+- Default roots: Linux `/opt/apps/peepal-rp`, macOS `/usr/local/apps/peepal-rp`,
+  Windows `C:\Program Files\PeepalRP` (data always under `<root>/data`).
+- Packaging scripts (deb/rpm, pkg, Inno) updated for the new paths.
+- First install walks **every** key in `backend/.env.example` (required vs
+  optional called out; secrets can be generated). Updates only prompt for
+  **new required** keys and keep existing secrets.
+- `PEEPAL_AGENT_URL` / `PEEPAL_AGENT_TOKEN` written for the loopback control API.
+- First-time seed recorded as `seeded` in `data/state.json`.
+
+### Agent
+
+- Loopback control API on `127.0.0.1:9080` (Bearer token): status, force check,
+  apply now. Same release-asset swap, maintenance page, and rollback as before.
+- Auto-apply and quiet hours unchanged; a tenant “Remind later” does not delay
+  install-wide auto-apply.
+
+### Product UI
+
+- Presence WebSocket (`GET /api/v1/presence`) counts active users per tenant.
+- GraphQL: `systemUpdateStatus`, `snoozeSystemUpdate`, `applySystemUpdate`
+  (tenant **admin** only).
+- Dashboard modal: “New updates are available…” with active-user count,
+  **Update now** / **Remind later** (1 hour per tenant).
+
+### Docs & monorepo
+
+- Root [`INSTALLATION.md`](../INSTALLATION.md) for development and on-prem setup.
+- Design/plan under `docs/superpowers/`.
+- Backend and frontend absorbed into the monorepo with workspace tooling.
+
+### Upgrade notes
+
+- Existing installs that already store an absolute `install_root` in
+  `config.json` keep that path; new defaults apply to fresh installs.
+- After upgrading the agent/app, ensure `PEEPAL_AGENT_TOKEN` in
+  `data/backend.env` matches `agent_token` in `data/config.json`.
+- Run backend migrate (`peepal-backend --migrate` / installer update path) so
+  `tenants.update_snoozed_until` is present.
+
+---
+
 ## v1.0.0 — Peepal Control Panel
 
 The first release. A single graphical application that installs Peepal ERP on
