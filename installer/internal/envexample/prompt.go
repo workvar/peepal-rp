@@ -17,6 +17,14 @@ var installerInjected = map[string]struct{}{
 	"PORT":               {},
 	"DB_PATH":            {},
 	"APP_ENV":            {},
+	// On-prem CORS/cookies/public URL are owned by the installer (including
+	// raspberrypi.local when RPI_LOCAL_ENABLE is on). Prompting here lets
+	// people paste a Domain=.local value that browsers reject.
+	"CORS_ORIGINS":     {},
+	"COOKIE_DOMAIN":    {},
+	"APP_BASE_URL":     {},
+	"WEBAUTHN_RP_ID":   {},
+	"RPI_LOCAL_ENABLE": {},
 }
 
 // Walk builds envfile.Vars from parsed example vars.

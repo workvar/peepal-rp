@@ -9,6 +9,21 @@ import (
 // raspberryPiLocal is the default mDNS name Raspberry Pi OS advertises.
 const raspberryPiLocal = "raspberrypi.local"
 
+func sanitizeCookieDomain(v string) string {
+	v = strings.TrimSpace(v)
+	if v == "" {
+		return ""
+	}
+	lower := strings.ToLower(strings.TrimPrefix(v, "."))
+	if strings.Contains(v, "://") || strings.Contains(v, "/") {
+		return ""
+	}
+	if strings.HasSuffix(lower, ".local") || lower == "local" {
+		return ""
+	}
+	return v
+}
+
 func envBool(v string) bool {
 	switch strings.ToLower(strings.TrimSpace(v)) {
 	case "1", "true", "yes", "on", "enabled":

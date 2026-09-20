@@ -1,5 +1,19 @@
 # Release notes
 
+## v1.2.3 — Existing database choice, raspberrypi.local CORS/cookies
+
+A leftover `peepal` schema from a failed first run made `--migrate` die on
+AutoMigrate. The wizard now asks: keep the data, wipe and replace, or leave
+it and create a new empty database (default: wipe, since that unblocks a
+retry). Unattended installs keep existing tables.
+
+CORS / `COOKIE_DOMAIN` / `APP_BASE_URL` / `WEBAUTHN_RP_ID` are no longer
+prompted. On a Pi they are set to `http://raspberrypi.local` (plus the LAN IP
+and other `*.local` names). `COOKIE_DOMAIN` stays empty — pasting the URL
+there is what breaks login.
+
+---
+
 ## v1.2.2 — Reuse system PostgreSQL
 
 The ARM64 installer found Postgres 17 on Raspberry Pi OS, then `initdb`'d a

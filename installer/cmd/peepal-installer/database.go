@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/peepal/installer/internal/paths"
@@ -63,6 +64,84 @@ func setupDatabase(ctx context.Context, l paths.Layout, a *answers) string {
 	if err := cluster.EnsureRoleAndDB(ctx, a.Config.DBUser, a.Config.DBPassword, a.Config.DBName); err != nil {
 		ui.Fail("Could not create the application database: %v", err)
 	}
+	if err := resolveExistingDatabase(ctx, cluster, a); err != nil {
+		ui.Fail("Could not prepare the application database: %v", err)
+	}
 	ui.OK("Database %q and role %q ready", a.Config.DBName, a.Config.DBUser)
 	return install.Source
+}
+
+const (
+	dbKeep = iota
+	dbReplace
+	dbNew
+)
+
+func resolveExistingDatabase(ctx context.Context, cluster pgsql.Cluster, a *answers) error {
+	n, err := cluster.UserTableCount(ctx, a.Config.DBName)
+	if err != nil {
+		return err
+	}
+	if n == 0 {
+		return nil
+	}
+
+	ui.Info("Database %q already has %d table(s) from a previous install.", a.Config.DBName, n)
+	choice := dbKeep
+	if a.Unattended {
+		ui.Info("Keeping the existing data (--unattended).")
+	} else {
+		ui.Info("A leftover schema is the usual reason a retry dies during migration.")
+		choice = ui.Choose("What should we do with the existing database?", []string{
+			"Use it as it is (keep the data, upgrade the schema)",
+			"Delete and replace it (wipe tables, then install a fresh schema)",
+			"Leave it as it is and create a new empty database",
+		}, dbReplace)
+	}
+
+	switch choice {
+	case dbReplace:
+		if err := cluster.ResetPublicSchema(ctx, a.Config.DBName, a.Config.DBUser); err != nil {
+			return err
+		}
+		ui.OK("Database %q was emptied", a.Config.DBName)
+		return nil
+	case dbNew:
+		return createSiblingDatabase(ctx, cluster, a)
+	default:
+		if err := cluster.GrantAppOwnership(ctx, a.Config.DBName, a.Config.DBUser); err != nil {
+			return err
+		}
+		ui.OK("Keeping existing database %q", a.Config.DBName)
+		return nil
+	}
+}
+
+func createSiblingDatabase(ctx context.Context, cluster pgsql.Cluster, a *answers) error {
+	old := a.Config.DBName
+	for {
+		name := strings.ToLower(ui.Ask("Name for the new database", pgsql.SuggestNextDBName(old)))
+		if !pgsql.ValidDBName(name) {
+			ui.Warn("Use lowercase letters, digits and underscores, starting with a letter.")
+			continue
+		}
+		if name == old {
+			ui.Warn("That is the existing database. Pick a different name.")
+			continue
+		}
+		if err := cluster.CreateAppDatabase(ctx, name, a.Config.DBUser); err != nil {
+			return err
+		}
+		n, err := cluster.UserTableCount(ctx, name)
+		if err != nil {
+			return err
+		}
+		if n > 0 {
+			ui.Warn("Database %q already has %d table(s). Pick a different name.", name, n)
+			continue
+		}
+		a.Config.DBName = name
+		ui.OK("New database %q created; %q was left untouched", name, old)
+		return nil
+	}
 }

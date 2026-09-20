@@ -54,6 +54,28 @@ func AskRequired(question string) string {
 	}
 }
 
+// Choose prints numbered options and returns the selected 0-based index.
+func Choose(question string, options []string, def int) int {
+	if len(options) == 0 {
+		return 0
+	}
+	if def < 0 || def >= len(options) {
+		def = 0
+	}
+	for i, o := range options {
+		fmt.Printf("    %d) %s\n", i+1, o)
+	}
+	for {
+		n := 0
+		line := Ask(question, fmt.Sprintf("%d", def+1))
+		_, err := fmt.Sscanf(line, "%d", &n)
+		if err == nil && n >= 1 && n <= len(options) {
+			return n - 1
+		}
+		Warn("Enter a number from 1 to %d.", len(options))
+	}
+}
+
 // Confirm asks a yes/no question.
 func Confirm(question string, def bool) bool {
 	hint := "y/N"

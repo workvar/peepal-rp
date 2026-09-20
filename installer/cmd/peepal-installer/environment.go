@@ -205,6 +205,7 @@ func injectInstallerVars(vars envfile.Vars, a *answers, origin string) {
 		vars["RPI_LOCAL_ENABLE"] = "true"
 	}
 	rpilocal.Apply(vars, a.Config.HTTPPort)
+	vars["COOKIE_DOMAIN"] = rpilocal.SanitizeCookieDomain(vars["COOKIE_DOMAIN"])
 	a.RPILocal = rpilocal.Enabled(vars["RPI_LOCAL_ENABLE"])
 	if a.Model != "" {
 		vars["OLLAMA_URL"] = llm.DefaultURL

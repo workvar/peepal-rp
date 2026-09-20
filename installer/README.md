@@ -44,14 +44,16 @@ an update can replace `app/backend` wholesale without touching customer data.
 5. **Application** — the latest release from each of the two private repos,
    verified against each release's `checksums.txt`.
 6. **Configuration** — `backend.env` with a freshly generated JWT secret and
-   database password. `COOKIE_DOMAIN` is left empty on purpose; a value there
-   breaks the login cookie on `localhost`. Set `RPI_LOCAL_ENABLE=true` (or pass
-   `--rpi-local`) so the same host-only cookie works at `http://raspberrypi.local`.
+   database password. CORS, cookies, and `http://raspberrypi.local` are filled
+   in by the installer (never typed). `COOKIE_DOMAIN` stays empty on purpose;
+   a URL or `.local` Domain is rejected by the browser and silently breaks
+   login. A Raspberry Pi turns this on automatically (`--rpi-local` forces it).
 7. **AI (optional)** — see below.
 8. **Service** — systemd unit, launchd daemon, or a SYSTEM scheduled task.
 
-Re-running the installer over an existing install is safe: the database, the
-env file and any downloaded model are reused.
+Re-running the installer over an existing install is safe: the env file and
+any downloaded model are reused. If the database already has tables, the
+wizard asks whether to keep them, wipe them, or create a new empty database.
 
 ## The local AI check
 

@@ -5,6 +5,7 @@ import (
 	"net"
 	"net/url"
 	"os"
+	"strconv"
 	"strings"
 )
 
@@ -66,7 +67,9 @@ func Apply(vars map[string]string, httpPort int) {
 	vars["COOKIE_DOMAIN"] = ""
 
 	public := PublicURL(httpPort)
-	vars["CORS_ORIGINS"] = mergeOrigins(vars["CORS_ORIGINS"], localhostOrigin(httpPort), public)
+	extras := []string{localhostOrigin(httpPort), public}
+	extras = append(extras, lanOrigins(httpPort)...)
+	vars["CORS_ORIGINS"] = mergeOrigins(vars["CORS_ORIGINS"], extras...)
 
 	if isLoopbackURL(vars["APP_BASE_URL"]) {
 		vars["APP_BASE_URL"] = public
@@ -74,6 +77,61 @@ func Apply(vars map[string]string, httpPort int) {
 	if isLoopbackHost(vars["WEBAUTHN_RP_ID"]) {
 		vars["WEBAUTHN_RP_ID"] = Host
 	}
+}
+
+// SanitizeCookieDomain drops values browsers will reject: a pasted URL, or
+// anything under .local (a public suffix). Empty means host-only cookies.
+func SanitizeCookieDomain(v string) string {
+	v = strings.TrimSpace(v)
+	if v == "" {
+		return ""
+	}
+	lower := strings.ToLower(strings.TrimPrefix(v, "."))
+	if strings.Contains(v, "://") || strings.Contains(v, "/") {
+		return ""
+	}
+	if strings.HasSuffix(lower, ".local") || lower == "local" {
+		return ""
+	}
+	return v
+}
+
+func lanOrigins(httpPort int) []string {
+	host, _ := os.Hostname()
+	addrs, _ := net.InterfaceAddrs()
+	return lanOriginsFrom(httpPort, host, addrs)
+}
+
+func lanOriginsFrom(httpPort int, hostname string, addrs []net.Addr) []string {
+	var extra []string
+	h := strings.ToLower(strings.TrimSuffix(strings.TrimSpace(hostname), "."))
+	if h != "" && h != "localhost" && !isLoopbackHost(h) {
+		if !strings.Contains(h, ".") {
+			h += ".local"
+		}
+		if strings.HasSuffix(h, ".local") {
+			extra = append(extra, originForHost(h, httpPort))
+		}
+	}
+	for _, a := range addrs {
+		ipn, ok := a.(*net.IPNet)
+		if !ok || ipn.IP == nil || ipn.IP.IsLoopback() {
+			continue
+		}
+		ip := ipn.IP.To4()
+		if ip == nil || !ip.IsPrivate() {
+			continue
+		}
+		extra = append(extra, originForHost(ip.String(), httpPort))
+	}
+	return extra
+}
+
+func originForHost(host string, httpPort int) string {
+	if httpPort == 0 || httpPort == 80 {
+		return "http://" + host
+	}
+	return "http://" + net.JoinHostPort(host, strconv.Itoa(httpPort))
 }
 
 func mergeOrigins(list string, extra ...string) string {

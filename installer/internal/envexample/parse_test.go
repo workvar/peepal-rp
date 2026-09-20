@@ -118,8 +118,10 @@ func TestWalkFirstInstallPromptsAll(t *testing.T) {
 	if out["JWT_SECRET"] == "" {
 		t.Error("expected generated JWT_SECRET")
 	}
-	if out["CORS_ORIGINS"] != "http://localhost:3000" {
-		t.Errorf("CORS_ORIGINS=%q", out["CORS_ORIGINS"])
+	for _, k := range []string{"CORS_ORIGINS", "COOKIE_DOMAIN", "RPI_LOCAL_ENABLE"} {
+		if asked[k] != 0 {
+			t.Errorf("prompted injected key %s", k)
+		}
 	}
 }
 

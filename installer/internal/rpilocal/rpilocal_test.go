@@ -1,6 +1,7 @@
 package rpilocal
 
 import (
+	"net"
 	"os"
 	"path/filepath"
 	"strings"
@@ -128,5 +129,47 @@ func TestApplyDoesNotClobberCustomPublicURL(t *testing.T) {
 	}
 	if !strings.Contains(vars["CORS_ORIGINS"], "http://raspberrypi.local") {
 		t.Errorf("still need the mDNS origin alongside the custom one: %q", vars["CORS_ORIGINS"])
+	}
+}
+
+func TestSanitizeCookieDomain(t *testing.T) {
+	t.Parallel()
+	cases := map[string]string{
+		"":                          "",
+		".workvar.com":              ".workvar.com",
+		"erp.college.edu":           "erp.college.edu",
+		"http://raspberrypi.local":  "",
+		"https://raspberrypi.local": "",
+		"raspberrypi.local":         "",
+		".local":                    "",
+		"clinic.local":              "",
+	}
+	for in, want := range cases {
+		if got := SanitizeCookieDomain(in); got != want {
+			t.Errorf("SanitizeCookieDomain(%q) = %q, want %q", in, got, want)
+		}
+	}
+}
+
+func TestLanOriginsFromHostnameAndPrivateIP(t *testing.T) {
+	t.Parallel()
+	addrs := []net.Addr{
+		&net.IPNet{IP: net.ParseIP("127.0.0.1"), Mask: net.CIDRMask(8, 32)},
+		&net.IPNet{IP: net.ParseIP("192.168.1.50"), Mask: net.CIDRMask(24, 32)},
+		&net.IPNet{IP: net.ParseIP("8.8.8.8"), Mask: net.CIDRMask(32, 32)},
+	}
+	got := strings.Join(lanOriginsFrom(80, "raspberrypi", addrs), ",")
+	if !strings.Contains(got, "http://raspberrypi.local") {
+		t.Errorf("missing hostname.local: %q", got)
+	}
+	if !strings.Contains(got, "http://192.168.1.50") {
+		t.Errorf("missing LAN IP: %q", got)
+	}
+	if strings.Contains(got, "8.8.8.8") || strings.Contains(got, "127.0.0.1") {
+		t.Errorf("public/loopback leaked: %q", got)
+	}
+	gotPort := strings.Join(lanOriginsFrom(8080, "clinic.local", addrs), ",")
+	if !strings.Contains(gotPort, "http://clinic.local:8080") {
+		t.Errorf("missing renamed .local with port: %q", gotPort)
 	}
 }

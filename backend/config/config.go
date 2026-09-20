@@ -113,6 +113,7 @@ func Load() {
 		App.WebAuthnRPID = hostOf(App.AppBaseURL)
 	}
 	applyRPILocal(&App)
+	App.CookieDomain = sanitizeCookieDomain(App.CookieDomain)
 }
 
 // getDuration reads a Go duration string (e.g. "15m", "720h") from the

@@ -135,3 +135,30 @@ func TestLoadProductionKeepsSecureCookiesWithoutFlag(t *testing.T) {
 		t.Error("production without the flag must keep Secure cookies")
 	}
 }
+
+func TestSanitizeCookieDomain(t *testing.T) {
+	t.Parallel()
+	cases := map[string]string{
+		"":                         "",
+		".workvar.com":             ".workvar.com",
+		"http://raspberrypi.local": "",
+		"raspberrypi.local":        "",
+		"clinic.local":             "",
+	}
+	for in, want := range cases {
+		if got := sanitizeCookieDomain(in); got != want {
+			t.Errorf("sanitizeCookieDomain(%q) = %q, want %q", in, got, want)
+		}
+	}
+}
+
+func TestLoadClearsPastedCookieURL(t *testing.T) {
+	t.Setenv("APP_ENV", "production")
+	t.Setenv("RPI_LOCAL_ENABLE", "false")
+	t.Setenv("COOKIE_DOMAIN", "http://raspberrypi.local")
+	t.Setenv("JWT_SECRET", "test-secret-at-least-32-chars-long!!")
+	Load()
+	if App.CookieDomain != "" {
+		t.Errorf("CookieDomain = %q, want empty (pasted URL / .local is invalid)", App.CookieDomain)
+	}
+}

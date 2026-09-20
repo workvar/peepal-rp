@@ -153,8 +153,8 @@ sudo peepal-installer --dir /opt/apps/peepal-rp
 
 1. Preflight (admin rights, disk, ports, RAM).
 2. GitHub credentials if the release repos are private (baked-in / env token, or prompt).
-3. Database: **local** (asks for database name) or **cloud** (asks for URI); connectivity is checked before continuing.
-4. Full walkthrough of `backend/.env.example` — every key, labeled required or optional; secrets can be generated. Includes the Raspberry Pi / `raspberrypi.local` prompt when that key is reached.
+3. Database: reuses distro Postgres when present. If the application database already has tables, asks whether to keep them, wipe and replace, or leave them and create a new empty database.
+4. Walkthrough of `backend/.env.example` for remaining secrets. CORS, cookies, `APP_BASE_URL`, and `raspberrypi.local` are set automatically on a Pi (`COOKIE_DOMAIN` stays empty — a URL or `.local` Domain is rejected by the browser).
 5. Downloads the latest **release assets** (not `main`).
 6. Migrations + first-time seed (recorded in `data/state.json` as `seeded`).
 7. Registers `peepal-agent` as an OS service (systemd / launchd / Windows scheduled task).
@@ -333,5 +333,6 @@ backend app dir for the process). Installer-managed keys include:
 - `PEEPAL_AGENT_URL` — default `http://127.0.0.1:9080`
 - `PEEPAL_AGENT_TOKEN` — shared secret for the loopback control API
 - `RPI_LOCAL_ENABLE` — `true` for `http://raspberrypi.local` (see [Raspberry Pi](#raspberry-pi-raspberrypilocal)); also `--rpi-local` at install time
+- `CORS_ORIGINS`, `COOKIE_DOMAIN`, `APP_BASE_URL`, `WEBAUTHN_RP_ID` — filled for `raspberrypi.local` / LAN on a Pi; `COOKIE_DOMAIN` stays empty
 
 Do not commit real `.env` files.
