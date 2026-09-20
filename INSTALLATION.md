@@ -43,6 +43,7 @@ Edit `backend/.env` at minimum:
 - `SUPER_ADMIN_EMAIL` / `SUPER_ADMIN_PASSWORD` — first platform admin
 - `CORS_ORIGINS` — usually `http://localhost:3000`
 - Leave `COOKIE_DOMAIN` empty for localhost
+- `RPI_LOCAL_ENABLE=true` — use when opening the app at `http://raspberrypi.local` (Raspberry Pi mDNS). This keeps auth cookies host-only and un-`Secure` so login works over HTTP, and allows `*.local` / LAN CORS origins. Restart after changing it.
 
 On-prem-only keys (`PEEPAL_AGENT_URL`, `PEEPAL_AGENT_TOKEN`) can stay empty in local dev; the tenant update UI will report the agent as unreachable.
 
@@ -109,7 +110,18 @@ Layout under the install root:
 
 ### Install packages
 
-Build artifacts come from the installer release pipeline (see `installer/README.md`). Typical customer flow:
+Download the platform installer from the [GitHub Releases](https://github.com/workvar/peepal-rp/releases) page for a given tag:
+
+| Platform | Asset |
+| --- | --- |
+| Windows | `PeepalSetup-<version>.exe` |
+| macOS (Apple Silicon) | `Peepal-<version>-arm64.pkg` |
+| macOS (Intel) | `Peepal-<version>-amd64.pkg` |
+| Linux | `peepal_<version>_amd64.deb` / `.rpm` (or arm64) |
+
+App update bundles (`peepal-backend_*.tar.gz`, `peepal-frontend.tar.gz`) are also on the same release; the agent downloads those automatically — end users only need the installer above.
+
+Build artifacts can also be produced locally (see `installer/README.md`). Typical customer flow after download:
 
 **Windows** — run the `.exe` installer (Inno Setup).
 
@@ -180,5 +192,12 @@ On installed machines, the live file is `<root>/data/backend.env` (copied into t
 
 - `PEEPAL_AGENT_URL` — default `http://127.0.0.1:9080`
 - `PEEPAL_AGENT_TOKEN` — shared secret for the loopback control API
+- `RPI_LOCAL_ENABLE` — `true` to use `http://raspberrypi.local` (cookies + CORS). Also settable at install time with `--rpi-local`.
 
 Do not commit real `.env` files.
+
+### Raspberry Pi (`raspberrypi.local`)
+
+Raspberry Pi OS advertises `http://raspberrypi.local` via Avahi. The packaged installer already listens on all interfaces; the missing piece is cookies: production sets the `Secure` flag, which browsers drop on HTTP, and `.local` is a public suffix so a `COOKIE_DOMAIN` value is rejected.
+
+Set `RPI_LOCAL_ENABLE=true` in `<root>/data/backend.env` (or pass `--rpi-local` at install) and restart `peepal-agent`. That turns `Secure` off, keeps the cookie host-only, allows `*.local` / LAN CORS origins, and rewrites localhost `APP_BASE_URL` to `http://raspberrypi.local`. Avahi is a recommended package of the Linux installer; Raspberry Pi OS already has it.

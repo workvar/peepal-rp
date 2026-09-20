@@ -1,0 +1,200 @@
+# Builds customer-facing installers and attaches them to the GitHub Release.
+#
+# Produces (attached to the same tag as the app bundles from release.yml):
+#   PeepalSetup-<ver>.exe              Windows
+#   Peepal-<ver>-arm64.pkg             macOS Apple Silicon
+#   Peepal-<ver>-amd64.pkg             macOS Intel
+#   peepal_<ver>_amd64.deb/.rpm        Linux
+#   peepal_<ver>_arm64.deb/.rpm        Linux
+#   installer-checksums.txt
+#
+# Note: installer/.github/workflows/ is NOT run by GitHub — only this root path is.
+name: Release installers
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version without v prefix (e.g. 1.1.0). Attaches to tag v<version>."
+        required: true
+
+permissions:
+  contents: write
+
+env:
+  # Optional: fine-grained PAT with Contents:read if release assets are private.
+  # Public assets on this repo work with an empty token.
+  PEEPAL_TOKEN: ${{ secrets.PEEPAL_RELEASE_TOKEN }}
+  # Monorepo: both app bundles ship on workvar/peepal-rp releases.
+  BACKEND_REPO: ${{ vars.PEEPAL_BACKEND_REPO || 'workvar/peepal-rp' }}
+  FRONTEND_REPO: ${{ vars.PEEPAL_FRONTEND_REPO || 'workvar/peepal-rp' }}
+  GOWORK: "off"
+
+jobs:
+  linux:
+    name: Linux packages
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: installer/go.mod
+          cache-dependency-path: installer/go.sum
+
+      - name: Set version
+        run: |
+          if [ -n "${{ inputs.version }}" ]; then
+            echo "VERSION=${{ inputs.version }}" >> "$GITHUB_ENV"
+          else
+            echo "VERSION=${GITHUB_REF_NAME#v}" >> "$GITHUB_ENV"
+          fi
+
+      - name: Build binaries
+        working-directory: installer
+        run: TARGETS="linux/amd64 linux/arm64" ./packaging/build.sh
+
+      - name: Install nfpm
+        run: go install github.com/goreleaser/nfpm/v2/cmd/nfpm@latest
+
+      - name: Package deb and rpm
+        working-directory: installer
+        run: |
+          for ARCH in amd64 arm64; do
+            ARCH=$ARCH VERSION=$VERSION envsubst < packaging/linux/nfpm.yaml > /tmp/nfpm-$ARCH.yaml
+            nfpm package -f /tmp/nfpm-$ARCH.yaml -p deb -t dist/
+            nfpm package -f /tmp/nfpm-$ARCH.yaml -p rpm -t dist/
+          done
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: linux-installers
+          path: |
+            installer/dist/*.deb
+            installer/dist/*.rpm
+
+  windows:
+    name: Windows installer
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: installer/go.mod
+          cache-dependency-path: installer/go.sum
+
+      - name: Set version
+        shell: bash
+        run: |
+          if [ -n "${{ inputs.version }}" ]; then
+            echo "VERSION=${{ inputs.version }}" >> "$GITHUB_ENV"
+          else
+            echo "VERSION=${GITHUB_REF_NAME#v}" >> "$GITHUB_ENV"
+          fi
+
+      - name: Build binaries
+        shell: bash
+        working-directory: installer
+        run: TARGETS="windows/amd64" ./packaging/build.sh
+
+      - name: Build Inno Setup installer
+        working-directory: installer
+        shell: pwsh
+        run: |
+          choco install innosetup --no-progress -y
+          & "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe" `
+            "/DVersion=$env:VERSION" `
+            /O"dist" `
+            packaging\windows\peepal.iss
+
+      - name: Sign
+        if: ${{ env.WINDOWS_CERT_BASE64 != '' }}
+        env:
+          WINDOWS_CERT_BASE64: ${{ secrets.WINDOWS_CERT_BASE64 }}
+          WINDOWS_CERT_PASSWORD: ${{ secrets.WINDOWS_CERT_PASSWORD }}
+        working-directory: installer
+        shell: pwsh
+        run: |
+          [IO.File]::WriteAllBytes("cert.pfx", [Convert]::FromBase64String($env:WINDOWS_CERT_BASE64))
+          & signtool sign /f cert.pfx /p $env:WINDOWS_CERT_PASSWORD /fd SHA256 `
+            /tr http://timestamp.digicert.com /td SHA256 dist\*.exe
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows-installers
+          path: installer/dist/*.exe
+
+  macos:
+    name: macOS packages
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: installer/go.mod
+          cache-dependency-path: installer/go.sum
+
+      - name: Set version
+        run: |
+          if [ -n "${{ inputs.version }}" ]; then
+            echo "VERSION=${{ inputs.version }}" >> "$GITHUB_ENV"
+          else
+            echo "VERSION=${GITHUB_REF_NAME#v}" >> "$GITHUB_ENV"
+          fi
+
+      - name: Build binaries
+        working-directory: installer
+        run: TARGETS="darwin/amd64 darwin/arm64" ./packaging/build.sh
+
+      - name: Build packages
+        working-directory: installer
+        env:
+          SIGN_ID: ${{ secrets.MACOS_INSTALLER_IDENTITY }}
+          NOTARY_PROFILE: ${{ secrets.MACOS_NOTARY_PROFILE }}
+        run: |
+          ARCH=arm64 ./packaging/macos/build-pkg.sh
+          ARCH=amd64 ./packaging/macos/build-pkg.sh
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: macos-installers
+          path: installer/dist/*.pkg
+
+  publish:
+    name: Attach installers to release
+    needs: [linux, windows, macos]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Collect and checksum
+        run: |
+          mkdir -p out
+          find artifacts -type f \( -name '*.exe' -o -name '*.pkg' -o -name '*.deb' -o -name '*.rpm' \) -exec mv {} out/ \;
+          cd out
+          sha256sum * > installer-checksums.txt
+          ls -lh
+          cat installer-checksums.txt
+
+      - name: Resolve tag
+        id: tag
+        run: |
+          if [ -n "${{ inputs.version }}" ]; then
+            echo "name=v${{ inputs.version }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "name=${GITHUB_REF_NAME}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.tag.outputs.name }}
+          files: out/*
+          fail_on_unmatched_files: true
+          # Do not rewrite release notes; app release.yml already set them.
+          append_body: false

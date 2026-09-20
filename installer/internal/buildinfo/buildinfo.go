@@ -6,10 +6,11 @@ var (
 	// Version of the installer/agent itself (e.g. "1.4.0").
 	Version = "dev"
 
-	// BackendRepo and FrontendRepo are "owner/name" GitHub slugs. The app is
-	// split across two private repositories, each cutting its own tags.
-	BackendRepo  = "peepal/peepal-backend"
-	FrontendRepo = "peepal/peepal-frontend"
+	// BackendRepo and FrontendRepo are "owner/name" GitHub slugs whose
+	// Releases carry peepal-backend_*.tar.gz and peepal-frontend.tar.gz.
+	// Defaults target this monorepo; CI can override via -ldflags.
+	BackendRepo  = "workvar/peepal-rp"
+	FrontendRepo = "workvar/peepal-rp"
 
 	// Token is a read-only fine-grained PAT with "Contents: read" on both
 	// repos. Injected at build time by CI so client machines can download
