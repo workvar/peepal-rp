@@ -103,7 +103,7 @@ jobs:
           # backend by next.config.js at runtime.
           NEXT_STANDALONE: "1"
           NODE_ENV: production
-        run: pnpm build
+        run: pnpm --ignore-workspace build
 
       - name: Assemble the bundle
         working-directory: frontend
