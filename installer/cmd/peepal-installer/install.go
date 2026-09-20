@@ -33,6 +33,9 @@ func install(ctx context.Context, o Options) {
 		ui.Warn("Could not create the service account: %v", err)
 	} else if account != "" {
 		ui.OK("Service account %q ready", account)
+		if err := sysuser.Chown(layout.Data, account); err != nil {
+			ui.Warn("Could not set ownership of %s: %v", layout.Data, err)
+		}
 	}
 
 	dbSource := setupDatabase(ctx, layout, &a)

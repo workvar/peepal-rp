@@ -1,5 +1,14 @@
 # Release notes
 
+## v1.2.1 — Fix Postgres init as the peepal user
+
+`data/` was `0750` and owned by root, so `initdb` (running as `peepal`) could
+not read `.pgpw`. The installer now gives the data directory to the service
+account before initialising the cluster, and clears a leftover `pgdata/` from
+a failed previous run.
+
+---
+
 ## v1.2.0 — Raspberry Pi LAN install
 
 Customers can install the ARM64 `.deb` on Raspberry Pi OS and open the app at

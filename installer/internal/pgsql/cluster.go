@@ -32,6 +32,17 @@ func (c Cluster) Initialised() bool {
 	return err == nil
 }
 
+func pwFileFor(dataDir string) string {
+	return filepath.Join(filepath.Dir(dataDir), ".pgpw")
+}
+
+// ownershipPaths are handed to the service account before initdb. The parent
+// of DataDir must be included: data/ is 0750, so peepal cannot read .pgpw
+// (or traverse into pgdata) while it is still owned by root.
+func ownershipPaths(dataDir, pwFile string) []string {
+	return []string{dataDir, filepath.Dir(dataDir), pwFile}
+}
+
 // Init runs initdb, writes a locked-down configuration and leaves the server
 // stopped. It is a no-op on an already-initialised directory.
 func (c Cluster) Init(ctx context.Context, log Logf) error {
@@ -39,24 +50,27 @@ func (c Cluster) Init(ctx context.Context, log Logf) error {
 		log("Reusing the existing database at %s", c.DataDir)
 		return c.writeConf()
 	}
+	// A previous failed initdb leaves a non-empty directory that initdb rejects.
+	if err := os.RemoveAll(c.DataDir); err != nil {
+		return err
+	}
 	if err := os.MkdirAll(filepath.Dir(c.DataDir), 0o755); err != nil {
 		return err
 	}
 	if err := os.MkdirAll(c.DataDir, 0o700); err != nil {
 		return err
 	}
-	pwFile := filepath.Join(filepath.Dir(c.DataDir), ".pgpw")
+	pwFile := pwFileFor(c.DataDir)
 	if err := os.WriteFile(pwFile, []byte(c.SuperPwd), 0o600); err != nil {
 		return err
 	}
 	defer os.Remove(pwFile)
 
 	if c.RunAs != "" {
-		if err := chownTree(c.DataDir, c.RunAs); err != nil {
-			return err
-		}
-		if err := chownTree(pwFile, c.RunAs); err != nil {
-			return err
+		for _, p := range ownershipPaths(c.DataDir, pwFile) {
+			if err := chownTree(p, c.RunAs); err != nil {
+				return err
+			}
 		}
 	}
 
