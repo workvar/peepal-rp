@@ -12,6 +12,8 @@ import LoadingSpinner  from "@/components/ui/LoadingSpinner";
 import DashboardProviders from "@/components/layout/DashboardProviders";
 import RouteGuard      from "@/components/layout/RouteGuard";
 import QuotaBanner     from "@/components/layout/QuotaBanner";
+import PresenceBeacon  from "@/components/layout/PresenceBeacon";
+import SystemUpdatePrompt from "@/components/layout/SystemUpdatePrompt";
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const router   = useRouter();
@@ -77,6 +79,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   return (
     <DashboardProviders>
+      <PresenceBeacon />
+      <SystemUpdatePrompt />
       <div
         className="flex flex-col h-screen overflow-hidden transition-colors duration-200"
         style={{ background: "rgb(var(--bg-base))" }}

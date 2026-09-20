@@ -3456,6 +3456,8 @@ export type Mutation = {
   allocateTransportVehicle: TransportAllocation;
   /** Submit a leave application. */
   applyLeave: LeaveRecord;
+  /** Ask peepal-agent to apply the available update now. */
+  applySystemUpdate: Scalars['Boolean']['output'];
   /** Approve an approval request. */
   approveRequest: ApprovalRequest;
   /** Assign a goal to a department — creates progress rows for every employee. */
@@ -3897,6 +3899,8 @@ export type Mutation = {
   settleInsuranceClaim: InsuranceClaim;
   /** Freeze the commission amount, mark the referral settled, and (when Phase 3 accounting is live) post the payable to the GL. */
   settleReferral: Referral;
+  /** Suppress the update popup for this tenant for one hour (does not delay auto-apply). */
+  snoozeSystemUpdate: SystemUpdateStatus;
   /** Self-service: create or replace the caller's own submission. */
   submitAssignment: AssignmentSubmission;
   /** Submit a quiz attempt — auto-graded; returns score and progress row. */
@@ -6858,6 +6862,8 @@ export type Query = {
   surgeries: Array<SurgerySchedule>;
   /** List the tenant's built-in system roles, industry-labelled and ordered. */
   systemRoles: Array<SystemRole>;
+  /** Tenant-admin view of whether a newer release is available for this install. */
+  systemUpdateStatus: SystemUpdateStatus;
   teleConsults: Array<TeleConsult>;
   /** Fetch the label map for the current tenant's vertical. */
   terminology: TerminologyPayload;
@@ -8629,6 +8635,20 @@ export type SystemRole = {
   /** The enforced enum id: admin / teacher / student / staff. */
   roleId: Scalars['String']['output'];
   sortOrder: Scalars['Int']['output'];
+};
+
+/** Installed vs available release versions and tenant snooze / presence state. */
+export type SystemUpdateStatus = {
+  __typename?: 'SystemUpdateStatus';
+  activeUsersInTenant: Scalars['Int']['output'];
+  agentReachable: Scalars['Boolean']['output'];
+  availableBackend: Scalars['String']['output'];
+  availableFrontend: Scalars['String']['output'];
+  installedBackend: Scalars['String']['output'];
+  installedFrontend: Scalars['String']['output'];
+  snoozed: Scalars['Boolean']['output'];
+  snoozedUntil: Maybe<Scalars['String']['output']>;
+  updateAvailable: Scalars['Boolean']['output'];
 };
 
 export type TeleConsult = {
@@ -13152,3 +13172,18 @@ export type CancelFeePaymentMutationVariables = Exact<{
 
 
 export type CancelFeePaymentMutation = { __typename?: 'Mutation', cancelFeePayment: { __typename?: 'FeePayment', id: string, status: string } };
+
+export type SystemUpdateStatusQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type SystemUpdateStatusQuery = { __typename?: 'Query', systemUpdateStatus: { __typename?: 'SystemUpdateStatus', installedBackend: string, installedFrontend: string, availableBackend: string, availableFrontend: string, updateAvailable: boolean, snoozed: boolean, snoozedUntil: string | null, activeUsersInTenant: number, agentReachable: boolean } };
+
+export type SnoozeSystemUpdateMutationVariables = Exact<{ [key: string]: never; }>;
+
+
+export type SnoozeSystemUpdateMutation = { __typename?: 'Mutation', snoozeSystemUpdate: { __typename?: 'SystemUpdateStatus', updateAvailable: boolean, snoozed: boolean, snoozedUntil: string | null, activeUsersInTenant: number, agentReachable: boolean } };
+
+export type ApplySystemUpdateMutationVariables = Exact<{ [key: string]: never; }>;
+
+
+export type ApplySystemUpdateMutation = { __typename?: 'Mutation', applySystemUpdate: boolean };
