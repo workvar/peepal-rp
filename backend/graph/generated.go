@@ -1395,6 +1395,7 @@ type ComplexityRoot struct {
 		AllocateHostelRoom             func(childComplexity int, input model.AllocateHostelRoomInput) int
 		AllocateTransportVehicle       func(childComplexity int, input model.AllocateTransportInput) int
 		ApplyLeave                     func(childComplexity int, input model.ApplyLeaveInput) int
+		ApplySystemUpdate              func(childComplexity int) int
 		ApproveRequest                 func(childComplexity int, id string, comment *string) int
 		AssignGoalToDepartment         func(childComplexity int, goalID string, departmentID string) int
 		AssignSalaryTemplate           func(childComplexity int, input model.AssignSalaryTemplateInput) int
@@ -1632,6 +1633,7 @@ type ComplexityRoot struct {
 		SetUserWorkspaceRoles          func(childComplexity int, userID string, roles []*model.WorkspaceRoleInput) int
 		SettleInsuranceClaim           func(childComplexity int, id string, approvedAmount *float64) int
 		SettleReferral                 func(childComplexity int, id string) int
+		SnoozeSystemUpdate             func(childComplexity int) int
 		SubmitAssignment               func(childComplexity int, assignmentID string, input model.SubmitAssignmentInput) int
 		SubmitQuiz                     func(childComplexity int, employeeGoalProgressID string, assignmentID string, answers []*model.QuizAnswerInput) int
 		SyncFeeAllocation              func(childComplexity int, id string) int
@@ -2153,6 +2155,7 @@ type ComplexityRoot struct {
 		Subjects                   func(childComplexity int, departmentID *string, search *string) int
 		Surgeries                  func(childComplexity int, date *string, theatreID *string, status *string) int
 		SystemRoles                func(childComplexity int) int
+		SystemUpdateStatus         func(childComplexity int) int
 		TeleConsults               func(childComplexity int, status *string, date *string) int
 		Terminology                func(childComplexity int) int
 		Timetable                  func(childComplexity int, academicYearID *string, courseID *string, semester *int, section *string, dayOfWeek *string, employeeID *string) int
@@ -2593,6 +2596,18 @@ type ComplexityRoot struct {
 		Label       func(childComplexity int) int
 		RoleID      func(childComplexity int) int
 		SortOrder   func(childComplexity int) int
+	}
+
+	SystemUpdateStatus struct {
+		ActiveUsersInTenant func(childComplexity int) int
+		AgentReachable      func(childComplexity int) int
+		AvailableBackend    func(childComplexity int) int
+		AvailableFrontend   func(childComplexity int) int
+		InstalledBackend    func(childComplexity int) int
+		InstalledFrontend   func(childComplexity int) int
+		Snoozed             func(childComplexity int) int
+		SnoozedUntil        func(childComplexity int) int
+		UpdateAvailable     func(childComplexity int) int
 	}
 
 	TeleConsult struct {
@@ -3140,6 +3155,8 @@ type MutationResolver interface {
 	RevokeMySession(ctx context.Context, sessionID string) (bool, error)
 	RevokeMyOtherSessions(ctx context.Context) (int, error)
 	RevokeUserSessions(ctx context.Context, userID string) (int, error)
+	SnoozeSystemUpdate(ctx context.Context) (*model.SystemUpdateStatus, error)
+	ApplySystemUpdate(ctx context.Context) (bool, error)
 }
 type QueryResolver interface {
 	Health(ctx context.Context) (bool, error)
@@ -3328,6 +3345,7 @@ type QueryResolver interface {
 	MyDeviceTokens(ctx context.Context) ([]*model.DeviceToken, error)
 	MySessions(ctx context.Context) ([]*model.UserSession, error)
 	UserSessions(ctx context.Context, userID string) ([]*model.UserSession, error)
+	SystemUpdateStatus(ctx context.Context) (*model.SystemUpdateStatus, error)
 }
 
 type executableSchema graphql.ExecutableSchemaState[ResolverRoot, DirectiveRoot, ComplexityRoot]
@@ -9418,6 +9436,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.Mutation.ApplyLeave(childComplexity, args["input"].(model.ApplyLeaveInput)), true
+	case "Mutation.applySystemUpdate":
+		if e.ComplexityRoot.Mutation.ApplySystemUpdate == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Mutation.ApplySystemUpdate(childComplexity), true
 	case "Mutation.approveRequest":
 		if e.ComplexityRoot.Mutation.ApproveRequest == nil {
 			break
@@ -11995,6 +12019,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.Mutation.SettleReferral(childComplexity, args["id"].(string)), true
+	case "Mutation.snoozeSystemUpdate":
+		if e.ComplexityRoot.Mutation.SnoozeSystemUpdate == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Mutation.SnoozeSystemUpdate(childComplexity), true
 	case "Mutation.submitAssignment":
 		if e.ComplexityRoot.Mutation.SubmitAssignment == nil {
 			break
@@ -15620,6 +15650,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.Query.SystemRoles(childComplexity), true
+	case "Query.systemUpdateStatus":
+		if e.ComplexityRoot.Query.SystemUpdateStatus == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Query.SystemUpdateStatus(childComplexity), true
 	case "Query.teleConsults":
 		if e.ComplexityRoot.Query.TeleConsults == nil {
 			break
@@ -17754,6 +17790,61 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.SystemRole.SortOrder(childComplexity), true
+
+	case "SystemUpdateStatus.activeUsersInTenant":
+		if e.ComplexityRoot.SystemUpdateStatus.ActiveUsersInTenant == nil {
+			break
+		}
+
+		return e.ComplexityRoot.SystemUpdateStatus.ActiveUsersInTenant(childComplexity), true
+	case "SystemUpdateStatus.agentReachable":
+		if e.ComplexityRoot.SystemUpdateStatus.AgentReachable == nil {
+			break
+		}
+
+		return e.ComplexityRoot.SystemUpdateStatus.AgentReachable(childComplexity), true
+	case "SystemUpdateStatus.availableBackend":
+		if e.ComplexityRoot.SystemUpdateStatus.AvailableBackend == nil {
+			break
+		}
+
+		return e.ComplexityRoot.SystemUpdateStatus.AvailableBackend(childComplexity), true
+	case "SystemUpdateStatus.availableFrontend":
+		if e.ComplexityRoot.SystemUpdateStatus.AvailableFrontend == nil {
+			break
+		}
+
+		return e.ComplexityRoot.SystemUpdateStatus.AvailableFrontend(childComplexity), true
+	case "SystemUpdateStatus.installedBackend":
+		if e.ComplexityRoot.SystemUpdateStatus.InstalledBackend == nil {
+			break
+		}
+
+		return e.ComplexityRoot.SystemUpdateStatus.InstalledBackend(childComplexity), true
+	case "SystemUpdateStatus.installedFrontend":
+		if e.ComplexityRoot.SystemUpdateStatus.InstalledFrontend == nil {
+			break
+		}
+
+		return e.ComplexityRoot.SystemUpdateStatus.InstalledFrontend(childComplexity), true
+	case "SystemUpdateStatus.snoozed":
+		if e.ComplexityRoot.SystemUpdateStatus.Snoozed == nil {
+			break
+		}
+
+		return e.ComplexityRoot.SystemUpdateStatus.Snoozed(childComplexity), true
+	case "SystemUpdateStatus.snoozedUntil":
+		if e.ComplexityRoot.SystemUpdateStatus.SnoozedUntil == nil {
+			break
+		}
+
+		return e.ComplexityRoot.SystemUpdateStatus.SnoozedUntil(childComplexity), true
+	case "SystemUpdateStatus.updateAvailable":
+		if e.ComplexityRoot.SystemUpdateStatus.UpdateAvailable == nil {
+			break
+		}
+
+		return e.ComplexityRoot.SystemUpdateStatus.UpdateAvailable(childComplexity), true
 
 	case "TeleConsult.clinicianId":
 		if e.ComplexityRoot.TeleConsult.ClinicianID == nil {
@@ -73404,6 +73495,84 @@ func (ec *executionContext) fieldContext_Mutation_revokeUserSessions(ctx context
 	return fc, nil
 }
 
+func (ec *executionContext) _Mutation_snoozeSystemUpdate(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Mutation_snoozeSystemUpdate,
+		func(ctx context.Context) (any, error) {
+			return ec.Resolvers.Mutation().SnoozeSystemUpdate(ctx)
+		},
+		nil,
+		ec.marshalNSystemUpdateStatus2ᚖcollegeerpᚋgraphᚋmodelᚐSystemUpdateStatus,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Mutation_snoozeSystemUpdate(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "installedBackend":
+				return ec.fieldContext_SystemUpdateStatus_installedBackend(ctx, field)
+			case "installedFrontend":
+				return ec.fieldContext_SystemUpdateStatus_installedFrontend(ctx, field)
+			case "availableBackend":
+				return ec.fieldContext_SystemUpdateStatus_availableBackend(ctx, field)
+			case "availableFrontend":
+				return ec.fieldContext_SystemUpdateStatus_availableFrontend(ctx, field)
+			case "updateAvailable":
+				return ec.fieldContext_SystemUpdateStatus_updateAvailable(ctx, field)
+			case "snoozed":
+				return ec.fieldContext_SystemUpdateStatus_snoozed(ctx, field)
+			case "snoozedUntil":
+				return ec.fieldContext_SystemUpdateStatus_snoozedUntil(ctx, field)
+			case "activeUsersInTenant":
+				return ec.fieldContext_SystemUpdateStatus_activeUsersInTenant(ctx, field)
+			case "agentReachable":
+				return ec.fieldContext_SystemUpdateStatus_agentReachable(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type SystemUpdateStatus", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_applySystemUpdate(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Mutation_applySystemUpdate,
+		func(ctx context.Context) (any, error) {
+			return ec.Resolvers.Mutation().ApplySystemUpdate(ctx)
+		},
+		nil,
+		ec.marshalNBoolean2bool,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Mutation_applySystemUpdate(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _MyAssignment_assignment(ctx context.Context, field graphql.CollectedField, obj *model.MyAssignment) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -90639,6 +90808,55 @@ func (ec *executionContext) fieldContext_Query_userSessions(ctx context.Context,
 	return fc, nil
 }
 
+func (ec *executionContext) _Query_systemUpdateStatus(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Query_systemUpdateStatus,
+		func(ctx context.Context) (any, error) {
+			return ec.Resolvers.Query().SystemUpdateStatus(ctx)
+		},
+		nil,
+		ec.marshalNSystemUpdateStatus2ᚖcollegeerpᚋgraphᚋmodelᚐSystemUpdateStatus,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Query_systemUpdateStatus(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "installedBackend":
+				return ec.fieldContext_SystemUpdateStatus_installedBackend(ctx, field)
+			case "installedFrontend":
+				return ec.fieldContext_SystemUpdateStatus_installedFrontend(ctx, field)
+			case "availableBackend":
+				return ec.fieldContext_SystemUpdateStatus_availableBackend(ctx, field)
+			case "availableFrontend":
+				return ec.fieldContext_SystemUpdateStatus_availableFrontend(ctx, field)
+			case "updateAvailable":
+				return ec.fieldContext_SystemUpdateStatus_updateAvailable(ctx, field)
+			case "snoozed":
+				return ec.fieldContext_SystemUpdateStatus_snoozed(ctx, field)
+			case "snoozedUntil":
+				return ec.fieldContext_SystemUpdateStatus_snoozedUntil(ctx, field)
+			case "activeUsersInTenant":
+				return ec.fieldContext_SystemUpdateStatus_activeUsersInTenant(ctx, field)
+			case "agentReachable":
+				return ec.fieldContext_SystemUpdateStatus_agentReachable(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type SystemUpdateStatus", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Query___type(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -100697,6 +100915,267 @@ func (ec *executionContext) fieldContext_SystemRole_sortOrder(_ context.Context,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SystemUpdateStatus_installedBackend(ctx context.Context, field graphql.CollectedField, obj *model.SystemUpdateStatus) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_SystemUpdateStatus_installedBackend,
+		func(ctx context.Context) (any, error) {
+			return obj.InstalledBackend, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_SystemUpdateStatus_installedBackend(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SystemUpdateStatus",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SystemUpdateStatus_installedFrontend(ctx context.Context, field graphql.CollectedField, obj *model.SystemUpdateStatus) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_SystemUpdateStatus_installedFrontend,
+		func(ctx context.Context) (any, error) {
+			return obj.InstalledFrontend, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_SystemUpdateStatus_installedFrontend(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SystemUpdateStatus",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SystemUpdateStatus_availableBackend(ctx context.Context, field graphql.CollectedField, obj *model.SystemUpdateStatus) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_SystemUpdateStatus_availableBackend,
+		func(ctx context.Context) (any, error) {
+			return obj.AvailableBackend, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_SystemUpdateStatus_availableBackend(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SystemUpdateStatus",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SystemUpdateStatus_availableFrontend(ctx context.Context, field graphql.CollectedField, obj *model.SystemUpdateStatus) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_SystemUpdateStatus_availableFrontend,
+		func(ctx context.Context) (any, error) {
+			return obj.AvailableFrontend, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_SystemUpdateStatus_availableFrontend(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SystemUpdateStatus",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SystemUpdateStatus_updateAvailable(ctx context.Context, field graphql.CollectedField, obj *model.SystemUpdateStatus) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_SystemUpdateStatus_updateAvailable,
+		func(ctx context.Context) (any, error) {
+			return obj.UpdateAvailable, nil
+		},
+		nil,
+		ec.marshalNBoolean2bool,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_SystemUpdateStatus_updateAvailable(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SystemUpdateStatus",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SystemUpdateStatus_snoozed(ctx context.Context, field graphql.CollectedField, obj *model.SystemUpdateStatus) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_SystemUpdateStatus_snoozed,
+		func(ctx context.Context) (any, error) {
+			return obj.Snoozed, nil
+		},
+		nil,
+		ec.marshalNBoolean2bool,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_SystemUpdateStatus_snoozed(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SystemUpdateStatus",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SystemUpdateStatus_snoozedUntil(ctx context.Context, field graphql.CollectedField, obj *model.SystemUpdateStatus) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_SystemUpdateStatus_snoozedUntil,
+		func(ctx context.Context) (any, error) {
+			return obj.SnoozedUntil, nil
+		},
+		nil,
+		ec.marshalOString2ᚖstring,
+		true,
+		false,
+	)
+}
+
+func (ec *executionContext) fieldContext_SystemUpdateStatus_snoozedUntil(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SystemUpdateStatus",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SystemUpdateStatus_activeUsersInTenant(ctx context.Context, field graphql.CollectedField, obj *model.SystemUpdateStatus) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_SystemUpdateStatus_activeUsersInTenant,
+		func(ctx context.Context) (any, error) {
+			return obj.ActiveUsersInTenant, nil
+		},
+		nil,
+		ec.marshalNInt2int,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_SystemUpdateStatus_activeUsersInTenant(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SystemUpdateStatus",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SystemUpdateStatus_agentReachable(ctx context.Context, field graphql.CollectedField, obj *model.SystemUpdateStatus) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_SystemUpdateStatus_agentReachable,
+		func(ctx context.Context) (any, error) {
+			return obj.AgentReachable, nil
+		},
+		nil,
+		ec.marshalNBoolean2bool,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_SystemUpdateStatus_agentReachable(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SystemUpdateStatus",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
 		},
 	}
 	return fc, nil
@@ -130451,6 +130930,20 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "snoozeSystemUpdate":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_snoozeSystemUpdate(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "applySystemUpdate":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_applySystemUpdate(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -136225,6 +136718,28 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "systemUpdateStatus":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_systemUpdateStatus(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
 		case "__type":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Query___type(ctx, field)
@@ -138653,6 +139168,82 @@ func (ec *executionContext) _SystemRole(ctx context.Context, sel ast.SelectionSe
 			}
 		case "sortOrder":
 			out.Values[i] = ec._SystemRole_sortOrder(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.Deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var systemUpdateStatusImplementors = []string{"SystemUpdateStatus"}
+
+func (ec *executionContext) _SystemUpdateStatus(ctx context.Context, sel ast.SelectionSet, obj *model.SystemUpdateStatus) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, systemUpdateStatusImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("SystemUpdateStatus")
+		case "installedBackend":
+			out.Values[i] = ec._SystemUpdateStatus_installedBackend(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "installedFrontend":
+			out.Values[i] = ec._SystemUpdateStatus_installedFrontend(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "availableBackend":
+			out.Values[i] = ec._SystemUpdateStatus_availableBackend(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "availableFrontend":
+			out.Values[i] = ec._SystemUpdateStatus_availableFrontend(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "updateAvailable":
+			out.Values[i] = ec._SystemUpdateStatus_updateAvailable(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "snoozed":
+			out.Values[i] = ec._SystemUpdateStatus_snoozed(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "snoozedUntil":
+			out.Values[i] = ec._SystemUpdateStatus_snoozedUntil(ctx, field, obj)
+		case "activeUsersInTenant":
+			out.Values[i] = ec._SystemUpdateStatus_activeUsersInTenant(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "agentReachable":
+			out.Values[i] = ec._SystemUpdateStatus_agentReachable(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
@@ -145942,6 +146533,20 @@ func (ec *executionContext) marshalNSystemRole2ᚖcollegeerpᚋgraphᚋmodelᚐS
 		return graphql.Null
 	}
 	return ec._SystemRole(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNSystemUpdateStatus2collegeerpᚋgraphᚋmodelᚐSystemUpdateStatus(ctx context.Context, sel ast.SelectionSet, v model.SystemUpdateStatus) graphql.Marshaler {
+	return ec._SystemUpdateStatus(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNSystemUpdateStatus2ᚖcollegeerpᚋgraphᚋmodelᚐSystemUpdateStatus(ctx context.Context, sel ast.SelectionSet, v *model.SystemUpdateStatus) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._SystemUpdateStatus(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalNTeleConsult2collegeerpᚋgraphᚋmodelᚐTeleConsult(ctx context.Context, sel ast.SelectionSet, v model.TeleConsult) graphql.Marshaler {

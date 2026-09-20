@@ -7174,3 +7174,32 @@ extend type Mutation {
   """
   revokeUserSessions(userId: ID!): Int!
 }
+
+# ── On-prem system updates (tenant admin) ─────────────────────────────────────
+# Status/snooze/apply against peepal-agent's loopback control API. Presence
+# counts come from GET /api/v1/presence WebSocket connections in this tenant.
+
+"""Installed vs available release versions and tenant snooze / presence state."""
+type SystemUpdateStatus {
+  installedBackend: String!
+  installedFrontend: String!
+  availableBackend: String!
+  availableFrontend: String!
+  updateAvailable: Boolean!
+  snoozed: Boolean!
+  snoozedUntil: String
+  activeUsersInTenant: Int!
+  agentReachable: Boolean!
+}
+
+extend type Query {
+  """Tenant-admin view of whether a newer release is available for this install."""
+  systemUpdateStatus: SystemUpdateStatus!
+}
+
+extend type Mutation {
+  """Suppress the update popup for this tenant for one hour (does not delay auto-apply)."""
+  snoozeSystemUpdate: SystemUpdateStatus!
+  """Ask peepal-agent to apply the available update now."""
+  applySystemUpdate: Boolean!
+}

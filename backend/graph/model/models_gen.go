@@ -4119,6 +4119,19 @@ type SystemRole struct {
 	SortOrder   int    `json:"sortOrder"`
 }
 
+// Installed vs available release versions and tenant snooze / presence state.
+type SystemUpdateStatus struct {
+	InstalledBackend    string  `json:"installedBackend"`
+	InstalledFrontend   string  `json:"installedFrontend"`
+	AvailableBackend    string  `json:"availableBackend"`
+	AvailableFrontend   string  `json:"availableFrontend"`
+	UpdateAvailable     bool    `json:"updateAvailable"`
+	Snoozed             bool    `json:"snoozed"`
+	SnoozedUntil        *string `json:"snoozedUntil,omitempty"`
+	ActiveUsersInTenant int     `json:"activeUsersInTenant"`
+	AgentReachable      bool    `json:"agentReachable"`
+}
+
 type TeleConsult struct {
 	ID            string  `json:"id"`
 	PatientID     string  `json:"patientId"`
