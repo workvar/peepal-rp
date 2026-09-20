@@ -12,8 +12,8 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 
 VERSION="${VERSION:-dev}"
-BACKEND_REPO="${BACKEND_REPO:-peepal/peepal-backend}"
-FRONTEND_REPO="${FRONTEND_REPO:-peepal/peepal-frontend}"
+BACKEND_REPO="${BACKEND_REPO:-workvar/peepal-rp}"
+FRONTEND_REPO="${FRONTEND_REPO:-workvar/peepal-rp}"
 CHANNEL="${CHANNEL:-stable}"
 TOKEN="${PEEPAL_TOKEN:-}"
 
