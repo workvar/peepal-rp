@@ -14,7 +14,7 @@ Two Go programs do all the work; the native packages are thin wrappers.
 ## What the customer gets
 
 ```
-C:\Program Files\Peepal   /opt/peepal   /usr/local/peepal
+C:\Program Files\PeepalRP   /opt/apps/peepal-rp   /usr/local/apps/peepal-rp
 ├── bin/peepal-agent            the background service
 ├── app/backend                 replaced on every backend release
 ├── app/frontend                replaced on every frontend release

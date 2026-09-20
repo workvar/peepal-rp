@@ -14,15 +14,18 @@ type Layout struct {
 }
 
 // Default returns the conventional layout for the current OS.
+// Data always lives under Root so a single directory can be backed up or removed.
 func Default() Layout {
+	var root string
 	switch runtime.GOOS {
 	case "windows":
-		return Layout{Root: `C:\Program Files\Peepal`, Data: `C:\ProgramData\Peepal`}
+		root = `C:\Program Files\PeepalRP`
 	case "darwin":
-		return Layout{Root: "/usr/local/peepal", Data: "/Library/Application Support/Peepal"}
+		root = "/usr/local/apps/peepal-rp"
 	default:
-		return Layout{Root: "/opt/peepal", Data: "/var/lib/peepal"}
+		root = "/opt/apps/peepal-rp"
 	}
+	return New(root)
 }
 
 // New builds a layout rooted at a custom install directory. Data lives under

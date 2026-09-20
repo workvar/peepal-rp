@@ -4,7 +4,7 @@
 # program, which asks for the administrator account and the AI preference.
 set -e
 
-SETUP="/usr/local/peepal/bin/peepal-setup.command"
+SETUP="/usr/local/apps/peepal-rp/bin/peepal-setup.command"
 LOG="/var/log/peepal-install.log"
 
 echo "$(date) pkg payload installed" >> "$LOG"

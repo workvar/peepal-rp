@@ -17,6 +17,8 @@ type State struct {
 	LastUpdate  time.Time `json:"last_update"`
 	// LastError is kept for the status endpoint and support calls.
 	LastError string `json:"last_error,omitempty"`
+	// Seeded is true after the first successful database migrate/seed.
+	Seeded bool `json:"seeded"`
 }
 
 // LoadState reads the state file, returning a zero state when absent.

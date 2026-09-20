@@ -1,9 +1,9 @@
 #!/bin/sh
 # Stops and unregisters the service before the files disappear. The database
-# and uploaded files in /opt/peepal/data are deliberately left behind.
+# and uploaded files in /opt/apps/peepal-rp/data are deliberately left behind.
 set -e
-SETUP=/usr/local/peepal/bin/peepal-installer
+SETUP=/usr/local/apps/peepal-rp/bin/peepal-installer
 if [ -x "$SETUP" ]; then
-  "$SETUP" --uninstall --unattended --keep-data --dir /opt/peepal || true
+  "$SETUP" --uninstall --unattended --keep-data --dir /opt/apps/peepal-rp || true
 fi
 exit 0

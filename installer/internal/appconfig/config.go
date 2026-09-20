@@ -27,6 +27,9 @@ type Config struct {
 	// AI holds the optional local-LLM configuration.
 	AI AIConfig `json:"ai"`
 
+	// AgentToken authenticates the backend to the agent's loopback control API.
+	AgentToken string `json:"agent_token"`
+
 	// Updates controls the GitHub polling behaviour.
 	Updates UpdateConfig `json:"updates"`
 }

@@ -24,11 +24,11 @@ depends:
 
 contents:
   - src: dist/linux_${ARCH}/peepal-installer
-    dst: /usr/local/peepal/bin/peepal-installer
+    dst: /usr/local/apps/peepal-rp/bin/peepal-installer
     file_info:
       mode: 0755
   - src: dist/linux_${ARCH}/peepal-agent
-    dst: /usr/local/peepal/bin/peepal-agent
+    dst: /usr/local/apps/peepal-rp/bin/peepal-agent
     file_info:
       mode: 0755
   - src: packaging/linux/peepal-setup

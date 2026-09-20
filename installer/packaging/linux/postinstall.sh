@@ -4,10 +4,10 @@
 # asks its questions; in an automated pipeline it prints what to run instead.
 set -e
 
-SETUP=/usr/local/peepal/bin/peepal-installer
+SETUP=/usr/local/apps/peepal-rp/bin/peepal-installer
 
 if [ -t 0 ] && [ -t 1 ]; then
-  "$SETUP" --dir /opt/peepal
+  "$SETUP" --dir /opt/apps/peepal-rp
 else
   cat <<'MSG'
 

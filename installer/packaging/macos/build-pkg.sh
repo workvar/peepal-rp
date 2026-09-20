@@ -18,16 +18,16 @@ OUT="dist/Peepal-${VERSION}-${ARCH}.pkg"
 [ -x "$BIN/peepal-installer" ] || { echo "run packaging/build.sh first"; exit 1; }
 
 rm -rf "$ROOT" build/scripts
-mkdir -p "$ROOT/usr/local/peepal/bin" build/scripts
+mkdir -p "$ROOT/usr/local/apps/peepal-rp/bin" build/scripts
 
-cp "$BIN/peepal-installer" "$BIN/peepal-agent" "$ROOT/usr/local/peepal/bin/"
-chmod 755 "$ROOT/usr/local/peepal/bin/"*
+cp "$BIN/peepal-installer" "$BIN/peepal-agent" "$ROOT/usr/local/apps/peepal-rp/bin/"
+chmod 755 "$ROOT/usr/local/apps/peepal-rp/bin/"*
 
 # The setup asks questions, and a pkg postinstall script has no terminal of
 # its own, so it opens one.
 cp packaging/macos/scripts/postinstall build/scripts/postinstall
-cp packaging/macos/Peepal\ Setup.command "$ROOT/usr/local/peepal/bin/peepal-setup.command"
-chmod 755 build/scripts/postinstall "$ROOT/usr/local/peepal/bin/peepal-setup.command"
+cp packaging/macos/Peepal\ Setup.command "$ROOT/usr/local/apps/peepal-rp/bin/peepal-setup.command"
+chmod 755 build/scripts/postinstall "$ROOT/usr/local/apps/peepal-rp/bin/peepal-setup.command"
 
 pkgbuild \
   --root "$ROOT" \
