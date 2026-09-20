@@ -50,6 +50,8 @@ jobs:
           GOOS: ${{ matrix.goos }}
           GOARCH: ${{ matrix.goarch }}
           CGO_ENABLED: "0"
+          # Isolate from the monorepo go.work so CI only needs the backend module.
+          GOWORK: "off"
         run: |
           mkdir -p out
           go build -trimpath -ldflags "-s -w" -o out/peepal-backend .
@@ -88,7 +90,9 @@ jobs:
 
       - name: Install dependencies
         working-directory: frontend
-        run: pnpm install --frozen-lockfile
+        # frontend/ owns its own lockfile; ignore the monorepo pnpm-workspace.yaml
+        # at the repo root (which has no root lockfile and breaks frozen installs).
+        run: pnpm install --frozen-lockfile --ignore-workspace
 
       - name: Build
         working-directory: frontend
