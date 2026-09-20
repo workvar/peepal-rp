@@ -15,6 +15,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/peepal/installer/internal/agentctl"
 	"github.com/peepal/installer/internal/appconfig"
 	"github.com/peepal/installer/internal/appstack"
 	"github.com/peepal/installer/internal/buildinfo"
@@ -129,6 +130,21 @@ func run(ctx context.Context, cancel context.CancelFunc, cfg appconfig.Config, s
 		}
 	}()
 
+	ctl := agentctl.New(agentctl.Options{
+		Token:     cfg.AgentToken,
+		Addr:      agentctl.DefaultAddr,
+		Updater:   up,
+		Status:    statusRef,
+		Cfg:       cfg,
+		StatePath: up.Layout.StateFile(),
+	})
+	go func() {
+		logx.Infof("control API listening on http://%s", ctl.Addr)
+		if err := ctl.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			logx.Errorf("control API failed: %v", err)
+		}
+	}()
+
 	go func() {
 		if stack.Healthy(ctx, 5*time.Minute) {
 			statusRef.Set(runstate.Running, "Up to date")
@@ -151,6 +167,7 @@ func run(ctx context.Context, cancel context.CancelFunc, cfg appconfig.Config, s
 
 	shutdown, done := context.WithTimeout(context.Background(), 30*time.Second)
 	defer done()
+	ctl.Shutdown(shutdown)
 	srv.Shutdown(shutdown)
 	stack.Group.StopAll(30 * time.Second)
 	logx.Infof("stopped")

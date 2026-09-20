@@ -61,6 +61,18 @@ func (u *Updater) Run(ctx context.Context) {
 	}
 }
 
+// LatestAvailable returns the newest published tags without applying anything.
+// Empty strings are returned for repos that cannot be reached.
+func (u *Updater) LatestAvailable(ctx context.Context) (backend, frontend string) {
+	if r, err := u.Client.Latest(ctx, u.Cfg.Updates.BackendRepo); err == nil {
+		backend = r.Tag
+	}
+	if r, err := u.Client.Latest(ctx, u.Cfg.Updates.FrontendRepo); err == nil {
+		frontend = r.Tag
+	}
+	return backend, frontend
+}
+
 // CheckAndApply performs one poll. It returns true when something changed.
 func (u *Updater) CheckAndApply(ctx context.Context) (bool, error) {
 	state := LoadState(u.Layout.StateFile())
