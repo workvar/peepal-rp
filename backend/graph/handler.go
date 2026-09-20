@@ -3,8 +3,10 @@ package graph
 import (
 	"context"
 
+	"collegeerp/agentclient"
 	"collegeerp/config"
 	"collegeerp/database"
+	"collegeerp/presence"
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/99designs/gqlgen/graphql/handler"
@@ -17,6 +19,19 @@ import (
 	"github.com/vektah/gqlparser/v2/ast"
 )
 
+// Shared deps for system-update resolvers; set from routes.Register.
+var (
+	presenceHub *presence.Hub
+	agentClient *agentclient.Client
+)
+
+// ConfigureUpdateDeps wires the presence hub and peepal-agent client used by
+// systemUpdateStatus / snooze / apply resolvers.
+func ConfigureUpdateDeps(hub *presence.Hub, agent *agentclient.Client) {
+	presenceHub = hub
+	agentClient = agent
+}
+
 // NewHandler returns a Fiber handler for POST /api/v1/graphql.
 // Requires middleware.Authenticate to run first (it populates Fiber locals
 // that injectAuthContext reads from the fasthttp request context).
@@ -25,7 +40,11 @@ import (
 // so that schema introspection can be disabled in production.
 func NewHandler() fiber.Handler {
 	srv := handler.New(NewExecutableSchema(Config{
-		Resolvers: &Resolver{DB: database.DB},
+		Resolvers: &Resolver{
+			DB:       database.DB,
+			Presence: presenceHub,
+			Agent:    agentClient,
+		},
 	}))
 
 	srv.AddTransport(transport.Options{})

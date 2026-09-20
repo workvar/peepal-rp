@@ -1,11 +1,13 @@
 package routes
 
 import (
+	"collegeerp/agentclient"
 	"collegeerp/config"
 	"collegeerp/graph"
 	"collegeerp/handlers"
 	"collegeerp/handlers/bulk"
 	"collegeerp/middleware"
+	"collegeerp/presence"
 
 	"github.com/gofiber/fiber/v2"
 )
@@ -13,6 +15,16 @@ import (
 // Register sets up all API routes.
 func Register(app *fiber.App) {
 	api := app.Group("/api/v1")
+
+	presenceHub := presence.NewHub()
+	agent := &agentclient.Client{
+		BaseURL: config.App.PeepalAgentURL,
+		Token:   config.App.PeepalAgentToken,
+	}
+	graph.ConfigureUpdateDeps(presenceHub, agent)
+
+	// Presence WebSocket — any authenticated tenant user; powers update popup counts.
+	api.Get("/presence", middleware.Authenticate, presence.NewHandler(presenceHub))
 
 	// Public tenant lookup — no auth required
 	api.Get("/tenants/lookup/:subdomain", handlers.LookupTenant)

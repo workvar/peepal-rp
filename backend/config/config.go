@@ -63,6 +63,12 @@ type Config struct {
 	// once push security is enabled on the Expo account; delivery works without
 	// it until then.
 	ExpoAccessToken string
+	// PeepalAgentURL is the loopback base URL of peepal-agent's control API
+	// (default http://127.0.0.1:9080). Used for on-prem update status/apply.
+	PeepalAgentURL string
+	// PeepalAgentToken is the Bearer token shared with peepal-agent
+	// (PEEPAL_AGENT_TOKEN). Empty disables authenticated agent calls.
+	PeepalAgentToken string
 }
 
 var App Config
@@ -91,6 +97,8 @@ func Load() {
 		ExpoAccessToken:    os.Getenv("EXPO_ACCESS_TOKEN"),
 		WebAuthnRPID:       os.Getenv("WEBAUTHN_RP_ID"),
 		WebAuthnRPName:     getEnv("WEBAUTHN_RP_NAME", "Peepal"),
+		PeepalAgentURL:     getEnv("PEEPAL_AGENT_URL", "http://127.0.0.1:9080"),
+		PeepalAgentToken:   os.Getenv("PEEPAL_AGENT_TOKEN"),
 	}
 	App.CookieSecure = App.AppEnv == "production"
 	// Default the passkey domain to the app's own host. That is correct for a

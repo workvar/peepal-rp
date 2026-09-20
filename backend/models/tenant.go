@@ -89,6 +89,10 @@ type Tenant struct {
 	// above; nil falls back to the column default (true).
 	EmailSendingAllowed *bool `gorm:"not null;default:true" json:"email_sending_allowed"`
 
+	// UpdateSnoozedUntil suppresses the tenant-admin system-update popup until
+	// this time. Nil means not snoozed. Does not affect install-wide auto-apply.
+	UpdateSnoozedUntil *time.Time `json:"update_snoozed_until"`
+
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
 }
