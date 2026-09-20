@@ -16,6 +16,7 @@ type answers struct {
 	AdminEmail    string
 	AdminPassword string
 	Model         string // empty when the AI assistant is off
+	Unattended    bool
 }
 
 // ask runs the interactive part. In unattended mode every value comes from
@@ -35,13 +36,14 @@ func ask(o Options, m sysinfo.Machine) answers {
 	cfg.FrontendPort = sysinfo.FirstFreePort(cfg.FrontendPort)
 	cfg.PostgresPort = sysinfo.FirstFreePort(cfg.PostgresPort)
 
-	a := answers{Config: cfg, AdminEmail: o.AdminEmail, AdminPassword: o.AdminPassword}
+	a := answers{Config: cfg, AdminEmail: o.AdminEmail, AdminPassword: o.AdminPassword, Unattended: o.Unattended}
 
 	if o.Unattended {
 		if a.AdminEmail == "" || a.AdminPassword == "" {
 			ui.Fail("--unattended needs both --admin-email and --admin-password.")
 		}
 		a.Model = unattendedModel(o, m)
+		ensureAgentToken(&a.Config)
 		ui.Info("Unattended install into %s on port %d", cfg.InstallRoot, cfg.HTTPPort)
 		return a
 	}
@@ -76,7 +78,14 @@ func ask(o Options, m sysinfo.Machine) answers {
 			a.Config.Updates.WindowStartHour, a.Config.Updates.WindowEndHour = 2, 5
 		}
 	}
+	ensureAgentToken(&a.Config)
 	return a
+}
+
+func ensureAgentToken(cfg *appconfig.Config) {
+	if cfg.AgentToken == "" {
+		cfg.AgentToken = envfile.Secret(32)
+	}
 }
 
 // unattendedModel applies the --ai flag without asking anything.

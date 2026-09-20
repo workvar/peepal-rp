@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/peepal/installer/internal/appconfig"
+	"github.com/peepal/installer/internal/envfile"
 	"github.com/peepal/installer/internal/paths"
 	"github.com/peepal/installer/internal/sysuser"
 	"github.com/peepal/installer/internal/ui"
@@ -32,13 +33,17 @@ func install(ctx context.Context, o Options) {
 	dbSource := setupDatabase(ctx, layout, &a)
 	setupRuntime(ctx, layout)
 	installedTags := setupApp(ctx, layout, o)
-	writeEnvironment(layout, a, machine)
+	if a.Config.AgentToken == "" {
+		a.Config.AgentToken = envfile.Secret(32)
+	}
+	writeEnvironment(layout, &a, machine)
 	migrate(ctx, layout)
 	setupAI(ctx, layout, &a)
 
 	if err := appconfig.Save(layout.ConfigFile(), a.Config); err != nil {
 		ui.Fail("Could not write the configuration: %v", err)
 	}
+	installedTags.Seeded = true
 	saveTags(layout, installedTags)
 
 	installService(layout, a.Config)
