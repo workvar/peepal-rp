@@ -3,6 +3,7 @@
 import Modal from "@/components/ui/Modal";
 import InvitePasswordField from "@/components/ui/InvitePasswordField";
 import { AlertTriangle } from "lucide-react";
+import { getTerminology } from "@/constants/terminology";
 import type { TenantsPageState } from "./useTenantsPage";
 
 // Edit tenant name / timezone / currency.
@@ -27,6 +28,29 @@ export function EditTenantModal({ s }: { s: TenantsPageState }) {
             placeholder="Organization name"
             className="input-field"
           />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-foreground/80 mb-1">
+            Organization Type
+          </label>
+          <select
+            value={editFormData.type}
+            onChange={(e) =>
+              setEditFormData({ ...editFormData, type: e.target.value as typeof editFormData.type })
+            }
+            className="input-field"
+          >
+            <option value="education">Education (school / college / training)</option>
+            <option value="corporate">Corporate (company)</option>
+            <option value="healthcare">Healthcare (hospital / clinic)</option>
+            <option value="nonprofit">Non-profit / NGO</option>
+          </select>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Controls labels (Students vs Patients) and which modules this org
+            can see. Switching to Healthcare assigns the Hospital plan when the
+            current plan is the built-in Education one (and vice versa).
+          </p>
         </div>
 
         <div>
@@ -114,6 +138,7 @@ export function CreateTenantModal({ s }: { s: TenantsPageState }) {
     isCreateModalOpen, setIsCreateModalOpen, register, handleSubmit, reset, loading,
     watch, setValue, tempOpen, setTempOpen,
   } = s;
+  const createTerms = getTerminology(watch("type"));
   return (
     <Modal
       title="Create New Tenant"
@@ -227,7 +252,7 @@ export function CreateTenantModal({ s }: { s: TenantsPageState }) {
               {...register("staff_email_required")}
               className="rounded border-border"
             />
-            Staff &amp; teachers sign in with email
+            Staff &amp; {createTerms.role_staff_plural.toLowerCase()} sign in with email
           </label>
           <label className="flex items-center gap-2 text-sm text-foreground/90">
             <input
@@ -235,7 +260,7 @@ export function CreateTenantModal({ s }: { s: TenantsPageState }) {
               {...register("student_email_required")}
               className="rounded border-border"
             />
-            Students sign in with email
+            {createTerms.member_plural} sign in with email
           </label>
         </div>
 

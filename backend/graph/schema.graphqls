@@ -843,6 +843,20 @@ type DashboardStats {
   todayPresent: Int!
   """Students/employees absent today."""
   todayAbsent: Int!
+  """Registered patients (healthcare). Zero outside that vertical."""
+  patients: Int!
+  """Appointments scheduled for today, excluding cancelled."""
+  todayAppointments: Int!
+  """OPD visits recorded today."""
+  todayOpd: Int!
+  """OPD visits still open."""
+  openOpd: Int!
+  """Patients currently admitted (IPD)."""
+  activeAdmissions: Int!
+  """Beds currently occupied."""
+  occupiedBeds: Int!
+  """Beds currently available."""
+  availableBeds: Int!
 }
 
 """An organisational department within the institution."""

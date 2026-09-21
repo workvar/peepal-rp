@@ -34,3 +34,35 @@ export function sectionLabel(
       return configured;
   }
 }
+
+/**
+ * Relabel nav items whose hardcoded education wording would leak into other
+ * verticals. /students is also hidden by industry gating for healthcare; the
+ * relabel is a safety net if the type has not loaded yet.
+ */
+export function itemLabel(href: string, configured: string, t: Terminology): string {
+  switch (href) {
+    case "/students":
+      return t.member_plural;
+    case "/attendance":
+      return t.attendance;
+    case "/marks":
+      return t.marks;
+    case "/leaves":
+      return t.leave;
+    case "/org/departments":
+      return t.department_plural;
+    case "/org/academic-years":
+      return t.year;
+    case "/fees/students":
+      return `${t.member} Fees`;
+    case "/reports/attendance":
+      return t.attendance;
+    case "/reports/marks":
+      return t.marks;
+    case "/reports/leaves":
+      return t.leave;
+    default:
+      return configured;
+  }
+}

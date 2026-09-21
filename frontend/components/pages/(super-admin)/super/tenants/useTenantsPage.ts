@@ -55,6 +55,7 @@ export function useTenantsPage() {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editFormData, setEditFormData] = useState({
     name: "",
+    type: "education" as CreateTenantType,
     timezone: "",
     currency: "",
     email_sending_allowed: true,
@@ -190,8 +191,18 @@ export function useTenantsPage() {
   };
 
   const openEditModal = (tenant: Tenant) => {
+    const raw = tenant.type || "education";
+    const type: CreateTenantType =
+      raw === "college" || raw === "education"
+        ? "education"
+        : raw === "enterprise" || raw === "corporate"
+          ? "corporate"
+          : raw === "healthcare" || raw === "nonprofit"
+            ? raw
+            : "education";
     setEditFormData({
       name: tenant.name,
+      type,
       timezone: tenant.timezone || "Asia/Kolkata",
       currency: tenant.currency || "INR",
       email_sending_allowed: tenant.email_sending_allowed ?? true,
@@ -207,6 +218,7 @@ export function useTenantsPage() {
     try {
       await superAdminAPI.updateTenant(selected.id, {
         name: editFormData.name,
+        type: editFormData.type,
         timezone: editFormData.timezone,
         currency: editFormData.currency,
         email_sending_allowed: editFormData.email_sending_allowed,

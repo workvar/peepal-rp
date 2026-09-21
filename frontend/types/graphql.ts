@@ -1649,6 +1649,20 @@ export type DashboardStats = {
   todayPresent: Scalars['Int']['output'];
   /** Total number of user accounts. */
   users: Scalars['Int']['output'];
+  /** Registered patients (healthcare). Zero outside that vertical. */
+  patients: Scalars['Int']['output'];
+  /** Appointments scheduled for today, excluding cancelled. */
+  todayAppointments: Scalars['Int']['output'];
+  /** OPD visits recorded today. */
+  todayOpd: Scalars['Int']['output'];
+  /** OPD visits still open. */
+  openOpd: Scalars['Int']['output'];
+  /** Patients currently admitted (IPD). */
+  activeAdmissions: Scalars['Int']['output'];
+  /** Beds currently occupied. */
+  occupiedBeds: Scalars['Int']['output'];
+  /** Beds currently available. */
+  availableBeds: Scalars['Int']['output'];
 };
 
 /** An organisational department within the institution. */
@@ -12819,7 +12833,7 @@ export type ExpiringDrugsQuery = { __typename?: 'Query', expiringDrugs: Array<{ 
 export type DashboardStatsQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type DashboardStatsQuery = { __typename?: 'Query', dashboardStats: { __typename?: 'DashboardStats', students: number, employees: number, teachers: number, users: number, pendingLeaves: number, pendingPayrolls: number, todayPresent: number, todayAbsent: number } };
+export type DashboardStatsQuery = { __typename?: 'Query', dashboardStats: { __typename?: 'DashboardStats', students: number, employees: number, teachers: number, users: number, pendingLeaves: number, pendingPayrolls: number, todayPresent: number, todayAbsent: number, patients: number, todayAppointments: number, todayOpd: number, openOpd: number, activeAdmissions: number, occupiedBeds: number, availableBeds: number } };
 
 export type AttendanceReportQueryVariables = Exact<{
   fromDate?: InputMaybe<Scalars['String']['input']>;

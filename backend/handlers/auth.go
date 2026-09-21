@@ -71,24 +71,20 @@ func Login(c *fiber.Ctx) error {
 	log.Printf("[AUTH] Login attempt: identifier=%s tenant=%s ip=%s", identifier, req.TenantSubdomain, c.IP())
 
 	var user models.User
-	// Tenant identity policy surfaced to the client so login/forms can adapt
-	// their labels (Email vs Employee ID / Roll Number). Defaults to email-based.
-	staffEmailRequired := true
-	studentEmailRequired := true
+	var loginTenant models.Tenant
+	haveTenant := false
 
 	if req.TenantSubdomain != "" {
 		// Tenant-scoped login (the normal path used by /[tenant]/login).
-		var tenant models.Tenant
-		if err := database.DB.WithContext(c.Context()).Where("subdomain = ?", req.TenantSubdomain).First(&tenant).Error; err != nil {
+		if err := database.DB.WithContext(c.Context()).Where("subdomain = ?", req.TenantSubdomain).First(&loginTenant).Error; err != nil {
 			log.Printf("[AUTH] Login failed: unknown tenant subdomain=%s", req.TenantSubdomain)
 			return utils.Unauthorized(c, "Invalid credentials")
 		}
-		if tenant.Status == models.TenantSuspended {
+		if loginTenant.Status == models.TenantSuspended {
 			return utils.Forbidden(c, "This organisation is suspended. Contact support.")
 		}
-		staffEmailRequired = tenant.StaffEmailReq()
-		studentEmailRequired = tenant.StudentEmailReq()
-		if !resolveUserByIdentifier(identifier, tenant.ID, &user) {
+		haveTenant = true
+		if !resolveUserByIdentifier(identifier, loginTenant.ID, &user) {
 			log.Printf("[AUTH] Login failed: user not found or inactive, identifier=%s tenant=%s", identifier, req.TenantSubdomain)
 			// Burn a bcrypt comparison so unknown users and wrong passwords
 			// respond in similar time (limits user enumeration).
@@ -139,19 +135,11 @@ func Login(c *fiber.Ctx) error {
 	}
 
 	payload := sessionPayload(c, tokens)
-	payload["user"] = fiber.Map{
-		"id":    user.ID,
-		"name":  user.Name,
-		"email": user.Email,
-		// role is the ACTIVE workspace; at login it always equals base_role.
-		"role":                   user.Role,
-		"base_role":              user.Role,
-		"tenant_id":              user.TenantID,
-		"photo_url":              user.PhotoURL,
-		"staff_email_required":   staffEmailRequired,
-		"student_email_required": studentEmailRequired,
-		"workspaces":             models.UserWorkspaces(database.DB.WithContext(c.Context()), &user),
+	var tenantPtr *models.Tenant
+	if haveTenant {
+		tenantPtr = &loginTenant
 	}
+	payload["user"] = sessionUserMap(c, &user, tenantPtr, string(user.Role))
 	return utils.OK(c, payload, "Login successful")
 }
 
@@ -293,15 +281,10 @@ func Me(c *fiber.Ctx) error {
 		return utils.NotFound(c, "User not found")
 	}
 
-	// Surface the tenant identity policy so admin forms can adapt (hide the
-	// email field, relabel the login identifier, etc.). Defaults to email-based
-	// when the tenant cannot be loaded (e.g. platform/super-admin sessions).
-	staffEmailRequired := true
-	studentEmailRequired := true
 	var tenant models.Tenant
+	var tenantPtr *models.Tenant
 	if err := database.DB.WithContext(c.Context()).First(&tenant, "id = ?", user.TenantID).Error; err == nil {
-		staffEmailRequired = tenant.StaffEmailReq()
-		studentEmailRequired = tenant.StudentEmailReq()
+		tenantPtr = &tenant
 	}
 
 	// The active workspace comes from the token, not the User row: the user may
@@ -312,17 +295,5 @@ func Me(c *fiber.Ctx) error {
 		activeRole = string(user.Role)
 	}
 
-	return utils.OK(c, fiber.Map{
-		"id":                     user.ID,
-		"name":                   user.Name,
-		"email":                  user.Email,
-		"role":                   activeRole,
-		"base_role":              user.Role,
-		"is_active":              user.IsActive,
-		"tenant_id":              user.TenantID,
-		"photo_url":              user.PhotoURL,
-		"staff_email_required":   staffEmailRequired,
-		"student_email_required": studentEmailRequired,
-		"workspaces":             models.UserWorkspaces(database.DB.WithContext(c.Context()), &user),
-	}, "")
+	return utils.OK(c, sessionUserMap(c, &user, tenantPtr, activeRole), "")
 }

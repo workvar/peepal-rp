@@ -24,6 +24,8 @@ export interface AuthUser {
   /** Every workspace this user may switch into. */
   workspaces?: Workspace[];
   tenant_id: string;
+  /** Canonical industry (education/corporate/healthcare/nonprofit). */
+  tenant_type?: TenantType | "";
   photo_url?: string;
   // Tenant identity policy (from /auth/login and /auth/me). When false, that
   // population signs in by Employee ID / Roll Number and email is optional.
@@ -660,6 +662,13 @@ export interface DashboardStats {
   pending_payrolls: number
   today_present: number
   today_absent: number
+  patients: number
+  today_appointments: number
+  today_opd: number
+  open_opd: number
+  active_admissions: number
+  occupied_beds: number
+  available_beds: number
 }
 
 // ── Attendance Report ───────────────────────────────────────────

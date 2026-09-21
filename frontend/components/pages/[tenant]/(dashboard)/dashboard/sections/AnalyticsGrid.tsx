@@ -15,6 +15,11 @@ interface PeopleStats {
   students?: number;
   employees?: number;
   teachers?: number;
+  patients?: number;
+  occupiedBeds?: number;
+  availableBeds?: number;
+  todayOpd?: number;
+  activeAdmissions?: number;
 }
 
 export default function AnalyticsGrid({
@@ -31,18 +36,36 @@ export default function AnalyticsGrid({
   const canFees = canViewHref("/fees");
   const canLeaves = canViewHref("/leaves");
   const canPayroll = canViewHref("/payroll");
+  const canPatients = canViewHref("/patients");
+  const canWards = canViewHref("/wards");
+  const canOpd = canViewHref("/encounters");
+  const canIpd = canViewHref("/ipd");
 
-  const attendanceHasData = data.attendance.trend.some((t) => t.total > 0);
+  const attendanceHasData = data.attendance.trend.some((row) => row.total > 0);
 
   // People tally: split the workforce into the terminology "staff" role
   // (teachers / clinicians / managers) and everyone else, so nobody is
-  // double-counted — that group is a subset of employees.
+  // double-counted — that group is a subset of employees. Patients are
+  // a separate registry (not students with a relabel), so they get their
+  // own slice when the clinical module is visible.
   const teaching = stats.teachers ?? 0;
   const nonTeaching = Math.max((stats.employees ?? 0) - teaching, 0);
   const people = [
-    { label: t.member_plural, value: stats.students ?? 0 },
+    ...(canPatients
+      ? [{ label: "Patients", value: stats.patients ?? 0 }]
+      : [{ label: t.member_plural, value: stats.students ?? 0 }]),
     { label: t.staff_plural, value: teaching },
     { label: "Other employees", value: nonTeaching },
+  ].filter((p) => p.value > 0);
+
+  const beds = [
+    { label: "Occupied", value: stats.occupiedBeds ?? 0 },
+    { label: "Available", value: stats.availableBeds ?? 0 },
+  ].filter((p) => p.value > 0);
+
+  const careMix = [
+    { label: "OPD today", value: stats.todayOpd ?? 0 },
+    { label: "IPD admitted", value: stats.activeAdmissions ?? 0 },
   ].filter((p) => p.value > 0);
 
   return (
@@ -83,6 +106,30 @@ export default function AnalyticsGrid({
           </ChartCard>
         )}
       </div>
+
+      {/* Clinical occupancy — hospital tenants only (canViewHref hides these elsewhere). */}
+      {(canWards || canOpd || canIpd) && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          {canWards && (
+            <ChartCard title="Bed Occupancy" subtitle="Occupied vs available beds">
+              {beds.length > 0 ? (
+                <DonutChart data={beds} />
+              ) : (
+                <EmptyChart message="No beds configured yet" hint="Add wards and beds to see occupancy here." />
+              )}
+            </ChartCard>
+          )}
+          {(canOpd || canIpd) && (
+            <ChartCard title="Care mix today" subtitle="Outpatient visits vs inpatients currently admitted">
+              {careMix.length > 0 ? (
+                <DonutChart data={careMix} />
+              ) : (
+                <EmptyChart message="No OPD or IPD activity yet" hint="Record a visit or admit a patient to see the mix." />
+              )}
+            </ChartCard>
+          )}
+        </div>
+      )}
 
       {/* Leave status + fees by mode */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">

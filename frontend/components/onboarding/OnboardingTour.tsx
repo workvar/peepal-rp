@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { useState } from "react";
 import { ArrowLeft, ArrowRight, X } from "lucide-react";
-import { ONBOARDING_STEPS } from "./steps";
+import { onboardingStepsFor } from "./steps";
+import { useTenantType } from "@/store/hooks/useTerminology";
 
 interface Props {
   open: boolean;
@@ -13,13 +14,15 @@ interface Props {
 
 export default function OnboardingTour({ open, onClose, tenantSlug }: Props) {
   const [index, setIndex] = useState(0);
+  const tenantType = useTenantType();
+  const steps = onboardingStepsFor(tenantType);
 
   if (!open) return null;
 
-  const step = ONBOARDING_STEPS[index];
+  const step = steps[index] ?? steps[0];
   const Icon = step.icon;
   const isFirst = index === 0;
-  const isLast = index === ONBOARDING_STEPS.length - 1;
+  const isLast = index === steps.length - 1;
 
   const next = () => {
     if (isLast) {
@@ -69,7 +72,7 @@ export default function OnboardingTour({ open, onClose, tenantSlug }: Props) {
         {/* ── Body ────────────────────────────────────────────── */}
         <div className="px-6 pt-3 pb-6">
           <p className="text-caption-2 font-semibold uppercase tracking-[0.08em] text-muted-foreground">
-            Step {index + 1} of {ONBOARDING_STEPS.length}
+            Step {index + 1} of {steps.length}
           </p>
           <h2 className="text-title-2 font-bold text-foreground mt-1 leading-tight">
             {step.title}
@@ -93,7 +96,7 @@ export default function OnboardingTour({ open, onClose, tenantSlug }: Props) {
 
         {/* ── Progress dots ───────────────────────────────────── */}
         <div className="flex items-center justify-center gap-1.5 pb-4">
-          {ONBOARDING_STEPS.map((_, i) => (
+          {steps.map((_, i) => (
             <span
               key={i}
               className="h-1.5 rounded-full transition-all duration-200"

@@ -1361,6 +1361,20 @@ type DashboardStats struct {
 	TodayPresent int `json:"todayPresent"`
 	// Students/employees absent today.
 	TodayAbsent int `json:"todayAbsent"`
+	// Registered patients (healthcare). Zero outside that vertical.
+	Patients int `json:"patients"`
+	// Appointments scheduled for today, excluding cancelled.
+	TodayAppointments int `json:"todayAppointments"`
+	// OPD visits recorded today.
+	TodayOpd int `json:"todayOpd"`
+	// OPD visits still open.
+	OpenOpd int `json:"openOpd"`
+	// Patients currently admitted (IPD).
+	ActiveAdmissions int `json:"activeAdmissions"`
+	// Beds currently occupied.
+	OccupiedBeds int `json:"occupiedBeds"`
+	// Beds currently available.
+	AvailableBeds int `json:"availableBeds"`
 }
 
 // An organisational department within the institution.

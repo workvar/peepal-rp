@@ -56,6 +56,42 @@ func bodyTokenClient(c *fiber.Ctx) bool {
 	return false
 }
 
+// sessionUserMap is the user object attached to login / me / passkey / refresh
+// / impersonation so every auth surface returns the same fields. tenant_type
+// is included so the UI can hide education modules (Students, Fees, Academic)
+// for a hospital before the terminology GraphQL query comes back.
+func sessionUserMap(c *fiber.Ctx, user *models.User, tenant *models.Tenant, activeRole string) fiber.Map {
+	staffEmailRequired := true
+	studentEmailRequired := true
+	tenantType := ""
+	if tenant != nil && tenant.ID != "" {
+		staffEmailRequired = tenant.StaffEmailReq()
+		studentEmailRequired = tenant.StudentEmailReq()
+		tenantType = string(tenant.Type.Canonical())
+	}
+	if activeRole == "" {
+		activeRole = string(user.Role)
+	}
+	db := database.DB
+	if c != nil {
+		db = database.DB.WithContext(c.Context())
+	}
+	return fiber.Map{
+		"id":                     user.ID,
+		"name":                   user.Name,
+		"email":                  user.Email,
+		"role":                   activeRole,
+		"base_role":              user.Role,
+		"is_active":              user.IsActive,
+		"tenant_id":              user.TenantID,
+		"tenant_type":            tenantType,
+		"photo_url":              user.PhotoURL,
+		"staff_email_required":   staffEmailRequired,
+		"student_email_required": studentEmailRequired,
+		"workspaces":             models.UserWorkspaces(db, user),
+	}
+}
+
 // sessionPayload builds the token half of an auth response. The refresh token
 // is included only for clients that cannot use cookies: echoing it to a browser
 // would put a weeks-long credential somewhere JavaScript can read.
@@ -279,15 +315,12 @@ func Refresh(c *fiber.Ctx) error {
 	// given it here or its next refresh trips the reuse detector and kills the
 	// session it was trying to keep alive.
 	payload := sessionPayload(c, sessionTokens{Access: token, Refresh: nextPlain})
-	payload["user"] = fiber.Map{
-		"id":        user.ID,
-		"name":      user.Name,
-		"email":     user.Email,
-		"role":      activeRole,
-		"base_role": user.Role,
-		"tenant_id": user.TenantID,
-		"photo_url": user.PhotoURL,
+	var tenant models.Tenant
+	var tenantPtr *models.Tenant
+	if err := db.First(&tenant, "id = ?", user.TenantID).Error; err == nil {
+		tenantPtr = &tenant
 	}
+	payload["user"] = sessionUserMap(c, &user, tenantPtr, activeRole)
 	return utils.OK(c, payload, "Session refreshed")
 }
 

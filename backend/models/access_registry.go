@@ -199,6 +199,7 @@ var AccessModules = []ModuleMeta{
 	{"my-assignments", "My Assignments", "My Workspace", []string{"student"}},
 	{"my-mess", "Mess Menu", "My Workspace", []string{"student"}},
 	{"patient-portal", "My Health", "My Workspace", []string{"patient"}},
+	{"my-schedule", "My Schedule", "My Workspace", []string{"teacher", "staff"}},
 	{"profile", "My Profile", "My Workspace", []string{"admin", "teacher", "student", "staff"}},
 	{"docs", "Docs", "My Workspace", []string{"admin", "teacher", "staff"}},
 }

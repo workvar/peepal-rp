@@ -16,6 +16,8 @@ export interface TourStep {
   icon: LucideIcon;
   // Optional call-to-action that takes the admin to a setup page.
   cta?: { label: string; path: string };
+  // When set, the step is shown only for those tenant types. Unset = all.
+  industries?: string[];
 }
 
 // Tour shown to a tenant's admin on the first login.
@@ -24,12 +26,12 @@ export interface TourStep {
 export const ONBOARDING_STEPS: TourStep[] = [
   {
     title: "Welcome to your ERP",
-    body: "This is your organisation's home base. Every module you need — students, staff, attendance, fees, payroll, reports — lives one click away. Let's take a quick tour before you set things up.",
+    body: "This is your organisation's home base. Every module you need lives one click away. Let's take a quick tour before you set things up.",
     icon: Sparkles,
   },
   {
     title: "Your dashboard at a glance",
-    body: "The top of the page greets you and highlights today's numbers — students, staff, present/absent counts and pending approvals. Each stat card links straight into the underlying list.",
+    body: "The top of the page greets you and highlights today's numbers — people, occupancy, present/absent counts and pending work. Each stat card links straight into the underlying list.",
     icon: TrendingUp,
   },
   {
@@ -53,6 +55,7 @@ export const ONBOARDING_STEPS: TourStep[] = [
     body: "Set the current session / academic year so marks, results and timetables land under the right period.",
     icon: CalendarDays,
     cta: { label: "Open Academic Years", path: "/org/academic-years" },
+    industries: ["education"],
   },
   {
     title: "Step 3 — Add your employees",
@@ -65,6 +68,14 @@ export const ONBOARDING_STEPS: TourStep[] = [
     body: "Add students from the Students page; their login account is created with them. Once people are in, every other module (attendance, marks, payroll) comes to life.",
     icon: Users,
     cta: { label: "Open Students", path: "/students" },
+    industries: ["education", "nonprofit"],
+  },
+  {
+    title: "Step 4 — Register your patients",
+    body: "Add patients from the Patients page. OPD visits, IPD admissions, appointments and billing all hang off that registry — start here so the rest of the clinical modules have someone to treat.",
+    icon: Users,
+    cta: { label: "Open Patients", path: "/patients" },
+    industries: ["healthcare"],
   },
   {
     title: "You're all set",
@@ -72,3 +83,9 @@ export const ONBOARDING_STEPS: TourStep[] = [
     icon: Sparkles,
   },
 ];
+
+/** Steps visible for a tenant type. Untagged steps are shared. */
+export function onboardingStepsFor(tenantType: string | null | undefined): TourStep[] {
+  const t = tenantType || "education";
+  return ONBOARDING_STEPS.filter((s) => !s.industries || s.industries.includes(t));
+}

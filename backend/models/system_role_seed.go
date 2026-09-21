@@ -88,6 +88,29 @@ func SeedSystemRoles(db *gorm.DB, tenant *Tenant) error {
 	return db.Create(&rows).Error
 }
 
+// RelabelSystemRoles rewrites the built-in role labels/descriptions from the
+// tenant's current terminology. Used when a super-admin changes org type
+// (college → hospital) so the Roles page stops saying "Teacher / Student".
+// Idempotent: tenants with no system-role rows are left for SeedSystemRoles.
+func RelabelSystemRoles(db *gorm.DB, tenant *Tenant) error {
+	if tenant == nil {
+		return nil
+	}
+	t := DefaultTerminology(tenant.Type)
+	for _, s := range systemRoleTemplate {
+		res := db.Model(&SystemRole{}).
+			Where("tenant_id = ? AND role_id = ?", tenant.ID, s.RoleID).
+			Updates(map[string]interface{}{
+				"label":       systemRoleLabel(s.RoleID, t),
+				"description": systemRoleDescription(s.RoleID, t),
+			})
+		if res.Error != nil {
+			return res.Error
+		}
+	}
+	return nil
+}
+
 // SeedSystemRolesAll backfills every existing tenant that has no system roles
 // yet. Safe to run repeatedly — SeedSystemRoles skips tenants already seeded.
 func SeedSystemRolesAll(db *gorm.DB) error {

@@ -87,7 +87,7 @@ export default function DashboardPage() {
                 <ChartsSkeleton count={4} />
               ) : (
                 <>
-                  <InsightStrip data={analytics} />
+                  <InsightStrip data={analytics} stats={stats ?? {}} />
                   <AnalyticsGrid data={analytics} stats={stats ?? {}} />
                 </>
               )}

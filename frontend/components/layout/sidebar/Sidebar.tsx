@@ -10,7 +10,7 @@ import { useSidebarState } from "./useSidebarState";
 import SidebarSection from "./SidebarSection";
 import SidebarFooter from "./SidebarFooter";
 import WorkspaceSwitcher from "./WorkspaceSwitcher";
-import { sectionLabel } from "./navSectionLabels";
+import { sectionLabel, itemLabel } from "./navSectionLabels";
 import { useTerminology, useTenantType } from "@/store/hooks/useTerminology";
 
 // Sections expanded by default on first visit.
@@ -37,7 +37,10 @@ export default function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
     .map((s) => ({
       ...s,
       label: sectionLabel(s.id, s.label, terms, tenantType),
-      items: visibleItems(s.items),
+      items: visibleItems(s.items).map((item) => ({
+        ...item,
+        label: itemLabel(item.href, item.label, terms),
+      })),
     }))
     .filter((s) => s.items.length > 0);
 

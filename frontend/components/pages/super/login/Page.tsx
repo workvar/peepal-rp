@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { useHydrateSession } from "@/store/hooks/useHydrateSession";
 import { login, clearError, sessionEstablished } from "@/store/slices/authSlice";
+import { setTenantType } from "@/store/slices/terminologySlice";
 import type { AuthUser } from "@/types";
 import PasskeySignIn from "@/components/auth/PasskeySignIn";
 import { Eye, EyeOff, AlertCircle, ShieldCheck } from "lucide-react";
@@ -50,6 +51,7 @@ export default function SuperLoginPage() {
   const handlePasskeySuccess = useCallback(
     (u: AuthUser) => {
       dispatch(sessionEstablished(u));
+      if (u.tenant_type) dispatch(setTenantType(u.tenant_type));
       router.replace("/super/dashboard");
     },
     [dispatch, router]

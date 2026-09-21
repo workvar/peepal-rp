@@ -20,6 +20,8 @@ func (r *queryResolver) DashboardStats(ctx context.Context) (*model.DashboardSta
 	var studentCount, employeeCount, teacherCount, userCount int64
 	var pendingLeaves, pendingPayrolls int64
 	var todayPresent, todayAbsent int64
+	var patientCount, todayAppointments, todayOpd, openOpd int64
+	var activeAdmissions, occupiedBeds, availableBeds int64
 
 	r.DB.WithContext(ctx).Model(&models.Student{}).Where("tenant_id = ?", auth.TenantID).Count(&studentCount)
 	r.DB.WithContext(ctx).Model(&models.Employee{}).
@@ -39,15 +41,45 @@ func (r *queryResolver) DashboardStats(ctx context.Context) (*model.DashboardSta
 		Where("tenant_id = ? AND DATE(date) = ? AND status = ?", auth.TenantID, today, "absent").
 		Count(&todayAbsent)
 
+	// Clinical counts always run: education tenants have empty tables and
+	// return zeros, which the dashboard hides via canViewHref on /patients
+	// etc. Counting here keeps one resolver for every vertical.
+	r.DB.WithContext(ctx).Model(&models.Patient{}).Where("tenant_id = ?", auth.TenantID).Count(&patientCount)
+	r.DB.WithContext(ctx).Model(&models.Appointment{}).
+		Where("tenant_id = ? AND date = ? AND status <> ?", auth.TenantID, today, models.AppointmentCancelled).
+		Count(&todayAppointments)
+	r.DB.WithContext(ctx).Model(&models.Encounter{}).
+		Where("tenant_id = ? AND visit_date = ? AND visit_type = ?", auth.TenantID, today, models.VisitOPD).
+		Count(&todayOpd)
+	r.DB.WithContext(ctx).Model(&models.Encounter{}).
+		Where("tenant_id = ? AND visit_type = ? AND status = ?", auth.TenantID, models.VisitOPD, models.EncounterOpen).
+		Count(&openOpd)
+	r.DB.WithContext(ctx).Model(&models.Admission{}).
+		Where("tenant_id = ? AND status = ?", auth.TenantID, models.AdmissionAdmitted).
+		Count(&activeAdmissions)
+	r.DB.WithContext(ctx).Model(&models.Bed{}).
+		Where("tenant_id = ? AND status = ?", auth.TenantID, models.BedOccupied).
+		Count(&occupiedBeds)
+	r.DB.WithContext(ctx).Model(&models.Bed{}).
+		Where("tenant_id = ? AND status = ?", auth.TenantID, models.BedAvailable).
+		Count(&availableBeds)
+
 	return &model.DashboardStats{
-		Students:        int(studentCount),
-		Employees:       int(employeeCount),
-		Teachers:        int(teacherCount),
-		Users:           int(userCount),
-		PendingLeaves:   int(pendingLeaves),
-		PendingPayrolls: int(pendingPayrolls),
-		TodayPresent:    int(todayPresent),
-		TodayAbsent:     int(todayAbsent),
+		Students:          int(studentCount),
+		Employees:         int(employeeCount),
+		Teachers:          int(teacherCount),
+		Users:             int(userCount),
+		PendingLeaves:     int(pendingLeaves),
+		PendingPayrolls:   int(pendingPayrolls),
+		TodayPresent:      int(todayPresent),
+		TodayAbsent:       int(todayAbsent),
+		Patients:          int(patientCount),
+		TodayAppointments: int(todayAppointments),
+		TodayOpd:          int(todayOpd),
+		OpenOpd:           int(openOpd),
+		ActiveAdmissions:  int(activeAdmissions),
+		OccupiedBeds:      int(occupiedBeds),
+		AvailableBeds:     int(availableBeds),
 	}, nil
 }
 

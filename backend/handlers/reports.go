@@ -20,6 +20,8 @@ func GetDashboardStats(c *fiber.Ctx) error {
 	var studentCount, employeeCount, teacherCount, userCount int64
 	var pendingLeaves, pendingPayrolls int64
 	var todayPresent, todayAbsent int64
+	var patientCount, todayAppointments, todayOpd, openOpd int64
+	var activeAdmissions, occupiedBeds, availableBeds int64
 
 	database.DB.WithContext(c.Context()).Model(&models.Student{}).Where("tenant_id = ?", tenantID).Count(&studentCount)
 	database.DB.WithContext(c.Context()).Model(&models.Employee{}).
@@ -39,15 +41,42 @@ func GetDashboardStats(c *fiber.Ctx) error {
 		Where("tenant_id = ? AND DATE(date) = ? AND status = ?", tenantID, today, "absent").
 		Count(&todayAbsent)
 
+	database.DB.WithContext(c.Context()).Model(&models.Patient{}).Where("tenant_id = ?", tenantID).Count(&patientCount)
+	database.DB.WithContext(c.Context()).Model(&models.Appointment{}).
+		Where("tenant_id = ? AND date = ? AND status <> ?", tenantID, today, models.AppointmentCancelled).
+		Count(&todayAppointments)
+	database.DB.WithContext(c.Context()).Model(&models.Encounter{}).
+		Where("tenant_id = ? AND visit_date = ? AND visit_type = ?", tenantID, today, models.VisitOPD).
+		Count(&todayOpd)
+	database.DB.WithContext(c.Context()).Model(&models.Encounter{}).
+		Where("tenant_id = ? AND visit_type = ? AND status = ?", tenantID, models.VisitOPD, models.EncounterOpen).
+		Count(&openOpd)
+	database.DB.WithContext(c.Context()).Model(&models.Admission{}).
+		Where("tenant_id = ? AND status = ?", tenantID, models.AdmissionAdmitted).
+		Count(&activeAdmissions)
+	database.DB.WithContext(c.Context()).Model(&models.Bed{}).
+		Where("tenant_id = ? AND status = ?", tenantID, models.BedOccupied).
+		Count(&occupiedBeds)
+	database.DB.WithContext(c.Context()).Model(&models.Bed{}).
+		Where("tenant_id = ? AND status = ?", tenantID, models.BedAvailable).
+		Count(&availableBeds)
+
 	return utils.OK(c, fiber.Map{
-		"students":          studentCount,
-		"employees":         employeeCount,
-		"teachers":          teacherCount,
-		"users":             userCount,
-		"pending_leaves":    pendingLeaves,
-		"pending_payrolls":  pendingPayrolls,
-		"today_present":     todayPresent,
-		"today_absent":      todayAbsent,
+		"students":            studentCount,
+		"employees":           employeeCount,
+		"teachers":            teacherCount,
+		"users":               userCount,
+		"pending_leaves":      pendingLeaves,
+		"pending_payrolls":    pendingPayrolls,
+		"today_present":       todayPresent,
+		"today_absent":        todayAbsent,
+		"patients":            patientCount,
+		"today_appointments":  todayAppointments,
+		"today_opd":           todayOpd,
+		"open_opd":            openOpd,
+		"active_admissions":   activeAdmissions,
+		"occupied_beds":       occupiedBeds,
+		"available_beds":      availableBeds,
 	}, "")
 }
 

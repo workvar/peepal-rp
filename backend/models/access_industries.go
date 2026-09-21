@@ -85,6 +85,7 @@ var moduleIndustries = map[string][]TenantType{
 	"telemedicine":   {TenantTypeHealthcare},
 	"referrals":      {TenantTypeHealthcare},
 	"patient-portal": {TenantTypeHealthcare},
+	"my-schedule":    {TenantTypeHealthcare},
 }
 
 // ModuleAllowedForIndustry reports whether the module is available to a tenant

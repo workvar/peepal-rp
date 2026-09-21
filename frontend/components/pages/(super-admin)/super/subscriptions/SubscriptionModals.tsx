@@ -29,7 +29,19 @@ export function AssignModal({ page }: { page: SubscriptionsPageState }) {
               <SearchableSelect
                 required
                 value={form.tenant_id}
-                onChange={(v) => setForm((f) => ({ ...f, tenant_id: v }))}
+                onChange={(v) => {
+                  const tenant = tenants.find((t) => t.id === v)
+                  const want =
+                    tenant?.type === "healthcare"
+                      ? "Hospital"
+                      : tenant?.type === "education" || tenant?.type === "college"
+                        ? "Education"
+                        : ""
+                  const match = want
+                    ? plans.find((p) => p.is_active && p.name === want)
+                    : undefined
+                  setForm((f) => ({ ...f, tenant_id: v, plan_id: match?.id || f.plan_id }))
+                }}
                 options={tenants.map((t) => ({ value: t.id, label: t.name }))}
                 placeholder="Select organisation"
               />

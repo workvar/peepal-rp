@@ -369,25 +369,13 @@ func completePasskeyLogin(c *fiber.Ctx, db *gorm.DB, user *models.User) error {
 		return utils.InternalError(c, "Could not generate token")
 	}
 
-	staffEmailRequired, studentEmailRequired := true, true
 	var tenant models.Tenant
+	var tenantPtr *models.Tenant
 	if err := db.First(&tenant, "id = ?", user.TenantID).Error; err == nil {
-		staffEmailRequired = tenant.StaffEmailReq()
-		studentEmailRequired = tenant.StudentEmailReq()
+		tenantPtr = &tenant
 	}
 
 	payload := sessionPayload(c, tokens)
-	payload["user"] = fiber.Map{
-		"id":                     user.ID,
-		"name":                   user.Name,
-		"email":                  user.Email,
-		"role":                   user.Role,
-		"base_role":              user.Role,
-		"tenant_id":              user.TenantID,
-		"photo_url":              user.PhotoURL,
-		"staff_email_required":   staffEmailRequired,
-		"student_email_required": studentEmailRequired,
-		"workspaces":             models.UserWorkspaces(db, user),
-	}
+	payload["user"] = sessionUserMap(c, user, tenantPtr, string(user.Role))
 	return utils.OK(c, payload, "Login successful")
 }

@@ -10,8 +10,9 @@ import {
   setTenantSlug,
   sessionEstablished,
 } from "@/store/slices/authSlice";
+import { setTenantType } from "@/store/slices/terminologySlice";
 import { tenantLookupAPI } from "@/lib/api";
-import type { AuthUser } from "@/types";
+import type { AuthUser, TenantType } from "@/types";
 import { Eye, EyeOff, AlertCircle } from "lucide-react";
 import { Logo } from "@/components/ui/Logo";
 import PasskeySignIn from "@/components/auth/PasskeySignIn";
@@ -21,6 +22,7 @@ interface TenantInfo {
   id: string;
   name: string;
   subdomain: string;
+  type?: TenantType;
   // Identity policy. When a population is false, those users sign in by
   // Employee ID / Roll Number instead of email. Optional for older responses.
   staff_email_required?: boolean;
@@ -62,6 +64,7 @@ export default function TenantLoginPage() {
   const handlePasskeySuccess = useCallback(
     (user: AuthUser) => {
       dispatch(sessionEstablished(user));
+      if (user.tenant_type) dispatch(setTenantType(user.tenant_type));
       dispatch(setTenantSlug(tenant));
       router.replace(`/${tenant}/dashboard`);
     },
@@ -74,6 +77,8 @@ export default function TenantLoginPage() {
     tenantLookupAPI.lookup(tenant)
       .then((res) => {
         setTenantInfo(res.data.data);
+        const lookedUp = res.data.data as TenantInfo;
+        if (lookedUp.type) dispatch(setTenantType(lookedUp.type));
       })
       .catch((err: unknown) => {
         const e = err as { response?: { status?: number } };
@@ -84,7 +89,7 @@ export default function TenantLoginPage() {
         }
       })
       .finally(() => setLookingUp(false));
-  }, [tenant]);
+  }, [tenant, dispatch]);
 
   // Redirect once authenticated
   useEffect(() => {

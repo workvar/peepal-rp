@@ -1,7 +1,7 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import { authAPI } from "@/lib/api";
 import type { AuthState, AuthUser } from "@/types";
-import { resetTerminology } from "./terminologySlice";
+import { resetTerminology, setTenantType } from "./terminologySlice";
 import {
   clearSessionMarker,
   hasSessionMarker,
@@ -22,13 +22,16 @@ export const login = createAsyncThunk(
       password,
       tenantSubdomain,
     }: { identifier: string; password: string; tenantSubdomain?: string },
-    { rejectWithValue }
+    { dispatch, rejectWithValue }
   ) => {
     try {
       const res = await authAPI.login(identifier, password, tenantSubdomain);
       const { user } = res.data.data;
       setSessionMarker();
       localStorage.setItem("tenantId", user.tenant_id || "");
+      if (user.tenant_type) {
+        dispatch(setTenantType(user.tenant_type));
+      }
       return { user } as { user: AuthUser };
     } catch (err: unknown) {
       const error = err as { response?: { data?: { error?: string } } };
@@ -57,10 +60,14 @@ export const logoutUser = createAsyncThunk("auth/logoutUser", async (_, { dispat
   return true;
 });
 
-export const fetchMe = createAsyncThunk("auth/me", async (_, { rejectWithValue }) => {
+export const fetchMe = createAsyncThunk("auth/me", async (_, { dispatch, rejectWithValue }) => {
   try {
     const res = await authAPI.me();
-    return res.data.data as AuthUser;
+    const user = res.data.data as AuthUser;
+    if (user.tenant_type) {
+      dispatch(setTenantType(user.tenant_type));
+    }
+    return user;
   } catch {
     return rejectWithValue("Session expired");
   }

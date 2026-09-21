@@ -429,14 +429,21 @@ type ComplexityRoot struct {
 	}
 
 	DashboardStats struct {
-		Employees       func(childComplexity int) int
-		PendingLeaves   func(childComplexity int) int
-		PendingPayrolls func(childComplexity int) int
-		Students        func(childComplexity int) int
-		Teachers        func(childComplexity int) int
-		TodayAbsent     func(childComplexity int) int
-		TodayPresent    func(childComplexity int) int
-		Users           func(childComplexity int) int
+		ActiveAdmissions  func(childComplexity int) int
+		AvailableBeds     func(childComplexity int) int
+		Employees         func(childComplexity int) int
+		OccupiedBeds      func(childComplexity int) int
+		OpenOpd           func(childComplexity int) int
+		Patients          func(childComplexity int) int
+		PendingLeaves     func(childComplexity int) int
+		PendingPayrolls   func(childComplexity int) int
+		Students          func(childComplexity int) int
+		Teachers          func(childComplexity int) int
+		TodayAbsent       func(childComplexity int) int
+		TodayAppointments func(childComplexity int) int
+		TodayOpd          func(childComplexity int) int
+		TodayPresent      func(childComplexity int) int
+		Users             func(childComplexity int) int
 	}
 
 	Department struct {
@@ -5079,12 +5086,42 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.ComplexityRoot.DailyAttendanceRow.Total(childComplexity), true
 
+	case "DashboardStats.activeAdmissions":
+		if e.ComplexityRoot.DashboardStats.ActiveAdmissions == nil {
+			break
+		}
+
+		return e.ComplexityRoot.DashboardStats.ActiveAdmissions(childComplexity), true
+	case "DashboardStats.availableBeds":
+		if e.ComplexityRoot.DashboardStats.AvailableBeds == nil {
+			break
+		}
+
+		return e.ComplexityRoot.DashboardStats.AvailableBeds(childComplexity), true
 	case "DashboardStats.employees":
 		if e.ComplexityRoot.DashboardStats.Employees == nil {
 			break
 		}
 
 		return e.ComplexityRoot.DashboardStats.Employees(childComplexity), true
+	case "DashboardStats.occupiedBeds":
+		if e.ComplexityRoot.DashboardStats.OccupiedBeds == nil {
+			break
+		}
+
+		return e.ComplexityRoot.DashboardStats.OccupiedBeds(childComplexity), true
+	case "DashboardStats.openOpd":
+		if e.ComplexityRoot.DashboardStats.OpenOpd == nil {
+			break
+		}
+
+		return e.ComplexityRoot.DashboardStats.OpenOpd(childComplexity), true
+	case "DashboardStats.patients":
+		if e.ComplexityRoot.DashboardStats.Patients == nil {
+			break
+		}
+
+		return e.ComplexityRoot.DashboardStats.Patients(childComplexity), true
 	case "DashboardStats.pendingLeaves":
 		if e.ComplexityRoot.DashboardStats.PendingLeaves == nil {
 			break
@@ -5115,6 +5152,18 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.DashboardStats.TodayAbsent(childComplexity), true
+	case "DashboardStats.todayAppointments":
+		if e.ComplexityRoot.DashboardStats.TodayAppointments == nil {
+			break
+		}
+
+		return e.ComplexityRoot.DashboardStats.TodayAppointments(childComplexity), true
+	case "DashboardStats.todayOpd":
+		if e.ComplexityRoot.DashboardStats.TodayOpd == nil {
+			break
+		}
+
+		return e.ComplexityRoot.DashboardStats.TodayOpd(childComplexity), true
 	case "DashboardStats.todayPresent":
 		if e.ComplexityRoot.DashboardStats.TodayPresent == nil {
 			break
@@ -33699,6 +33748,209 @@ func (ec *executionContext) _DashboardStats_todayAbsent(ctx context.Context, fie
 }
 
 func (ec *executionContext) fieldContext_DashboardStats_todayAbsent(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DashboardStats",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _DashboardStats_patients(ctx context.Context, field graphql.CollectedField, obj *model.DashboardStats) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_DashboardStats_patients,
+		func(ctx context.Context) (any, error) {
+			return obj.Patients, nil
+		},
+		nil,
+		ec.marshalNInt2int,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_DashboardStats_patients(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DashboardStats",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _DashboardStats_todayAppointments(ctx context.Context, field graphql.CollectedField, obj *model.DashboardStats) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_DashboardStats_todayAppointments,
+		func(ctx context.Context) (any, error) {
+			return obj.TodayAppointments, nil
+		},
+		nil,
+		ec.marshalNInt2int,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_DashboardStats_todayAppointments(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DashboardStats",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _DashboardStats_todayOpd(ctx context.Context, field graphql.CollectedField, obj *model.DashboardStats) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_DashboardStats_todayOpd,
+		func(ctx context.Context) (any, error) {
+			return obj.TodayOpd, nil
+		},
+		nil,
+		ec.marshalNInt2int,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_DashboardStats_todayOpd(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DashboardStats",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _DashboardStats_openOpd(ctx context.Context, field graphql.CollectedField, obj *model.DashboardStats) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_DashboardStats_openOpd,
+		func(ctx context.Context) (any, error) {
+			return obj.OpenOpd, nil
+		},
+		nil,
+		ec.marshalNInt2int,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_DashboardStats_openOpd(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DashboardStats",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _DashboardStats_activeAdmissions(ctx context.Context, field graphql.CollectedField, obj *model.DashboardStats) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_DashboardStats_activeAdmissions,
+		func(ctx context.Context) (any, error) {
+			return obj.ActiveAdmissions, nil
+		},
+		nil,
+		ec.marshalNInt2int,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_DashboardStats_activeAdmissions(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DashboardStats",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _DashboardStats_occupiedBeds(ctx context.Context, field graphql.CollectedField, obj *model.DashboardStats) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_DashboardStats_occupiedBeds,
+		func(ctx context.Context) (any, error) {
+			return obj.OccupiedBeds, nil
+		},
+		nil,
+		ec.marshalNInt2int,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_DashboardStats_occupiedBeds(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DashboardStats",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _DashboardStats_availableBeds(ctx context.Context, field graphql.CollectedField, obj *model.DashboardStats) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_DashboardStats_availableBeds,
+		func(ctx context.Context) (any, error) {
+			return obj.AvailableBeds, nil
+		},
+		nil,
+		ec.marshalNInt2int,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_DashboardStats_availableBeds(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "DashboardStats",
 		Field:      field,
@@ -82223,6 +82475,20 @@ func (ec *executionContext) fieldContext_Query_dashboardStats(_ context.Context,
 				return ec.fieldContext_DashboardStats_todayPresent(ctx, field)
 			case "todayAbsent":
 				return ec.fieldContext_DashboardStats_todayAbsent(ctx, field)
+			case "patients":
+				return ec.fieldContext_DashboardStats_patients(ctx, field)
+			case "todayAppointments":
+				return ec.fieldContext_DashboardStats_todayAppointments(ctx, field)
+			case "todayOpd":
+				return ec.fieldContext_DashboardStats_todayOpd(ctx, field)
+			case "openOpd":
+				return ec.fieldContext_DashboardStats_openOpd(ctx, field)
+			case "activeAdmissions":
+				return ec.fieldContext_DashboardStats_activeAdmissions(ctx, field)
+			case "occupiedBeds":
+				return ec.fieldContext_DashboardStats_occupiedBeds(ctx, field)
+			case "availableBeds":
+				return ec.fieldContext_DashboardStats_availableBeds(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type DashboardStats", field.Name)
 		},
@@ -122959,6 +123225,41 @@ func (ec *executionContext) _DashboardStats(ctx context.Context, sel ast.Selecti
 			}
 		case "todayAbsent":
 			out.Values[i] = ec._DashboardStats_todayAbsent(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "patients":
+			out.Values[i] = ec._DashboardStats_patients(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "todayAppointments":
+			out.Values[i] = ec._DashboardStats_todayAppointments(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "todayOpd":
+			out.Values[i] = ec._DashboardStats_todayOpd(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "openOpd":
+			out.Values[i] = ec._DashboardStats_openOpd(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "activeAdmissions":
+			out.Values[i] = ec._DashboardStats_activeAdmissions(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "occupiedBeds":
+			out.Values[i] = ec._DashboardStats_occupiedBeds(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "availableBeds":
+			out.Values[i] = ec._DashboardStats_availableBeds(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}

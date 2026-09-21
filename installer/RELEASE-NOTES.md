@@ -1,5 +1,25 @@
 # Release notes
 
+## v1.3.0 — Healthcare tenant type and clinical dashboard
+
+Setting an organisation to Healthcare actually switches the product now.
+Edit Tenant can change type (create already could). Login, passkey, and
+`/me` return `tenant_type` so the sidebar hides Students/Academic/Fees
+immediately. A hospital on the built-in Education plan is moved onto the
+Hospital plan so Patients, OPD, and IPD are entitled.
+
+The tenant dashboard shows patient, appointment, OPD, admission, and bed
+counts for healthcare orgs.
+
+### Upgrade notes
+
+- Super-admin: **Tenants → Edit** → Organization Type = Healthcare → Save,
+  then sign in to the org again (or impersonate).
+- Custom subscription plans are left alone; only the built-in Education
+  ↔ Hospital pair is swapped.
+
+---
+
 ## v1.2.3 — Existing database choice, raspberrypi.local CORS/cookies
 
 A leftover `peepal` schema from a failed first run made `--migrate` die on

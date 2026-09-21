@@ -11,6 +11,13 @@ export const DASHBOARD_STATS = gql`
       pendingPayrolls
       todayPresent
       todayAbsent
+      patients
+      todayAppointments
+      todayOpd
+      openOpd
+      activeAdmissions
+      occupiedBeds
+      availableBeds
     }
   }
 `;

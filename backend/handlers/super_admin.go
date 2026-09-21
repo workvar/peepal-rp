@@ -9,7 +9,6 @@ import (
 	"collegeerp/models"
 	"collegeerp/utils"
 	"errors"
-	"log"
 	"strconv"
 
 	"github.com/gofiber/fiber/v2"
@@ -101,6 +100,7 @@ func CreateTenant(c *fiber.Ctx) error {
 	if rawType == "" {
 		rawType = models.TenantTypeEducation
 	}
+	rawType = rawType.Canonical()
 
 	// Identity policy: default to email-based unless the caller opts out.
 	staffEmailRequired := true
@@ -159,20 +159,10 @@ func CreateTenant(c *fiber.Ctx) error {
 		return utils.BadRequest(c, "Could not create tenant — subdomain may already exist")
 	}
 
-	// Seed the built-in roles from this tenant's industry (Clinician/Trainee/…
-	// for healthcare, Teacher/Student/… for education). Best-effort: a seed
-	// hiccup should not fail tenant creation, and a nightly backfill would catch
-	// it, but log so it is visible.
-	if err := models.SeedSystemRoles(database.DB.WithContext(c.Context()), &tenant); err != nil {
-		log.Printf("system role seed failed for tenant %s: %v", tenant.ID, err)
-	}
-
-	// Seed this industry's ready-made custom roles (Receptionist / Doctor /
-	// Pharmacist for healthcare) with their module grants. Best-effort for the
-	// same reason as above; the --migrate backfill would catch a failure.
-	if err := models.SeedDefaultRoles(database.DB.WithContext(c.Context()), &tenant); err != nil {
-		log.Printf("default role seed failed for tenant %s: %v", tenant.ID, err)
-	}
+	// Seed industry labels, ready-made roles, and the matching built-in plan
+	// (Hospital for healthcare, Education for schools) so the org doesn't
+	// boot onto Students/Fees after being created as a hospital.
+	models.SyncIndustryPresentation(database.DB.WithContext(c.Context()), &tenant)
 
 	admin := models.User{
 		TenantID: tenant.ID,
@@ -262,8 +252,13 @@ func UpdateTenant(c *fiber.Ctx) error {
 	if req.Currency != "" {
 		tenant.Currency = req.Currency
 	}
+	oldType := tenant.Type.Canonical()
 	if req.Type != "" {
-		tenant.Type = models.TenantType(req.Type)
+		rawType := models.TenantType(req.Type)
+		if !rawType.IsValid() {
+			return utils.BadRequest(c, "Invalid tenant type. Expected one of: education, corporate, healthcare, nonprofit")
+		}
+		tenant.Type = rawType.Canonical()
 	}
 	if req.StaffEmailRequired != nil {
 		tenant.StaffEmailRequired = req.StaffEmailRequired
@@ -277,6 +272,11 @@ func UpdateTenant(c *fiber.Ctx) error {
 
 	if err := database.DB.WithContext(c.Context()).Save(&tenant).Error; err != nil {
 		return utils.InternalError(c, "Failed to save record")
+	}
+	if tenant.Type.Canonical() != oldType {
+		// Relabel Teacher→Clinician, swap Education↔Hospital plan, seed
+		// healthcare default roles (Doctor / Receptionist / …).
+		models.SyncIndustryPresentation(database.DB.WithContext(c.Context()), &tenant)
 	}
 	return utils.OK(c, tenant, "Tenant updated")
 }
@@ -340,16 +340,11 @@ func ImpersonateTenant(c *fiber.Ctx) error {
 	token := tokens.Access
 
 	return utils.OK(c, fiber.Map{
-		"user": fiber.Map{
-			"id":        admin.ID,
-			"name":      admin.Name,
-			"email":     admin.Email,
-			"role":      admin.Role,
-			"tenant_id": admin.TenantID,
-		},
+		"user": sessionUserMap(c, &admin, &tenant, string(admin.Role)),
 		"tenant": fiber.Map{
 			"id":        tenant.ID,
 			"subdomain": tenant.Subdomain,
+			"type":      tenant.Type.Canonical(),
 		},
 		"token": token,
 		// Seconds until the access token expires; the session itself continues
@@ -402,6 +397,7 @@ func LookupTenant(c *fiber.Ctx) error {
 		"name":                   tenant.Name,
 		"subdomain":              tenant.Subdomain,
 		"status":                 tenant.Status,
+		"type":                   tenant.Type.Canonical(),
 		"staff_email_required":   tenant.StaffEmailReq(),
 		"student_email_required": tenant.StudentEmailReq(),
 	}, "")

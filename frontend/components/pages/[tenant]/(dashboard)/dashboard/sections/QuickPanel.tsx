@@ -1,16 +1,22 @@
 "use client";
 
 import Link from "next/link";
-import { ChevronRight, SlidersHorizontal, Building2, UserPlus, CalendarCheck } from "lucide-react";
+import { ChevronRight, SlidersHorizontal, Building2, UserPlus, CalendarCheck, ClipboardPlus, DoorOpen, HeartPulse } from "lucide-react";
 import { useAccess } from "@/lib/useAccess";
 import { useTerminology } from "@/store/hooks/useTerminology";
 import type { Terminology } from "@/constants/terminology";
 
 // Labels are terminology-driven so a non-education tenant never reads
 // "Student" or "Department" when its vertical calls them something else.
+// Healthcare shortcuts bind to the clinical pages (patients / OPD / IPD),
+// not /students — that path is industry-gated and never appears in a hospital.
 const actionsFor = (t: Terminology) => [
   { label: `Mark ${t.attendance}`,  desc: `Record today's ${t.attendance.toLowerCase()}`, path: "/attendance",       icon: CalendarCheck },
   { label: `Add ${t.member}`,       desc: `Register a new ${t.member.toLowerCase()}`,     path: "/students",         icon: UserPlus },
+  { label: "Register Patient",     desc: "Add someone to the patient registry",          path: "/patients",         icon: HeartPulse },
+  { label: "Book Appointment",     desc: "Schedule a consultation",                      path: "/appointments",     icon: CalendarCheck },
+  { label: "Record OPD Visit",     desc: "Open today's outpatient encounter",            path: "/encounters",       icon: ClipboardPlus },
+  { label: "Admit Patient",        desc: "IPD admit, transfer & discharge",              path: "/ipd",              icon: DoorOpen },
   { label: "Salary Setup",          desc: "Templates & assignments",                      path: "/salary/templates", icon: SlidersHorizontal },
   { label: t.department_plural,     desc: `Manage org ${t.department_plural.toLowerCase()}`, path: "/org/departments", icon: Building2 },
 ];

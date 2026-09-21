@@ -117,6 +117,7 @@ var defaultPageMap = map[string]string{
 	"telemedicine":    "clinical",
 	"referrals":       "clinical",
 	"patient-portal":  "clinical",
+	"my-schedule":     "clinical",
 	"billing":         "billing",
 	"pharmacy":        "pharmacy",
 
